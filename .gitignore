@@ -30,3 +30,6 @@
 
 # Debug files
 *.dSYM/
+yotta_modules/
+yotta_targets/
+build/
