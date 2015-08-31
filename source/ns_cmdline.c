@@ -38,7 +38,7 @@
 
 #ifdef TRACE_PRINTF
 #undef tr_debug
-#define tr_debug(...) printf( __VA_ARGS__);printf("\n")
+#define tr_debug(...) printf( __VA_ARGS__);printf("\r\n")
 #endif
 
 #ifdef TRACE_DEEP
@@ -231,7 +231,7 @@ void cmd_init(cmd_print_t *outf)
     cmd.tab_lookup_n = 0;
     cmd.cmd_buffer_ptr = 0;
     cmd.idle = true;
-    cmd_set_retfmt("retcode: %i\n");
+    cmd_set_retfmt("retcode: %i\r\n");
     cmd_line_clear(0);            // clear line
     cmd_history_save(0);          // the current line is the 0 item
     //cmd_free();
@@ -241,20 +241,20 @@ void cmd_init(cmd_print_t *outf)
 }
 
 #ifdef INCLUDE_MAN
-#define MAN_ECHO    "Displays messages, or turns command echoing on or off\n"\
-                    "echo <data_to_be_print>\n"\
-                    "some special parameters:\n"\
-                    "<bool>                 On/Off echo input characters\n"
-#define MAN_ALIAS   "alias <theAlias> <command (parameters)>\n"
-#define MAN_SET     "set <var_name> <value>\n"\
-                    "some special parameters\n"\
-                    "--vt100 <bool>         On/Off vt100 controls\n"\
-                    "--retcode <bool>       On/Off retcode print after execution\n"\
-                    "--retfmt <format>      Return print format. Default: \"retcode: %i\\n\"\n"
+#define MAN_ECHO    "Displays messages, or turns command echoing on or off\r\n"\
+                    "echo <data_to_be_print>\r\n"\
+                    "some special parameters:\r\n"\
+                    "<bool>                 On/Off echo input characters\r\n"
+#define MAN_ALIAS   "alias <theAlias> <command (parameters)>\r\n"
+#define MAN_SET     "set <var_name> <value>\r\n"\
+                    "some special parameters\r\n"\
+                    "--vt100 <bool>         On/Off vt100 controls\r\n"\
+                    "--retcode <bool>       On/Off retcode print after execution\r\n"\
+                    "--retfmt <format>      Return print format. Default: \"retcode: %i\\n\"\r\n"
 
 #define MAN_CLEAR   "Clears the display"
-#define MAN_HISTORY "Show commands history\n"\
-                    "history (<optio>)\n"\
+#define MAN_HISTORY "Show commands history\r\n"\
+                    "history (<optio>)\r\n"\
                     "clear                  Clear history"
 #else
 #define MAN_ECHO    NULL
@@ -463,11 +463,11 @@ void cmd_init_screen()
         cmd_printf("\r\x1b[2J"); /* Clear screen */
         cmd_printf("\x1b[7h"); /* enable line wrap */
     }
-    //cmd_printf("ARM Ltd\n");
-    cmd_printf("   _   ___ __  __               _            _  ___  ___ \n");
-    cmd_printf("  /_\\ | _ \\  \\/  |  ___   _ __ | |__  ___ __| |/ _ \\/ __|\n");
-    cmd_printf(" / _ \\|   / |\\/| | |___| | '  \\| '_ \\/ -_) _` | (_) \\__ \n");
-    cmd_printf("/_/ \\_\\_|_\\_|  |_|       |_|_|_|_.__/\\___\\__,_|\\___/|___/\n\n");
+    //cmd_printf("ARM Ltd\r\n");
+    cmd_printf("   _   ___ __  __               _            _  ___  ___ \r\n");
+    cmd_printf("  /_\\ | _ \\  \\/  |  ___   _ __ | |__  ___ __| |/ _ \\/ __|\r\n");
+    cmd_printf(" / _ \\|   / |\\/| | |___| | '  \\| '_ \\/ -_) _` | (_) \\__ \r\n");
+    cmd_printf("/_/ \\_\\_|_\\_|  |_|       |_|_|_|_.__/\\___\\__,_|\\___/|___/\r\n\n");
     cmd_output();
 }
 uint8_t cmd_history_size(uint8_t max)
@@ -617,7 +617,7 @@ static int cmd_parse_argv(char *string_ptr, char **argv)
 static void cmd_print_man(cmd_command_t *command_ptr)
 {
     if (command_ptr->man_ptr) {
-        cmd_printf("%s\n", command_ptr->man_ptr);
+        cmd_printf("%s\r\n", command_ptr->man_ptr);
     }
 }
 static void cmd_set_input(const char *str, int cur)
@@ -698,7 +698,7 @@ static int cmd_run(char *string_ptr)
 
     tr_info("Executing cmd: '%s'", string_ptr);
     char *command_str = MEM_ALLOC(MAX_LINE);
-    while (isspace(*string_ptr) &&
+    while (isspace((int)*string_ptr) &&
             *string_ptr != '\n' &&
             *string_ptr != 0) {
         string_ptr++; //skip white spaces
@@ -714,7 +714,7 @@ static int cmd_run(char *string_ptr)
     cmd.cmd_ptr = cmd_find(argv[0]);
 
     if (cmd.cmd_ptr == NULL) {
-        cmd_printf("Command '%s' not found.\n", argv[0]);
+        cmd_printf("Command '%s' not found.\r\n", argv[0]);
         MEM_FREE(command_str);
         return CMDLINE_RETCODE_COMMAND_NOT_FOUND;
     }
@@ -749,7 +749,7 @@ static int cmd_run(char *string_ptr)
             break;
         case (CMDLINE_RETCODE_INVALID_PARAMETERS):
             tr_warn("Command parameter was incorrect");
-            cmd_printf("Invalid parameters!\n");
+            cmd_printf("Invalid parameters!\r\n");
             cmd_print_man(cmd.cmd_ptr);
             break;
         default:
@@ -867,7 +867,7 @@ void cmd_escape_read(int16_t u_data)
     } else if (u_data == 'F') {
         // Xterm support
         cmd.cursor = strlen(cmd.input);
-    } else if (isdigit(cmd.escape[cmd.escape_index - 1]) && u_data == '~') {
+    } else if (isdigit((int)cmd.escape[cmd.escape_index - 1]) && u_data == '~') {
         switch (cmd.escape[cmd.escape_index - 1]) {
             case ('1'): //beginning-of-line     # Home key
                 cmd.cursor =  0;
@@ -955,12 +955,12 @@ void cmd_char_input(int16_t u_data)
         cmd_reset_tab();
         if (strlen(cmd.input) == 0) {
             if (cmd.echo) {
-                cmd_printf("\n");
+                cmd_printf("\r\n");
                 cmd_output();
             }
         } else {
             if (cmd.echo) {
-                cmd_printf("\n");
+                cmd_printf("\r\n");
             }
             cmd_execute();
         }
@@ -1014,7 +1014,7 @@ void cmd_char_input(int16_t u_data)
         }
     } else {
         cmd_reset_tab();
-        tr_deep("cursor: %d, inputlen: %d, u_data: %c\n", cmd.cursor, strlen(cmd.input), u_data);
+        tr_deep("cursor: %d, inputlen: %d, u_data: %c\r\n", cmd.cursor, strlen(cmd.input), u_data);
         if ((strlen(cmd.input) >= MAX_LINE - 1) || (cmd.cursor >= MAX_LINE - 1)) {
             tr_warn("input buffer full");
             if (cmd.echo) {
@@ -1034,10 +1034,10 @@ void cmd_char_input(int16_t u_data)
 static int check_variable_keylookup_size(char **key, int *keysize)
 {
     if (cmd.cursor > 0 && cmd.tab_lookup > 0) {
-        //printf("tab_lookup: %i\n", cmd.tab_lookup);
+        //printf("tab_lookup: %i\r\n", cmd.tab_lookup);
         char *ptr = cmd.input + cmd.tab_lookup;
         do {
-            //printf("varkey lookup: %c\n", *ptr);
+            //printf("varkey lookup: %c\r\n", *ptr);
             if (*ptr == ' ') {
                 return 0;
             }
@@ -1045,7 +1045,7 @@ static int check_variable_keylookup_size(char **key, int *keysize)
                 int varlen = cmd.tab_lookup - (ptr - cmd.input) - 1;
                 *key = ptr;
                 *keysize = varlen;
-                //printf("varkey size: %i\n", varlen);
+                //printf("varkey size: %i\r\n", varlen);
                 return (ptr - cmd.input);
             }
             ptr--;
@@ -1325,7 +1325,7 @@ static void cmd_alias_print_all(void)
 {
     ns_list_foreach(cmd_alias_t, cur_ptr, &cmd.alias_list) {
         if (cur_ptr->name_ptr != NULL) {
-            cmd_printf("%-18s'%s'\n", cur_ptr->name_ptr, cur_ptr->value_ptr ? cur_ptr->value_ptr : "");
+            cmd_printf("%-18s'%s'\r\n", cur_ptr->name_ptr, cur_ptr->value_ptr ? cur_ptr->value_ptr : "");
         }
     }
     return;
@@ -1334,7 +1334,7 @@ static void cmd_variable_print_all(void)
 {
     ns_list_foreach(cmd_variable_t, cur_ptr, &cmd.variable_list) {
         if (cur_ptr->name_ptr != NULL) {
-            cmd_printf("%-18s'%s'\n", cur_ptr->name_ptr, cur_ptr->value_ptr ? cur_ptr->value_ptr : "");
+            cmd_printf("%-18s'%s'\r\n", cur_ptr->name_ptr, cur_ptr->value_ptr ? cur_ptr->value_ptr : "");
         }
     }
     return;
@@ -1446,19 +1446,19 @@ int alias_command(int argc, char *argv[])
 {
     if (argc == 1) {
         // print all alias
-        cmd_printf("alias:\n");
+        cmd_printf("alias:\r\n");
         cmd_alias_print_all();
     } else if (argc == 2) {
         // print alias
         if (is_cmdline_commands(argv[1])) {
-            cmd_printf("Cannot overwrite default commands with alias\n");
+            cmd_printf("Cannot overwrite default commands with alias\r\n");
             return -1;
         }
-        tr_debug("Deleting alias %s\n", argv[1]);
+        tr_debug("Deleting alias %s\r\n", argv[1]);
         cmd_alias_add(argv[1], NULL);
     } else {
         // set alias
-        tr_debug("Setting alias %s = %s\n", argv[1], argv[2]);
+        tr_debug("Setting alias %s = %s\r\n", argv[1], argv[2]);
         cmd_alias_add(argv[1], argv[2]);
     }
     return 0;
@@ -1467,7 +1467,7 @@ int set_command(int argc, char *argv[])
 {
     if (argc == 1) {
         // print all alias
-        cmd_printf("variables:\n");
+        cmd_printf("variables:\r\n");
         cmd_variable_print_all();
     } else if (argc == 2) {
         // print alias
@@ -1499,7 +1499,7 @@ int echo_command(int argc, char *argv[])
 {
     int n;
     if (argc == 1) {
-        cmd_printf("ECHO is %s\n", cmd.echo ? "on" : "off");
+        cmd_printf("ECHO is %s\r\n", cmd.echo ? "on" : "off");
         return 0;
     } else if (argc == 2) {
         if (strcmp(argv[1], "off") == 0) {
@@ -1511,30 +1511,33 @@ int echo_command(int argc, char *argv[])
         }
     }
     for (n = 1; n < argc; n++) {
-        tr_deep("ECHO: %s\n", argv[n]);
+        tr_deep("ECHO: %s\r\n", argv[n]);
         cmd_printf("%s ", argv[n]);
     }
-    cmd_printf("\n");
+    cmd_printf("\r\n");
     return 0;
 }
 
 int clear_command(int argc, char *argv[])
 {
+	(void)argc;
+	(void	)argv;
+
     cmd_echo(true);
     cmd_init_screen();
     return 0;
 }
 int help_command(int argc, char *argv[])
 {
-    cmd_printf("Commands:\n");
+    cmd_printf("Commands:\r\n");
     if (argc == 1) {
         ns_list_foreach(cmd_command_t, cur_ptr, &cmd.command_list) {
-            cmd_printf("%-16s%s\n", cur_ptr->name_ptr, (cur_ptr->info_ptr ? cur_ptr->info_ptr : ""));
+            cmd_printf("%-16s%s\r\n", cur_ptr->name_ptr, (cur_ptr->info_ptr ? cur_ptr->info_ptr : ""));
         }
     } else if (argc == 2) {
         cmd_command_t *cmd_ptr = cmd_find(argv[1]);
         if (cmd_ptr) {
-            cmd_printf("Command: %s\n", cmd_ptr->name_ptr);
+            cmd_printf("Command: %s\r\n", cmd_ptr->name_ptr);
             if (cmd_ptr->man_ptr) {
                 cmd_printf(cmd_ptr->man_ptr);
             } else if (cmd_ptr->info_ptr) {
@@ -1549,10 +1552,10 @@ int help_command(int argc, char *argv[])
 int history_command(int argc, char *argv[])
 {
     if (argc == 1) {
-        cmd_printf("History [%i/%i]:\n", ns_list_count(&cmd.history_list), cmd.history_max_count);
+        cmd_printf("History [%i/%i]:\r\n", ns_list_count(&cmd.history_list), cmd.history_max_count);
         int i = 0;
         ns_list_foreach_reverse(cmd_history_t, cur_ptr, &cmd.history_list) {
-            cmd_printf("[%i]: %s\n", i++, cur_ptr->command_ptr);
+            cmd_printf("[%i]: %s\r\n", i++, cur_ptr->command_ptr);
         }
     } else if (argc == 2) {
         if (strcmp(argv[1], "clear") == 0) {
