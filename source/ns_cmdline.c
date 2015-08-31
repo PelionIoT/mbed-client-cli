@@ -29,7 +29,7 @@
 #include "ns_list.h"
 #define FEA_TRACE_SUPPORT
 #include "ns_trace.h"
-#include "ns_cmdline.h"
+#include "mbed-client-cli/ns_cmdline.h"
 
 
 //#define TRACE_DEEP
