@@ -1,5 +1,5 @@
 SRCS := $(wildcard source/*)
 LIB := libCmdline.a
-EXPORT_HEADERS := mbed-client-cli
+EXPORT_HEADERS := .
 
 include ../exported_rules.mk
