@@ -56,7 +56,7 @@
 #define BS  0x08
 #define ETX 0x03
 #define TAB 0x09
-#define CAN 0x24
+#define CAN 0x18
 
 #define MAX_LINE 500
 #define MAX_ARGUMENTS 30
