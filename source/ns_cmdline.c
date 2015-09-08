@@ -29,8 +29,12 @@
 #include "ns_list.h"
 #define FEA_TRACE_SUPPORT
 #include "ns_trace.h"
-#include "mbed-client-cli/ns_cmdline.h"
 
+#ifdef TARGET_LIKE_MBED
+#include "mbed-client-cli/ns_cmdline.h"
+#else
+#include "ns_cmdline.h"
+#endif
 
 //#define TRACE_DEEP
 //#define TRACE_PRINTF
