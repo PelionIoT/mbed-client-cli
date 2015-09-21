@@ -6,7 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include "ns_types.h"
 
 #if defined(_WIN32) || defined(__unix__) || defined(__unix) || defined(unix) || defined(TARGET_LIKE_MBED)
 #include <stdlib.h> //malloc
@@ -17,6 +16,7 @@
 #define MEM_FREE free
 #endif
 #else
+#include "ns_types.h"
 #include "nsdynmemLIB.h"
 #ifndef MEM_ALLOC
 #define MEM_ALLOC ns_dyn_mem_temporary_alloc

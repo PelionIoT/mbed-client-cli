@@ -92,8 +92,14 @@
 extern "C" {
 #endif
 
-#include "ns_types.h"
 #include <stdarg.h>
+
+#if defined(_WIN32) || defined(__unix__) || defined(__unix) || defined(unix) || defined(TARGET_LIKE_MBED)
+#include <stdint.h>
+#include <stddef.h>
+#else
+#include "ns_types.h"
+#endif
 
 #define CMDLINE_RETCODE_COMMAND_BUSY            2   //!< Command Busy
 #define CMDLINE_RETCODE_EXCUTING_CONTINUE       1   //!< Execution continue in background
