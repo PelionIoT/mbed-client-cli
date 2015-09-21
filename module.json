@@ -20,5 +20,6 @@
     }
   ],
   "dependencies": {
+    "mbed-client-trace": "ARMmbed/mbed-client-trace"
   }
 }

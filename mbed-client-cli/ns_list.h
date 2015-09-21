@@ -17,10 +17,20 @@
 #ifndef NS_LIST_H_
 #define NS_LIST_H_
 
+#if defined(YOTTA_CFG)
+#include <stdint.h>
+#include <stddef.h>
+#else
 #include "ns_types.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+
+#ifndef NS_INLINE
+#define NS_INLINE
 #endif
 
 /** \file

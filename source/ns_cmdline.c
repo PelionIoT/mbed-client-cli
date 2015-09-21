@@ -9,6 +9,7 @@
 
 #if defined(_WIN32) || defined(__unix__) || defined(__unix) || defined(unix) || defined(TARGET_LIKE_MBED)
 #include <stdlib.h> //malloc
+#include "mbed-client-cli/ns_list.h"
 #ifndef MEM_ALLOC
 #define MEM_ALLOC malloc
 #endif
@@ -18,6 +19,7 @@
 #else
 #include "ns_types.h"
 #include "nsdynmemLIB.h"
+#include "ns_list.h"
 #ifndef MEM_ALLOC
 #define MEM_ALLOC ns_dyn_mem_temporary_alloc
 #endif
@@ -26,7 +28,6 @@
 #endif
 #endif
 
-#include "ns_list.h"
 #define FEA_TRACE_SUPPORT
 #include "ns_trace.h"
 
