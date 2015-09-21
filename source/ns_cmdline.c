@@ -8,7 +8,7 @@
 #include <ctype.h>
 #include "ns_types.h"
 
-#if defined(_WIN32) || defined(__unix__) || defined(__unix) || defined(unix)
+#if defined(_WIN32) || defined(__unix__) || defined(__unix) || defined(unix) || defined(TARGET_LIKE_MBED)
 #include <stdlib.h> //malloc
 #ifndef MEM_ALLOC
 #define MEM_ALLOC malloc

@@ -20,6 +20,5 @@
     }
   ],
   "dependencies": {
-    "nanostack-libservice": "~3.0.0"
   }
 }
