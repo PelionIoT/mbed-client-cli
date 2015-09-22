@@ -9,7 +9,11 @@
 
 #if defined(_WIN32) || defined(__unix__) || defined(__unix) || defined(unix) || defined(TARGET_LIKE_MBED)
 #include <stdlib.h> //malloc
+#if defined(TARGET_LIKE_MBED)
 #include "mbed-client-cli/ns_list.h"
+#else
+#include "ns_list.h"
+#endif
 #ifndef MEM_ALLOC
 #define MEM_ALLOC malloc
 #endif
