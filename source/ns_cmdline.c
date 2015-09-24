@@ -7,13 +7,8 @@
 #include <string.h>
 #include <ctype.h>
 
-#if defined(_WIN32) || defined(__unix__) || defined(__unix) || defined(unix) || defined(TARGET_LIKE_MBED)
+#if defined(_WIN32) || defined(__unix__) || defined(__unix) || defined(unix) || defined(YOTTA_CFG)
 #include <stdlib.h> //malloc
-#if defined(TARGET_LIKE_MBED)
-#include "mbed-client-cli/ns_list.h"
-#else
-#include "ns_list.h"
-#endif
 #ifndef MEM_ALLOC
 #define MEM_ALLOC malloc
 #endif
@@ -21,9 +16,7 @@
 #define MEM_FREE free
 #endif
 #else
-#include "ns_types.h"
 #include "nsdynmemLIB.h"
-#include "ns_list.h"
 #ifndef MEM_ALLOC
 #define MEM_ALLOC ns_dyn_mem_temporary_alloc
 #endif
@@ -32,13 +25,19 @@
 #endif
 #endif
 
-#define FEA_TRACE_SUPPORT
-#include "ns_trace.h"
+//#define YOTTA_CFG_TRACE
+
 
 #ifdef YOTTA_CFG
+#include "mbed-client-cli/ns_types.h"
+#include "mbed-client-cli/ns_list.h"
 #include "mbed-client-cli/ns_cmdline.h"
+#include "mbed-client-trace/mbed_client_trace.h"
 #else
+#include "ns_types.h"
+#include "ns_list.h"
 #include "ns_cmdline.h"
+#include "ns_trace.h"
 #endif
 
 //#define TRACE_DEEP
@@ -224,7 +223,7 @@ void cmd_init(cmd_print_t *outf)
         cmd.init = true;
     }
 #if defined(HAVE_DEBUG) || defined(FEA_TRACE_SUPPORT)
-    set_trace_exclude_filters(TRACE_GROUP);
+    mbed_client_trace_exclude_filters_set(TRACE_GROUP);
 #endif
     cmd.out = outf ? outf : default_cmd_response_out;
     cmd.ctrl_fnc = NULL;
@@ -264,7 +263,7 @@ void cmd_init(cmd_print_t *outf)
 #define MAN_CLEAR   "Clears the display"
 #define MAN_HISTORY "Show commands history\r\n"\
                     "history (<optio>)\r\n"\
-                    "clear                  Clear history"
+                    "clear                  Clear history\r\n"
 #else
 #define MAN_ECHO    NULL
 #define MAN_ALIAS   NULL
@@ -1108,15 +1107,15 @@ void cmd_echo_on(void)
 #ifndef TEST
 static
 #endif
-int replace_alias(char *str, const char *old, const char *new)
+int replace_alias(char *str, const char *old_str, const char *new_str)
 {
-    int old_len = strlen(old),
-        new_len = strlen(new);
-    if ((memcmp(str, old, old_len) == 0) &&
+    int old_len = strlen(old_str),
+        new_len = strlen(new_str);
+    if ((memcmp(str, old_str, old_len) == 0) &&
             ((str[ old_len ] == ' ') || (str[ old_len ] == 0) ||
              (str[ old_len ] == ';') || (str[ old_len ] == '&'))) {
         memmove(str + new_len, str + old_len, strlen(str + old_len) + 1);
-        memcpy(str, new, new_len);
+        memcpy(str, new_str, new_len);
         return new_len - old_len;
     }
     return 0;
@@ -1131,16 +1130,16 @@ static void cmd_replace_alias(char *input)
 #ifndef TEST
 static
 #endif
-void replace_variable(char *str, const char *old, const char *new)
+void replace_variable(char *str, const char *old_str, const char *new_str)
 {
     char *ptr = str;
-    int old_len = strlen(old),
-        new_len = strlen(new);
+    int old_len = strlen(old_str),
+        new_len = strlen(new_str);
     if (old_len > 0) {
-        while ((ptr = strstr(ptr, old)) != 0) {
+        while ((ptr = strstr(ptr, old_str)) != 0) {
             if (ptr > str && *(ptr - 1) == '$') {
                 memmove(ptr + new_len - 1, ptr + old_len, strlen(ptr + old_len) + 1);
-                memcpy(ptr - 1, new, new_len);
+                memcpy(ptr - 1, new_str, new_len);
             }
             ptr++;
         }
@@ -1463,11 +1462,11 @@ int alias_command(int argc, char *argv[])
             cmd_printf("Cannot overwrite default commands with alias\r\n");
             return -1;
         }
-        tr_debug("Deleting alias %s\r\n", argv[1]);
+        tr_debug("Deleting alias %s", argv[1]);
         cmd_alias_add(argv[1], NULL);
     } else {
         // set alias
-        tr_debug("Setting alias %s = %s\r\n", argv[1], argv[2]);
+        tr_debug("Setting alias %s = %s", argv[1], argv[2]);
         cmd_alias_add(argv[1], argv[2]);
     }
     return 0;

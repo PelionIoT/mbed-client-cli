@@ -21,5 +21,13 @@
   ],
   "dependencies": {
     "mbed-client-trace": "ARMmbed/mbed-client-trace"
+  },
+  "testTargetDependencies": {
+    "x86-linux-native": {
+        "cpputest": "ARMmbed/cpputest"
+    }, 
+    "x86-windows-native": {
+        "cpputest": "ARMmbed/cpputest"
+    }
   }
 }

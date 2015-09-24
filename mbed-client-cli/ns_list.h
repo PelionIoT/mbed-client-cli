@@ -18,8 +18,7 @@
 #define NS_LIST_H_
 
 #if defined(YOTTA_CFG)
-#include <stdint.h>
-#include <stddef.h>
+#include "mbed-client-cli/ns_types.h"
 #else
 #include "ns_types.h"
 #endif
@@ -28,10 +27,6 @@
 extern "C" {
 #endif
 
-
-#ifndef NS_INLINE
-#define NS_INLINE
-#endif
 
 /** \file
  * \brief Linked list support library

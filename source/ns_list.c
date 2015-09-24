@@ -20,4 +20,8 @@
  */
 #define NS_LIST_FN extern
 
+#if defined(YOTTA_CFG)
+#include "mbed-client-cli/ns_list.h"
+#else
 #include "ns_list.h"
+#endif
