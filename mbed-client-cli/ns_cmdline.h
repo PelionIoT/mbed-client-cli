@@ -3,6 +3,7 @@
  */
 /**
  * \file ns_cmdline.h
+ * 
  * Command line library - mbedOS shell
  *
  * Usage example:
