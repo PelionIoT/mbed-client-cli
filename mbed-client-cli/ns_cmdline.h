@@ -96,7 +96,14 @@ extern "C" {
 #include <stdarg.h>
 
 #if defined(_WIN32) || defined(__unix__) || defined(__unix) || defined(unix) || defined(YOTTA_CFG)
+
+#if defined(YOTTA_CFG)
 #include "mbed-client-cli/ns_types.h"
+#else
+#include <stdint.h>
+#include <stddef.h>
+#endif
+
 #else
 #include "ns_types.h"
 #endif
