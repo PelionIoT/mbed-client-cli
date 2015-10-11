@@ -198,6 +198,7 @@ int set_command(int argc, char *argv[]);
 int clear_command(int argc, char *argv[]);
 int help_command(int argc, char *argv[]);
 int history_command(int argc, char *argv[]);
+int for_command(int argc, char *argv[]);
 
 void default_cmd_response_out(const char *fmt, va_list ap)
 {
@@ -264,6 +265,8 @@ void cmd_init(cmd_print_t *outf)
 #define MAN_HISTORY "Show commands history\r\n"\
                     "history (<optio>)\r\n"\
                     "clear                  Clear history\r\n"
+#define MAN_FOR     "for loop\n"\
+                    "for <var> in range(<start>,<end>): <command(s)>"
 #else
 #define MAN_ECHO    NULL
 #define MAN_ALIAS   NULL
@@ -280,6 +283,7 @@ static void cmd_init_base_commands(void)
     cmd_add("set",      set_command,      "Handle variables",     MAN_SET);
     cmd_add("clear",    clear_command,    "Clears the display",   MAN_CLEAR);
     cmd_add("history",  history_command,  "View your command Line History", MAN_HISTORY);
+    cmd_add("for",      for_command,      "for loop", MAN_FOR);
 }
 void cmd_reset(void)
 {
@@ -738,7 +742,7 @@ static int cmd_run(char *string_ptr)
         cmd_print_man(cmd.cmd_ptr);
         return CMDLINE_RETCODE_SUCCESS;
     }
-    
+
     if( cmd.cmd_ptr->busy ) {
         MEM_FREE(command_str);
         return CMDLINE_RETCODE_COMMAND_BUSY;
@@ -1573,6 +1577,61 @@ int history_command(int argc, char *argv[])
         }
     }
     return 0;
+}
+int for_command(int argc, char *argv[])
+{
+    //"for x in range(a,b): cmds"
+    tr_debug("for-loop: in");
+    if( argc < 5 ){
+        cmd_printf("too less parameters\n");
+        return CMDLINE_RETCODE_INVALID_PARAMETERS;
+    }
+
+    if( strcmp(argv[2], "in") != 0 )
+    {
+        cmd_printf("third parameters should be 'in'\n");
+        return CMDLINE_RETCODE_INVALID_PARAMETERS;
+    }
+    char *var = argv[1];
+    if( strncmp(argv[3], "range(", 6) == 0 )
+    {
+        tr_debug("only range() is supported");
+        char *ptr;
+        char *from = &argv[3][6];
+        int i = strtol(from, &ptr, 10);
+        *ptr = 0;
+        char *to = (1+ptr);
+        int to_i = strtol(to, &ptr, 10);
+        char* cmd = argv[4];
+        char tmp[10];
+        int count = 0;
+        for(; i <= to_i; i++)
+        {
+            sprintf(tmp, "set %s %d", var, i);
+            cmd_exe(tmp);
+            count++;
+
+            char *curCmd = cmd;
+            char* nextPtr = cmd;
+            do {
+                nextPtr = strchr(nextPtr, ';');
+                if( nextPtr != 0 ){
+                    nextPtr = 0;
+                }
+                tr_debug("Adding cmd '%s' to stack", curCmd);
+                cmd_exe(curCmd);
+                if( nextPtr != 0 ){
+                    curCmd = nextPtr++;
+                }
+                count++;
+            } while( nextPtr );
+        }
+        tr_debug("Added %d commands to stack", count);
+        return CMDLINE_RETCODE_SUCCESS;
+    } else {
+        cmd_printf("option '%s' not supported", argv[3]);
+        return CMDLINE_RETCODE_COMMAND_NOT_IMPLEMENTED;
+    }
 }
 
 /** Parameter helping functions

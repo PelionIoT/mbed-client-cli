@@ -612,3 +612,8 @@ TEST(cli, ampersand)
     ARRAY_CMP(RESPONSE("hello world ") , buf);
 }
 
+TEST(cli, for_loop)
+{
+    REQUEST("for x in range(1,3): \"echo hello world\"");
+    ARRAY_CMP( RESPONSE("hello world \r\nhello world \r\nhello world \r\n"), buf);
+}
