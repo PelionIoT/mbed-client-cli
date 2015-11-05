@@ -164,6 +164,15 @@ TEST(cli, cmd_parameter_last)
     char *argv[] =  { "cmd", "p1", "p2", "3", "p4", "p5" };
     CHECK_EQUAL(cmd_parameter_last(6, argv), "p5");
 }
+TEST(cli, cmd_parameter_exists)
+{   
+    bool ok;
+    char *argv[] =  { "cmd", "p1", "p2", "3", "p4", "p5" };
+    ok = cmd_parameter_exists(6, argv), "p5");
+    CHECK_EQUAL(true, ok);
+    ok = cmd_parameter_exists(6, argv), "p6");
+    CHECK_EQUAL(false, ok);
+}
 TEST(cli, cmd_has_option)
 {
     char *argv[] =  { "cmd", "-p", "p2", "3", "p4", "p5" };

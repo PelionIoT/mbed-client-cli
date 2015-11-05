@@ -1647,3 +1647,11 @@ char *cmd_parameter_last(int argc, char *argv[])
     }
     return NULL;
 }
+bool cmd_parameter_exists(int argc, char *argv[], char *key)
+{
+    int i = cmd_parameter_index(argc, argv, key);
+    if (i > 0) {
+        return true;
+    }
+    return false;
+}
