@@ -347,6 +347,23 @@ bool cmd_parameter_int(int argc, char *argv[], char *key, int32_t *value);
  */
 char *cmd_parameter_last(int argc, char *argv[]);
 
+/** find command parameter by key and return true or false depending upon the presense of the key.
+ * e.g. cmd: "mycmd mykey myvalue"
+ * \code
+ *   cmd_parameter_exists( argc, argv, "mykey");
+ *   if (mykey exists in any of the argv[1-(argc-1)])
+ *      return true
+ *   otherwise
+ *      return false
+ * \endcode
+ * \param argc  argc is the count of arguments given in argv pointer list. value begins from 1 and this means that the 0 item in list argv is a string to name of command.
+ * \param argv  is list of arguments. List size is given in argc parameter. Value in argv[0] is string to name of command.
+ * \param key   parameter key to be find
+ * \return true if parameter key is found otherwise false
+ */
+
+bool cmd_parameter_exists(int argc, char *argv[], char *key);
+
 #ifdef __cplusplus
 }
 #endif
