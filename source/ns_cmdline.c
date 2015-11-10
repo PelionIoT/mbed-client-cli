@@ -835,7 +835,7 @@ void cmd_escape_read(int16_t u_data)
         } else {
             cmd.cursor ++;
         }
-        if (cmd.cursor > strlen(cmd.input)) {
+        if ((int)cmd.cursor > (int)strlen(cmd.input)) {
             cmd.cursor = strlen(cmd.input);
         }
     } else if (u_data == 'A') {
@@ -884,7 +884,7 @@ void cmd_escape_read(int16_t u_data)
                 cmd.insert = !cmd.insert;
                 break;
             case ('3'): //delete-char           # Delete key
-                if (strlen(cmd.input) > cmd.cursor) {
+                if ((int)strlen(cmd.input) > (int)cmd.cursor) {
                     memmove(&cmd.input[cmd.cursor], &cmd.input[cmd.cursor + 1], strlen(&cmd.input[cmd.cursor + 1]) + 1);
                 }
                 break;
