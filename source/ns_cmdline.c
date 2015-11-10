@@ -66,7 +66,7 @@
 #define TAB 0x09
 #define CAN 0x18
 
-#define MAX_LINE 500
+#define MAX_LINE 2000
 #define MAX_ARGUMENTS 30
 
 //include manuals or not (save memory a little when not include)
