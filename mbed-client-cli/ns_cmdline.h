@@ -241,7 +241,7 @@ void cmd_exe(char *str);
  * \param alias     alias name
  * \param value     value for alias. Values can be any visible ASCII -characters.
  */
-void cmd_alias_add(char *alias, char *value);
+void cmd_alias_add(const char *alias, const char *value);
 /** Add Variable to interpreter.
  * Variables are replaced with values before executing a command.
  * To use variables from cli, use dollar ($) -character so that interpreter knows user want to use variable in that place.
@@ -272,7 +272,7 @@ void cmd_variable_add(char *variable, char *value);
  * \param key   option key, which index you want to find out.
  * \return index where parameter was or <=0 when not found
  */
-int cmd_parameter_index(int argc, char *argv[], char *key);
+int cmd_parameter_index(int argc, char *argv[], const char *key);
 /** check if command option is present.
  * e.g. cmd: "mycmd -c"
  * \code
@@ -301,7 +301,7 @@ bool cmd_has_option(int argc, char *argv[], char *key);
  * \param value parameter value to be fetch, if key not found value are untouched. "1" and "on" and "true" and "enable" and "allow" are True -value, all others false.
  * \return true if parameter key and value found otherwise false
  */
-bool cmd_parameter_bool(int argc, char *argv[], char *key, bool *value);
+bool cmd_parameter_bool(int argc, char *argv[], const char *key, bool *value);
 /** find command parameter by key and return value (next parameter).
  * if exists, return parameter pointer, otherwise null.
  * e.g. cmd: "mycmd mykey myvalue"
@@ -319,7 +319,7 @@ bool cmd_parameter_bool(int argc, char *argv[], char *key, bool *value);
  * \param value pointer to pointer, which will point to cli input data when key and value found. if key or value not found this parameter are untouched.
  * \return true if parameter key and value found otherwise false
  */
-bool cmd_parameter_val(int argc, char *argv[], char *key, char **value);
+bool cmd_parameter_val(int argc, char *argv[], const char *key, char **value);
 /** find command parameter by key and return value (next parameter) in integer.
  * e.g. cmd: "mycmd mykey myvalue"
  * \code
@@ -332,7 +332,7 @@ bool cmd_parameter_val(int argc, char *argv[], char *key, char **value);
  * \param value parameter value to be fetch, if key not found value are untouched.
  * \return true if parameter key and value found otherwise false
  */
-bool cmd_parameter_int(int argc, char *argv[], char *key, int32_t *value);
+bool cmd_parameter_int(int argc, char *argv[], const char *key, int32_t *value);
 /** Get last command line parameter as string.
  * e.g.
  * \code
