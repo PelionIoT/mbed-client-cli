@@ -1505,24 +1505,27 @@ int set_command(int argc, char *argv[])
 }
 int echo_command(int argc, char *argv[])
 {
-    int n;
+    bool printEcho = false;
     if (argc == 1) {
-        cmd_printf("ECHO is %s\r\n", cmd.echo ? "on" : "off");
-        return 0;
+        printEcho = true;
     } else if (argc == 2) {
         if (strcmp(argv[1], "off") == 0) {
             cmd_echo(false);
-            return 0;
+            printEcho = true;
         } else if (strcmp(argv[1], "on") == 0) {
             cmd_echo(true);
-            return 0;
+            printEcho = true;
         }
     }
-    for (n = 1; n < argc; n++) {
-        tr_deep("ECHO: %s\r\n", argv[n]);
-        cmd_printf("%s ", argv[n]);
+    if( printEcho ) {
+        cmd_printf("ECHO is %s\r\n", cmd.echo ? "on" : "off");
+    } else {
+        for (int n = 1; n < argc; n++) {
+            tr_deep("ECHO: %s\r\n", argv[n]);
+            cmd_printf("%s ", argv[n]);
+        }
+        cmd_printf("\r\n");
     }
-    cmd_printf("\r\n");
     return 0;
 }
 
