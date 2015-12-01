@@ -264,13 +264,13 @@ void cmd_variable_add(char *variable, char *value);
             cmd_exe("mycmd enable")
       }
       int mycmd_command(int argc, char *argv[]) {
-        bool found = cmd_parameter_exists( argc, argv, "enable" );
+        bool found = cmd_parameter_index( argc, argv, "enable" ) > 0;
       }
  * \endcode
  * \param argc  argc is the count of arguments given in argv pointer list. value begins from 1 and this means that the 0 item in list argv is a string to name of command.
  * \param argv  is list of arguments. List size is given in argc parameter. Value in argv[0] is string to name of command.
  * \param key   option key, which index you want to find out.
- * \return index where parameter was or <=0 when not found
+ * \return index where parameter was or -1 when not found
  */
 int cmd_parameter_index(int argc, char *argv[], const char *key);
 /** check if command option is present.
