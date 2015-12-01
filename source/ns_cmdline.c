@@ -66,7 +66,7 @@
 #define TAB 0x09
 #define CAN 0x18
 
-#define MAX_LINE 500
+#define MAX_LINE 2000
 #define MAX_ARGUMENTS 30
 
 //include manuals or not (save memory a little when not include)
@@ -171,7 +171,7 @@ static const char      *cmd_input_lookup(char *name, int namelength, int n);
 static char            *cmd_input_lookup_var(char *name, int namelength, int n);
 static cmd_command_t   *cmd_find(const char *name);
 static cmd_command_t   *cmd_find_n(char *name, int nameLength, int n);
-static cmd_alias_t     *alias_find(char *alias);
+static cmd_alias_t     *alias_find(const char *alias);
 static cmd_alias_t     *alias_find_n(char *alias, int aliaslength, int n);
 static cmd_variable_t  *variable_find(char *variable);
 static cmd_variable_t  *variable_find_n(char *variable, int length, int n);
@@ -1257,7 +1257,7 @@ static void cmd_execute(void)
 }
 
 
-static cmd_alias_t *alias_find(char *alias)
+static cmd_alias_t *alias_find(const char *alias)
 {
     cmd_alias_t *alias_ptr = NULL;
     if (alias == NULL || strlen(alias) == 0) {
@@ -1348,7 +1348,7 @@ static void cmd_variable_print_all(void)
     return;
 }
 
-void cmd_alias_add(char *alias, char *value)
+void cmd_alias_add(const char *alias, const char *value)
 {
     cmd_alias_t *alias_ptr;
     if (alias == NULL || strlen(alias) == 0) {
@@ -1577,7 +1577,7 @@ int history_command(int argc, char *argv[])
 
 /** Parameter helping functions
  */
-int cmd_parameter_index(int argc, char *argv[], char *key)
+int cmd_parameter_index(int argc, char *argv[], const char *key)
 {
     int i = 0;
     for (i = 1; i < argc; i++) {
@@ -1599,7 +1599,7 @@ bool cmd_has_option(int argc, char *argv[], char *key)
     }
     return false;
 }
-bool cmd_parameter_bool(int argc, char *argv[], char *key, bool *value)
+bool cmd_parameter_bool(int argc, char *argv[], const char *key, bool *value)
 {
     int i = cmd_parameter_index(argc, argv, key);
     if (i > 0) {
@@ -1618,7 +1618,7 @@ bool cmd_parameter_bool(int argc, char *argv[], char *key, bool *value)
     }
     return false;
 }
-bool cmd_parameter_val(int argc, char *argv[], char *key, char **value)
+bool cmd_parameter_val(int argc, char *argv[], const char *key, char **value)
 {
     int i = cmd_parameter_index(argc, argv, key);
     if (i > 0) {
@@ -1629,7 +1629,7 @@ bool cmd_parameter_val(int argc, char *argv[], char *key, char **value)
     }
     return false;
 }
-bool cmd_parameter_int(int argc, char *argv[], char *key, int32_t *value)
+bool cmd_parameter_int(int argc, char *argv[], const char *key, int32_t *value)
 {
     int i = cmd_parameter_index(argc, argv, key);
     if (i > 0) {
