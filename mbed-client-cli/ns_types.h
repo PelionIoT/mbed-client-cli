@@ -214,7 +214,29 @@ typedef int_fast32_t int_fast24_t;
 #else /* C */
 # if __STDC_VERSION__ >= 201112L
 # define NS_STATIC_ASSERT(test, str) _Static_assert(test, str);
-# elif defined __GNUC__ && NS_GCC_VERSION >= 40600
+# elif defined __GNUC__ && NS_GCC_VERSION >= 40600 Skip to content
+This repository  
+Pull requests
+Issues
+Gist
+ @jupe
+ Unwatch 93
+  Star 0
+ Fork 1 ARMmbed/mbed-client-libservice
+ Code  Issues 0  Pull requests 1  Wiki  Pulse  Graphs  Settings
+Edit
+Fixed ArmCC compilation problem #9
+ Merged	yogpan01  merged 1 commit into master from armcc_fixed on Oct 30
++1 −1 
+ Conversation 10   Commits 1   Files changed 1
+Unified Split
+Showing  1 changed file  with 1 addition and 1 deletion.
+View 2  mbed-client-libservice/ns_types.h
+ @@ -214,7 +214,7 @@ typedef int_fast32_t int_fast24_t;
+ #else /* C */		 #else /* C */
+ # if __STDC_VERSION__ >= 201112L		 # if __STDC_VERSION__ >= 201112L
+ # define NS_STATIC_ASSERT(test, str) _Static_assert(test, str);		 # define NS_STATIC_ASSERT(test, str) _Static_assert(test, str);
+-# elif defined __GNUC__ && NS_GCC_VERSION >= 40600 && !defined __CC_ARM
 # define NS_STATIC_ASSERT(test, str) __extension__ _Static_assert(test, str);
 # else
 # define NS_STATIC_ASSERT(test, str)
