@@ -29,12 +29,10 @@
 
 
 #ifdef YOTTA_CFG
-#include "mbed-client-cli/ns_types.h"
-#include "mbed-client-cli/ns_list.h"
+#include "ns_list_internal/ns_list.h"
 #include "mbed-client-cli/ns_cmdline.h"
 #include "mbed-client-trace/mbed_client_trace.h"
 #else
-#include "ns_types.h"
 #include "ns_list.h"
 #include "ns_cmdline.h"
 #include "ns_trace.h"
