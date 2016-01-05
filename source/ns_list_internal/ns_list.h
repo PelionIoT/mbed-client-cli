@@ -17,11 +17,7 @@
 #ifndef NS_LIST_H_
 #define NS_LIST_H_
 
-#if defined(YOTTA_CFG)
-#include "mbed-client-cli/ns_types.h"
-#else
 #include "ns_types.h"
-#endif
 
 #ifdef __cplusplus
 extern "C" {
