@@ -36,7 +36,7 @@
 #include "ns_list.h"
 #include "ns_cmdline.h"
 #include "ns_trace.h"
-#define mbed_client_trace_exclude_filters_set set_trace_exclude_filters_set
+#define mbed_client_trace_exclude_filters_set set_trace_exclude_filters
 #endif
 
 //#define TRACE_DEEP
