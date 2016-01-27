@@ -201,6 +201,7 @@ int history_command(int argc, char *argv[]);
 void default_cmd_response_out(const char *fmt, va_list ap)
 {
     vprintf(fmt, ap);
+    fflush(stdout);
 }
 void cmd_printf(const char *fmt, ...)
 {
@@ -238,6 +239,7 @@ void cmd_init(cmd_print_t *outf)
     cmd.tab_lookup_n = 0;
     cmd.cmd_buffer_ptr = 0;
     cmd.idle = true;
+    cmd.ready_cb = cmd_next;
     cmd_set_retfmt("retcode: %i\r\n");
     cmd_line_clear(0);            // clear line
     cmd_history_save(0);          // the current line is the 0 item
