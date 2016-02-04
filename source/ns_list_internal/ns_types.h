@@ -214,7 +214,7 @@ typedef int_fast32_t int_fast24_t;
 #else /* C */
 # if __STDC_VERSION__ >= 201112L
 # define NS_STATIC_ASSERT(test, str) _Static_assert(test, str);
-# elif defined __GNUC__ && NS_GCC_VERSION >= 40600
+# elif defined __GNUC__ && NS_GCC_VERSION >= 40600 && !defined __CC_ARM
 # define NS_STATIC_ASSERT(test, str) __extension__ _Static_assert(test, str);
 # else
 # define NS_STATIC_ASSERT(test, str)
