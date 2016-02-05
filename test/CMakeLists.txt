@@ -9,7 +9,7 @@ if(DEFINED TARGET_LIKE_X86_WINDOWS_NATIVE OR DEFINED TARGET_LIKE_X86_LINUX_NATIV
     # describe what the test executable needs to link with
     target_link_libraries(mbed_client_cli_test 
         "mbed-client-cli"
-        "mbed-client-trace"
+        "mbed-trace"
         cpputest
     )
     add_definitions("-Wno-write-strings")

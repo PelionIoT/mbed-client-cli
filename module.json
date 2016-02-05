@@ -19,7 +19,7 @@
     }
   ],
   "dependencies": {
-    "mbed-client-trace": "ARMmbed/mbed-client-trace"
+    "mbed-trace": "ARMmbed/mbed-trace"
   },
   "testTargetDependencies": {
     "x86-linux-native": {

@@ -18,9 +18,9 @@
 #include "mbed-cpputest/CppUTest/SimpleString.h"
 #include "mbed-cpputest/CppUTest/CommandLineTestRunner.h"
 
-#define MBED_CLIENT_TRACE_FEA_IPV6 0
-#define YOTTA_CFG_TRACE
-#include "mbed-client-trace/mbed_client_trace.h"
+#define YOTTA_CFG_MTRACE
+#define YOTTA_CFG_MTRACE_FEA_IPV6 0
+#include "mbed-trace/mbed_trace.h"
 #include "mbed-client-cli/ns_cmdline.h"
 #define MAX(x,y)   (x>y?x:y)
 #define ARRAY_CMP(x, y) \

@@ -26,18 +26,22 @@
 #endif
 #endif
 
-//#define YOTTA_CFG_TRACE
+// force traces for this module
+//#define YOTTA_CFG_MBED_TRACE
 
 
 #ifdef YOTTA_CFG
 #include "ns_list_internal/ns_list.h"
 #include "mbed-client-cli/ns_cmdline.h"
-#include "mbed-client-trace/mbed_client_trace.h"
+#include "mbed-trace/mbed_trace.h"
 #else
 #include "ns_list.h"
 #include "ns_cmdline.h"
 #include "ns_trace.h"
-#define mbed_client_trace_exclude_filters_set set_trace_exclude_filters
+#define mbed_trace_exclude_filters_set set_trace_exclude_filters
+#if (HAVE_DEBUG) || defined(FEA_TRACE_SUPPORT)
+#define YOTTA_CFG_MBED_TRACE
+#endif
 #endif
 
 //#define TRACE_DEEP
@@ -223,8 +227,8 @@ void cmd_init(cmd_print_t *outf)
         ns_list_init(&cmd.cmd_buffer);
         cmd.init = true;
     }
-#if defined(HAVE_DEBUG) || defined(FEA_TRACE_SUPPORT)
-    mbed_client_trace_exclude_filters_set(TRACE_GROUP);
+#if defined(YOTTA_CFG_MBED_TRACE)
+    mbed_trace_exclude_filters_set(TRACE_GROUP);
 #endif
     cmd.out = outf ? outf : default_cmd_response_out;
     cmd.ctrl_fnc = NULL;
