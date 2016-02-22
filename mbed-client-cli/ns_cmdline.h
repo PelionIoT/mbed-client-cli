@@ -334,6 +334,19 @@ bool cmd_parameter_int(int argc, char *argv[], const char *key, int32_t *value);
  * \param argv  is list of arguments. List size is given in argc parameter. Value in argv[0] is string to name of command.
  * \return pointer to last parameter or NULL when there is no any parameters.
  */
+bool cmd_parameter_float(int argc, char *argv[], const char *key, float *value);
+/** Get last command line parameter as string.
+ * e.g.
+ * \code
+    cmd: "mycmd hello world"
+        cmd_parameter_last -> "world"
+    cmd: "mycmd"
+        cmd_parameter_last() -> NULL
+   \endcode
+ * \param argc  argc is the count of arguments given in argv pointer list. value begins from 1 and this means that the 0 item in list argv is a string to name of command.
+ * \param argv  is list of arguments. List size is given in argc parameter. Value in argv[0] is string to name of command.
+ * \return pointer to last parameter or NULL when there is no any parameters.
+ */
 char *cmd_parameter_last(int argc, char *argv[]);
 
 /** find command parameter by key and return value (next parameter) in int64.

@@ -1644,6 +1644,17 @@ bool cmd_parameter_int(int argc, char *argv[], const char *key, int32_t *value)
     }
     return false;
 }
+bool cmd_parameter_float(int argc, char *argv[], const char *key, float *value)
+{
+    int i = cmd_parameter_index(argc, argv, key);
+    if (i > 0) {
+        if (argc > (i + 1)) {
+            *value = strtof(argv[i + 1], 0);
+            return true;
+        }
+    }
+    return false;
+}
 // convert hex string (eg. "76 ab ff") to binary array
 static int string_to_bytes(const char *str, uint8_t *buf, int bytes)
 {
