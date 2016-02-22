@@ -29,15 +29,14 @@
 
 
 #ifdef YOTTA_CFG
-#include "mbed-client-cli/ns_types.h"
-#include "mbed-client-cli/ns_list.h"
+#include "ns_list_internal/ns_list.h"
 #include "mbed-client-cli/ns_cmdline.h"
 #include "mbed-client-trace/mbed_client_trace.h"
 #else
-#include "ns_types.h"
 #include "ns_list.h"
 #include "ns_cmdline.h"
 #include "ns_trace.h"
+#define mbed_client_trace_exclude_filters_set set_trace_exclude_filters
 #endif
 
 //#define TRACE_DEEP
@@ -738,7 +737,7 @@ static int cmd_run(char *string_ptr)
         cmd_print_man(cmd.cmd_ptr);
         return CMDLINE_RETCODE_SUCCESS;
     }
-    
+
     if( cmd.cmd_ptr->busy ) {
         MEM_FREE(command_str);
         return CMDLINE_RETCODE_COMMAND_BUSY;
@@ -1638,6 +1637,72 @@ bool cmd_parameter_int(int argc, char *argv[], const char *key, int32_t *value)
     if (i > 0) {
         if (argc > (i + 1)) {
             *value = strtol(argv[i + 1], 0, 10);
+            return true;
+        }
+    }
+    return false;
+}
+// convert hex string (eg. "76 ab ff") to binary array
+static int string_to_bytes(const char *str, uint8_t *buf, int bytes)
+{
+    int len = strlen(str);
+    if( len <= (3*bytes - 1)) {
+        int i;
+        for(i=0;i<bytes;i++){
+           if( i*3<len ){
+               buf[i] = (uint8_t)strtoul(str+i*3, 0, 16);
+           } else {
+               buf[i] = 0;
+           }
+        }
+        return 0;
+    }
+    return -1;
+}
+
+static uint64_t read_64_bit(const uint8_t data_buf[__static 8])
+{
+    uint64_t temp_64;
+    temp_64 = (uint64_t)(*data_buf++) << 56;
+    temp_64 += (uint64_t)(*data_buf++) << 48;
+    temp_64 += (uint64_t)(*data_buf++) << 40;
+    temp_64 += (uint64_t)(*data_buf++) << 32;
+    temp_64 += (uint64_t)(*data_buf++) << 24;
+    temp_64 += (uint64_t)(*data_buf++) << 16;
+    temp_64 += (uint64_t)(*data_buf++) << 8;
+    temp_64 += *data_buf++;
+    return temp_64;
+}
+
+bool cmd_parameter_timestamp(int argc, char *argv[], const char *key, int64_t *value)
+{
+    int i = cmd_parameter_index(argc, argv, key);
+    if (i > 0) {
+        if (argc > (i + 1)) {
+            if (strchr(argv[i + 1],',') != 0) {
+                // Format seconds,tics
+                const char splitValue[] = ", ";
+                char *token;
+                token = strtok(argv[i + 1], splitValue);
+                if (token) {
+                    *value = strtoul(token, 0, 10) << 16;
+                }
+                token = strtok(NULL, splitValue);
+                if (token) {
+                    *value |= (0xffff & strtoul(token, 0, 10));
+                }
+            } else if (strchr(argv[i + 1],':') != 0 ) {
+                // Format 00:00:00:00:00:00:00:00
+                uint8_t buf[8];
+                if (string_to_bytes(argv[i + 1], buf, 8) == 0) {
+                    *value = read_64_bit(buf);
+                } else {
+                  cmd_printf("timestamp should be 8 bytes long\r\n");
+                }
+            } else {
+                // Format uint64
+                *value = strtol(argv[i + 1], 0, 10);
+            }
             return true;
         }
     }
