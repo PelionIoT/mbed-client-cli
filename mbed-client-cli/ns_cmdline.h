@@ -3,7 +3,7 @@
  */
 /**
  * \file ns_cmdline.h
- * 
+ *
  * Command line library - mbedOS shell
  *
  * Usage example:
@@ -94,19 +94,8 @@ extern "C" {
 #endif
 
 #include <stdarg.h>
-
-#if defined(_WIN32) || defined(__unix__) || defined(__unix) || defined(unix) || defined(YOTTA_CFG)
-
-#if defined(YOTTA_CFG)
-#include "mbed-client-cli/ns_types.h"
-#else
 #include <stdint.h>
 #include <stddef.h>
-#endif
-
-#else
-#include "ns_types.h"
-#endif
 
 #define CMDLINE_RETCODE_COMMAND_BUSY            2   //!< Command Busy
 #define CMDLINE_RETCODE_EXCUTING_CONTINUE       1   //!< Execution continue in background
@@ -346,6 +335,26 @@ bool cmd_parameter_int(int argc, char *argv[], const char *key, int32_t *value);
  * \return pointer to last parameter or NULL when there is no any parameters.
  */
 char *cmd_parameter_last(int argc, char *argv[]);
+
+/** find command parameter by key and return value (next parameter) in int64.
+ * e.g. cmd: "mycmd mykey myvalue"
+ * \code
+ *   uint32_t i;
+ *   cmd_parameter_timestamp( argc, argv, "mykey", &i );
+ * \endcode
+ *
+ * Supports following formats:
+ *  number -> direct conversion
+ *  11:22:33:44:55:66:77:88 -> converts to number
+ *  seconds,tics -> converts thread type timestamp to int64
+ *
+ * \param argc  argc is the count of arguments given in argv pointer list. value begins from 1 and this means that the 0 item in list argv is a string to name of command.
+ * \param argv  is list of arguments. List size is given in argc parameter. Value in argv[0] is string to name of command.
+ * \param key   parameter key to be find
+ * \param value parameter value to be fetch, if key not found value are untouched.
+ * \return true if parameter key and value found otherwise false
+ */
+bool cmd_parameter_timestamp(int argc, char *argv[], const char *key, int64_t *value);
 
 #ifdef __cplusplus
 }
