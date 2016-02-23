@@ -257,7 +257,7 @@ void cmd_init(cmd_print_t *outf)
                     "some special parameters\r\n"\
                     "--vt100 <bool>         On/Off vt100 controls\r\n"\
                     "--retcode <bool>       On/Off retcode print after execution\r\n"\
-                    "--retfmt <format>      Return print format. Default: \"\\rretcode: %i\\r\\n\"\r\n"
+                    "--retfmt <format>      Return print format. Default: \"\\r\\nretcode: %i\\r\\n\"\r\n"
 
 #define MAN_CLEAR   "Clears the display"
 #define MAN_HISTORY "Show commands history\r\n"\
