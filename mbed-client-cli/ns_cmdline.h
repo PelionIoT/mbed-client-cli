@@ -312,8 +312,8 @@ bool cmd_parameter_val(int argc, char *argv[], const char *key, char **value);
 /** find command parameter by key and return value (next parameter) in integer.
  * e.g. cmd: "mycmd mykey myvalue"
  * \code
- *   int32_t i;
- *   cmd_parameter_val_int( argc, argv, "mykey", &i );
+     int32_t i;
+     cmd_parameter_int( argc, argv, "mykey", &i );
  * \endcode
  * \param argc  argc is the count of arguments given in argv pointer list. value begins from 1 and this means that the 0 item in list argv is a string to name of command.
  * \param argv  is list of arguments. List size is given in argc parameter. Value in argv[0] is string to name of command.
@@ -322,27 +322,28 @@ bool cmd_parameter_val(int argc, char *argv[], const char *key, char **value);
  * \return true if parameter key and value found otherwise false
  */
 bool cmd_parameter_int(int argc, char *argv[], const char *key, int32_t *value);
-/** Get last command line parameter as string.
- * e.g.
+/** find command parameter by key and return value (next parameter) in integer.
+ * e.g. cmd: "mycmd mykey myvalue"
  * \code
-    cmd: "mycmd hello world"
-        cmd_parameter_last -> "world"
-    cmd: "mycmd"
-        cmd_parameter_last() -> NULL
-   \endcode
+     float i;
+     cmd_parameter_float( argc, argv, "mykey", &i );
+ * \endcode
  * \param argc  argc is the count of arguments given in argv pointer list. value begins from 1 and this means that the 0 item in list argv is a string to name of command.
  * \param argv  is list of arguments. List size is given in argc parameter. Value in argv[0] is string to name of command.
- * \return pointer to last parameter or NULL when there is no any parameters.
+ * \param key   parameter key to be find
+ * \param value parameter value to be fetch, if key not found value are untouched.
+ * \return true if parameter key and value found otherwise false
  */
 bool cmd_parameter_float(int argc, char *argv[], const char *key, float *value);
 /** Get last command line parameter as string.
  * e.g.
+ *     cmd: "mycmd hello world"
+ *     cmd_parameter_last -> "world"
+ *     cmd: "mycmd"
+ *     cmd_parameter_last() -> NULL
  * \code
-    cmd: "mycmd hello world"
-        cmd_parameter_last -> "world"
-    cmd: "mycmd"
-        cmd_parameter_last() -> NULL
-   \endcode
+    cmd_parameter_last(argc, argv)
+ * \endcode
  * \param argc  argc is the count of arguments given in argv pointer list. value begins from 1 and this means that the 0 item in list argv is a string to name of command.
  * \param argv  is list of arguments. List size is given in argc parameter. Value in argv[0] is string to name of command.
  * \return pointer to last parameter or NULL when there is no any parameters.
@@ -352,8 +353,8 @@ char *cmd_parameter_last(int argc, char *argv[]);
 /** find command parameter by key and return value (next parameter) in int64.
  * e.g. cmd: "mycmd mykey myvalue"
  * \code
- *   uint32_t i;
- *   cmd_parameter_timestamp( argc, argv, "mykey", &i );
+     uint32_t i;
+     cmd_parameter_timestamp( argc, argv, "mykey", &i );
  * \endcode
  *
  * Supports following formats:

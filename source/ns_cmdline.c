@@ -1638,7 +1638,7 @@ bool cmd_parameter_int(int argc, char *argv[], const char *key, int32_t *value)
     int i = cmd_parameter_index(argc, argv, key);
     if (i > 0) {
         if (argc > (i + 1)) {
-            *value = strtol(argv[i + 1], 0, 10);
+            *value = strtol(argv[i + 1], NULL, 10);
             return true;
         }
     }
@@ -1649,7 +1649,7 @@ bool cmd_parameter_float(int argc, char *argv[], const char *key, float *value)
     int i = cmd_parameter_index(argc, argv, key);
     if (i > 0) {
         if (argc > (i + 1)) {
-            *value = strtof(argv[i + 1], 0);
+            *value = strtof(argv[i + 1], NULL);
             return true;
         }
     }
