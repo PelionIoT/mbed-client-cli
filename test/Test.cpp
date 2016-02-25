@@ -149,15 +149,20 @@ TEST(cli, parameters_int)
 {
     bool ok;
     int val;
-    char *argv[] =  { "cmd", "p1", "p2", "3", "p4", "p5" };
+    char *argv[] =  { "cmd", "p1", "p2", "3", "p4", "555fail", "p5" };
 
     ok = cmd_parameter_int(6, argv, "p2", &val);
     CHECK_EQUAL(true, ok);
     CHECK_EQUAL(3, val);
 
+    ok = cmd_parameter_int(6, argv, "p1", &val);
+    CHECK_EQUAL(false, ok);
+
     ok = cmd_parameter_int(6, argv, "p4", &val);
-    CHECK_EQUAL(true, ok);
-    CHECK_EQUAL(0, val);
+    CHECK_EQUAL(false, ok);
+
+    ok = cmd_parameter_int(6, argv, "p5", &val);
+    CHECK_EQUAL(false, ok);
 }
 TEST(cli, parameters_float)
 {

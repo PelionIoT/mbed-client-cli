@@ -1636,10 +1636,18 @@ bool cmd_parameter_val(int argc, char *argv[], const char *key, char **value)
 bool cmd_parameter_int(int argc, char *argv[], const char *key, int32_t *value)
 {
     int i = cmd_parameter_index(argc, argv, key);
+    char* tailptr;
     if (i > 0) {
         if (argc > (i + 1)) {
-            *value = strtol(argv[i + 1], NULL, 10);
-            return true;
+            *value = strtol(argv[i + 1], &tailptr, 10);
+            if (0 == (char) *tailptr) {
+                return true;
+            }
+            if (!isspace((char) *tailptr)) {
+                return false;
+            } else {
+                return true;
+            }
         }
     }
     return false;
