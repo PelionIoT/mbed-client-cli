@@ -1647,10 +1647,18 @@ bool cmd_parameter_int(int argc, char *argv[], const char *key, int32_t *value)
 bool cmd_parameter_float(int argc, char *argv[], const char *key, float *value)
 {
     int i = cmd_parameter_index(argc, argv, key);
+    char* tailptr;
     if (i > 0) {
         if (argc > (i + 1)) {
-            *value = strtof(argv[i + 1], NULL);
-            return true;
+            *value = strtof(argv[i + 1], &tailptr);
+            if (0 == (char) *tailptr) {
+                return true;    //Should be correct read always
+            }
+            if (!isspace((char) *tailptr)) {
+                return false;   //Garbage in tailptr
+            } else {
+                return true;    //Spaces are fine after float
+            }
         }
     }
     return false;

@@ -322,17 +322,17 @@ bool cmd_parameter_val(int argc, char *argv[], const char *key, char **value);
  * \return true if parameter key and value found otherwise false
  */
 bool cmd_parameter_int(int argc, char *argv[], const char *key, int32_t *value);
-/** find command parameter by key and return value (next parameter) in integer.
+/** find command parameter by key and return value (next parameter) in float. Only whitespaces are allowed in addition to the float to be read.
  * e.g. cmd: "mycmd mykey myvalue"
  * \code
-     float i;
-     cmd_parameter_float( argc, argv, "mykey", &i );
+     float value;
+     cmd_parameter_float( argc, argv, "key", &value );
  * \endcode
- * \param argc  argc is the count of arguments given in argv pointer list. value begins from 1 and this means that the 0 item in list argv is a string to name of command.
+ * \param argc  argc is the count of arguments given in argv pointer list. values begin from 1 and this means that the item 0 in the list argv is a string to name of command.
  * \param argv  is list of arguments. List size is given in argc parameter. Value in argv[0] is string to name of command.
  * \param key   parameter key to be find
- * \param value parameter value to be fetch, if key not found value are untouched.
- * \return true if parameter key and value found otherwise false
+ * \param value A pointer to a variable where to write the converted number. If value cannot be converted, it is not touched.
+ * \return true if parameter key and float value found, otherwise return false
  */
 bool cmd_parameter_float(int argc, char *argv[], const char *key, float *value);
 /** Get last command line parameter as string.

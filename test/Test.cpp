@@ -164,15 +164,21 @@ TEST(cli, parameters_float)
     bool ok;
     float val;
     float val2 = 3.14159;
-    char *argv[] =  { "cmd", "p1", "p2", "3.14159", "p4", "p5" };
+    char *argv[] =  { "cmd", "p1", "3.14159", "p3", "3.14159 ", "p4", "3.14fail ", "p5" };
 
-    ok = cmd_parameter_float(6, argv, "p2", &val);
+    ok = cmd_parameter_float(8, argv, "p1", &val);
     CHECK_EQUAL(true, ok);
     CHECK_EQUAL(val2, val);
 
-    ok = cmd_parameter_float(6, argv, "p4", &val);
+    ok = cmd_parameter_float(8, argv, "p3", &val);
     CHECK_EQUAL(true, ok);
-    CHECK_EQUAL(0, val);
+    CHECK_EQUAL(val2, val);
+
+    ok = cmd_parameter_float(8, argv, "p4", &val);
+    CHECK_EQUAL(false, ok);
+
+    ok = cmd_parameter_float(8, argv, "p5", &val);
+    CHECK_EQUAL(false, ok);
 }
 TEST(cli, cmd_parameter_last)
 {
