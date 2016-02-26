@@ -1,6 +1,6 @@
 {
   "name": "mbed-client-cli",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Command Line Library for mbed client",
   "keywords": [
     "cli",
