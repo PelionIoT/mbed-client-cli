@@ -1,18 +1,16 @@
 # mbed-client-cli
 
-Command Line Library for CLI application. Library provides methods for:
+Command Line Library for a CLI application. This library provides methods for:
 
-* adding commands to interpreter
-* deleting comamnds from interpreter
-* executing commands
-* adding command aliases to interpreter
-* searching command arguments
-* etc...
-
+* Adding commands to the interpreter.
+* Deleting commands from the interpreter.
+* Executing commands.
+* Adding command aliases to the interpreter.
+* Searching command arguments.
 
 ## API
 
-Command line library API is described in the snipplet below. 
+Command Line Library API is described in the snipplet below: 
 
 ```c++
 // initialize cmdline with print function
@@ -27,7 +25,7 @@ cmd_exe( <command> );
 
 ## Usage example
 
-Here is an example how to add new commands to command line library and execute the commands.
+Adding new commands to the Command Line Library and executing the commands:
 
 ```c++
 //example print function
