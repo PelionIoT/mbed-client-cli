@@ -355,7 +355,7 @@ void cmd_next(int retcode)
         retcode = cmd_run(cmd.cmd_buffer_ptr->cmd_s);
         //check if execution goes to the backend or not
         if (retcode == CMDLINE_RETCODE_EXCUTING_CONTINUE ) {
-            if( cmd.cmd_buffer_ptr->operator == OPERATOR_BACKGROUND )
+            if( (NULL != cmd.cmd_buffer_ptr) && cmd.cmd_buffer_ptr->operator == OPERATOR_BACKGROUND )
             {
                 //execution continue in background, but operator say that it's "ready"
                 cmd_ready(CMDLINE_RETCODE_SUCCESS);
