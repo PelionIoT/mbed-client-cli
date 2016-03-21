@@ -1,26 +1,39 @@
 # mbed-client-cli
 
-[![Build Status](http://mbed-linux.cloudapp.net/job/mbed-client-cli/badge/icon)](http://mbed-linux.cloudapp.net/job/mbed-client-cli/)
+Command Line Library for CLI application. Library provides methods for:
 
-Simple Command Line Library for client
+* adding commands to interpreter
+* deleting comamnds from interpreter
+* executing commands
+* adding command aliases to interpreter
+* searching command arguments
+* etc...
+
 
 ## API
+
+Command line library API is described in the snipplet below. 
+
 ```c++
 // initialize cmdline with print function
 cmd_init( (func)(const char* fmt, va_list ap) );
 // configure ready cb.
-cmd_set_ready_cb( (func)(int retcode)  );  
+cmd_set_ready_cb( (func)(int retcode)  );
 // register command for library
 cmd_add( <command>, (int func)(int argc, char *argv[]), <help>, <man>); 
 //execute some existing commands
 cmd_exe( <command> );
 ```
+
 ## Usage example
+
+Here is an example how to add new commands to command line library and execute the commands.
+
 ```c++
-//simple print function
+//example print function
 void myprint(const char* fmt, va_list ap){ vprintf(fmt, ap); }
 
-// simple ready cb, which call next command to be execute
+// ready cb, which call next command to be execute
 void cmd_ready_cb(int retcode) { cmd_next( retcode ); }
 
 // dummy command with some option
