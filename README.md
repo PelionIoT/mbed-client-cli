@@ -1,26 +1,37 @@
 # mbed-client-cli
 
-[![Build Status](http://mbed-linux.cloudapp.net/job/mbed-client-cli/badge/icon)](http://mbed-linux.cloudapp.net/job/mbed-client-cli/)
+Command Line Library for a CLI application. This library provides methods for:
 
-Simple Command Line Library for client
+* Adding commands to the interpreter.
+* Deleting commands from the interpreter.
+* Executing commands.
+* Adding command aliases to the interpreter.
+* Searching command arguments.
 
 ## API
+
+Command Line Library API is described in the snipplet below: 
+
 ```c++
 // initialize cmdline with print function
 cmd_init( (func)(const char* fmt, va_list ap) );
 // configure ready cb.
-cmd_set_ready_cb( (func)(int retcode)  );  
+cmd_set_ready_cb( (func)(int retcode)  );
 // register command for library
 cmd_add( <command>, (int func)(int argc, char *argv[]), <help>, <man>); 
 //execute some existing commands
 cmd_exe( <command> );
 ```
+
 ## Usage example
+
+Adding new commands to the Command Line Library and executing the commands:
+
 ```c++
-//simple print function
+//example print function
 void myprint(const char* fmt, va_list ap){ vprintf(fmt, ap); }
 
-// simple ready cb, which call next command to be execute
+// ready cb, calls next command to be executed
 void cmd_ready_cb(int retcode) { cmd_next( retcode ); }
 
 // dummy command with some option
@@ -38,7 +49,7 @@ void timer_ready_cb(void) {
    cmd_ready(CMDLINE_RETCODE_SUCCESS);
 }
 
-// long command, which need e.g. some events to finalize command execution
+// long command, that needs for example some events to complete the command execution
 int cmd_long(int argc, char *argv[] ) {
    timer_start( 5000, timer_ready_cb ); //pseudo timer code
    return CMDLINE_RETCODE_EXCUTING_CONTINUE;
