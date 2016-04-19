@@ -19,7 +19,8 @@
     }
   ],
   "dependencies": {
-    "mbed-trace": "1.1.1"
+    "mbed-trace": "1.1.1",
+    "nanostack-libservice": "^3.0.0"
   },
   "testTargetDependencies": {
     "x86-linux-native": {
