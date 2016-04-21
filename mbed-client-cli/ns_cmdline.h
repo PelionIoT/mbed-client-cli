@@ -97,6 +97,7 @@ extern "C" {
 #include <stdarg.h>
 #include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
 
 #define CMDLINE_RETCODE_COMMAND_BUSY            2   //!< Command Busy
 #define CMDLINE_RETCODE_EXCUTING_CONTINUE       1   //!< Execution continue in background
