@@ -52,12 +52,12 @@ void input(const char *str)
 }
 
 #define REQUEST(x)          input(x);INIT_BUF();cmd_char_input('\r');
-#define RESPONSE(x)         "\r\n"x"\r\n\r\x1B[2K/> \x1B[1D"
-#define CMDLINE(x)          "\r\x1b[2K/>"x"\x1b[1D"
+#define RESPONSE(x)         "\r\n" x "\r\n\r\x1B[2K/> \x1B[1D"
+#define CMDLINE(x)          "\r\x1b[2K/>" x "\x1b[1D"
 
 #define FORWARD             "C"
 #define BACKWARD            "D"
-#define CMDLINE_CUR(x, cursor, dir)  "\r\x1b[2K/>"x"\x1b["cursor""dir
+#define CMDLINE_CUR(x, cursor, dir)  "\r\x1b[2K/>" x "\x1b[" cursor "" dir
 #define CLEAN()             cmd_char_input('\r');INIT_BUF();
 
 //vt100 keycodes
