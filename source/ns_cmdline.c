@@ -31,11 +31,11 @@
 
 
 #ifdef YOTTA_CFG
-#include "ns_list_internal/ns_list.h"
+#include "mbed-client-libservice/ns_list.h"
 #include "mbed-client-cli/ns_cmdline.h"
 #include "mbed-trace/mbed_trace.h"
 #else
-#include "ns_list.h"
+#include "mbed-client-libservice/ns_list.h"
 #include "ns_cmdline.h"
 #include "ns_trace.h"
 #define mbed_trace_exclude_filters_set set_trace_exclude_filters
