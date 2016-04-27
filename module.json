@@ -19,7 +19,7 @@
     }
   ],
   "dependencies": {
-    "mbed-trace": "1.1.1"
+    "mbed-trace": "^1.1.2"
   },
   "testTargetDependencies": {
     "x86-linux-native": {
