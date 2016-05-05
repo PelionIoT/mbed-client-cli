@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2014-2015 ARM. All rights reserved.
+ * Copyright (c) 2016 ARM Limited. All rights reserved.
  */
+
 /**
- * \file \test_libTrace\Test.c
+ * \file \test\Test.c
  *
- * \brief Unit tests for libTrace
+ * \brief Unit tests for mbed-client-cli
  */
 #include <string.h>
 #include <stdlib.h>
@@ -17,9 +18,9 @@
 #include "mbed-cpputest/CppUTest/SimpleString.h"
 #include "mbed-cpputest/CppUTest/CommandLineTestRunner.h"
 
-#define MBED_CLIENT_TRACE_FEA_IPV6 0
-#define YOTTA_CFG_TRACE
-#include "mbed-client-trace/mbed_client_trace.h"
+#define YOTTA_CFG_MBED_TRACE
+#define YOTTA_CFG_MBED_TRACE_FEA_IPV6 0
+#include "mbed-trace/mbed_trace.h"
 #include "mbed-client-cli/ns_cmdline.h"
 #define MAX(x,y)   (x>y?x:y)
 #define ARRAY_CMP(x, y) \
@@ -51,12 +52,12 @@ void input(const char *str)
 }
 
 #define REQUEST(x)          input(x);INIT_BUF();cmd_char_input('\r');
-#define RESPONSE(x)         "\r\n"x"\r\n\r\x1B[2K/> \x1B[1D"
-#define CMDLINE(x)          "\r\x1b[2K/>"x"\x1b[1D"
+#define RESPONSE(x)         "\r\n" x "\r\n\r\x1B[2K/> \x1B[1D"
+#define CMDLINE(x)          "\r\x1b[2K/>" x "\x1b[1D"
 
 #define FORWARD             "C"
 #define BACKWARD            "D"
-#define CMDLINE_CUR(x, cursor, dir)  "\r\x1b[2K/>"x"\x1b["cursor""dir
+#define CMDLINE_CUR(x, cursor, dir)  "\r\x1b[2K/>" x "\x1b[" cursor "" dir
 #define CLEAN()             cmd_char_input('\r');INIT_BUF();
 
 //vt100 keycodes
@@ -149,15 +150,41 @@ TEST(cli, parameters_int)
 {
     bool ok;
     int val;
-    char *argv[] =  { "cmd", "p1", "p2", "3", "p4", "p5" };
+    char *argv[] =  { "cmd", "p1", "p2", "3", "p4", "555fail", "p5" };
 
     ok = cmd_parameter_int(6, argv, "p2", &val);
     CHECK_EQUAL(true, ok);
     CHECK_EQUAL(3, val);
 
+    ok = cmd_parameter_int(6, argv, "p1", &val);
+    CHECK_EQUAL(false, ok);
+
     ok = cmd_parameter_int(6, argv, "p4", &val);
+    CHECK_EQUAL(false, ok);
+
+    ok = cmd_parameter_int(6, argv, "p5", &val);
+    CHECK_EQUAL(false, ok);
+}
+TEST(cli, parameters_float)
+{
+    bool ok;
+    float val;
+    float val2 = 3.14159;
+    char *argv[] =  { "cmd", "p1", "3.14159", "p3", "3.14159 ", "p4", "3.14fail ", "p5" };
+
+    ok = cmd_parameter_float(8, argv, "p1", &val);
     CHECK_EQUAL(true, ok);
-    CHECK_EQUAL(0, val);
+    CHECK_EQUAL(val2, val);
+
+    ok = cmd_parameter_float(8, argv, "p3", &val);
+    CHECK_EQUAL(true, ok);
+    CHECK_EQUAL(val2, val);
+
+    ok = cmd_parameter_float(8, argv, "p4", &val);
+    CHECK_EQUAL(false, ok);
+
+    ok = cmd_parameter_float(8, argv, "p5", &val);
+    CHECK_EQUAL(false, ok);
 }
 TEST(cli, cmd_parameter_last)
 {

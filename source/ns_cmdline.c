@@ -1,6 +1,7 @@
 /*
- * Copyright (c) 2014-2015 ARM. All rights reserved.
+ * Copyright (c) 2016 ARM Limited. All rights reserved.
  */
+
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -25,19 +26,22 @@
 #endif
 #endif
 
-//#define YOTTA_CFG_TRACE
+// force traces for this module
+//#define YOTTA_CFG_MBED_TRACE
 
 
 #ifdef YOTTA_CFG
-#include "mbed-client-cli/ns_types.h"
-#include "mbed-client-cli/ns_list.h"
+#include "ns_list_internal/ns_list.h"
 #include "mbed-client-cli/ns_cmdline.h"
-#include "mbed-client-trace/mbed_client_trace.h"
+#include "mbed-trace/mbed_trace.h"
 #else
-#include "ns_types.h"
 #include "ns_list.h"
 #include "ns_cmdline.h"
 #include "ns_trace.h"
+#define mbed_trace_exclude_filters_set set_trace_exclude_filters
+#if (HAVE_DEBUG) || defined(FEA_TRACE_SUPPORT)
+#define YOTTA_CFG_MBED_TRACE
+#endif
 #endif
 
 //#define TRACE_DEEP
@@ -66,7 +70,7 @@
 #define TAB 0x09
 #define CAN 0x18
 
-#define MAX_LINE 500
+#define MAX_LINE 2000
 #define MAX_ARGUMENTS 30
 
 //include manuals or not (save memory a little when not include)
@@ -171,7 +175,7 @@ static const char      *cmd_input_lookup(char *name, int namelength, int n);
 static char            *cmd_input_lookup_var(char *name, int namelength, int n);
 static cmd_command_t   *cmd_find(const char *name);
 static cmd_command_t   *cmd_find_n(char *name, int nameLength, int n);
-static cmd_alias_t     *alias_find(char *alias);
+static cmd_alias_t     *alias_find(const char *alias);
 static cmd_alias_t     *alias_find_n(char *alias, int aliaslength, int n);
 static cmd_variable_t  *variable_find(char *variable);
 static cmd_variable_t  *variable_find_n(char *variable, int length, int n);
@@ -203,6 +207,7 @@ int for_command(int argc, char *argv[]);
 void default_cmd_response_out(const char *fmt, va_list ap)
 {
     vprintf(fmt, ap);
+    fflush(stdout);
 }
 void cmd_printf(const char *fmt, ...)
 {
@@ -223,8 +228,8 @@ void cmd_init(cmd_print_t *outf)
         ns_list_init(&cmd.cmd_buffer);
         cmd.init = true;
     }
-#if defined(HAVE_DEBUG) || defined(FEA_TRACE_SUPPORT)
-    mbed_client_trace_exclude_filters_set(TRACE_GROUP);
+#if defined(YOTTA_CFG_MBED_TRACE)
+    mbed_trace_exclude_filters_set(TRACE_GROUP);
 #endif
     cmd.out = outf ? outf : default_cmd_response_out;
     cmd.ctrl_fnc = NULL;
@@ -240,6 +245,7 @@ void cmd_init(cmd_print_t *outf)
     cmd.tab_lookup_n = 0;
     cmd.cmd_buffer_ptr = 0;
     cmd.idle = true;
+    cmd.ready_cb = cmd_next;
     cmd_set_retfmt("retcode: %i\r\n");
     cmd_line_clear(0);            // clear line
     cmd_history_save(0);          // the current line is the 0 item
@@ -358,7 +364,7 @@ void cmd_next(int retcode)
         retcode = cmd_run(cmd.cmd_buffer_ptr->cmd_s);
         //check if execution goes to the backend or not
         if (retcode == CMDLINE_RETCODE_EXCUTING_CONTINUE ) {
-            if( cmd.cmd_buffer_ptr->operator == OPERATOR_BACKGROUND )
+            if( (NULL != cmd.cmd_buffer_ptr) && cmd.cmd_buffer_ptr->operator == OPERATOR_BACKGROUND )
             {
                 //execution continue in background, but operator say that it's "ready"
                 cmd_ready(CMDLINE_RETCODE_SUCCESS);
@@ -1261,7 +1267,7 @@ static void cmd_execute(void)
 }
 
 
-static cmd_alias_t *alias_find(char *alias)
+static cmd_alias_t *alias_find(const char *alias)
 {
     cmd_alias_t *alias_ptr = NULL;
     if (alias == NULL || strlen(alias) == 0) {
@@ -1352,7 +1358,7 @@ static void cmd_variable_print_all(void)
     return;
 }
 
-void cmd_alias_add(char *alias, char *value)
+void cmd_alias_add(const char *alias, const char *value)
 {
     cmd_alias_t *alias_ptr;
     if (alias == NULL || strlen(alias) == 0) {
@@ -1509,24 +1515,27 @@ int set_command(int argc, char *argv[])
 }
 int echo_command(int argc, char *argv[])
 {
-    int n;
+    bool printEcho = false;
     if (argc == 1) {
-        cmd_printf("ECHO is %s\r\n", cmd.echo ? "on" : "off");
-        return 0;
+        printEcho = true;
     } else if (argc == 2) {
         if (strcmp(argv[1], "off") == 0) {
             cmd_echo(false);
-            return 0;
+            printEcho = true;
         } else if (strcmp(argv[1], "on") == 0) {
             cmd_echo(true);
-            return 0;
+            printEcho = true;
         }
     }
-    for (n = 1; n < argc; n++) {
-        tr_deep("ECHO: %s\r\n", argv[n]);
-        cmd_printf("%s ", argv[n]);
+    if( printEcho ) {
+        cmd_printf("ECHO is %s\r\n", cmd.echo ? "on" : "off");
+    } else {
+        for (int n = 1; n < argc; n++) {
+            tr_deep("ECHO: %s\r\n", argv[n]);
+            cmd_printf("%s ", argv[n]);
+        }
+        cmd_printf("\r\n");
     }
-    cmd_printf("\r\n");
     return 0;
 }
 
@@ -1636,7 +1645,7 @@ int for_command(int argc, char *argv[])
 
 /** Parameter helping functions
  */
-int cmd_parameter_index(int argc, char *argv[], char *key)
+int cmd_parameter_index(int argc, char *argv[], const char *key)
 {
     int i = 0;
     for (i = 1; i < argc; i++) {
@@ -1658,7 +1667,7 @@ bool cmd_has_option(int argc, char *argv[], char *key)
     }
     return false;
 }
-bool cmd_parameter_bool(int argc, char *argv[], char *key, bool *value)
+bool cmd_parameter_bool(int argc, char *argv[], const char *key, bool *value)
 {
     int i = cmd_parameter_index(argc, argv, key);
     if (i > 0) {
@@ -1677,7 +1686,7 @@ bool cmd_parameter_bool(int argc, char *argv[], char *key, bool *value)
     }
     return false;
 }
-bool cmd_parameter_val(int argc, char *argv[], char *key, char **value)
+bool cmd_parameter_val(int argc, char *argv[], const char *key, char **value)
 {
     int i = cmd_parameter_index(argc, argv, key);
     if (i > 0) {
@@ -1688,12 +1697,105 @@ bool cmd_parameter_val(int argc, char *argv[], char *key, char **value)
     }
     return false;
 }
-bool cmd_parameter_int(int argc, char *argv[], char *key, int32_t *value)
+bool cmd_parameter_int(int argc, char *argv[], const char *key, int32_t *value)
+{
+    int i = cmd_parameter_index(argc, argv, key);
+    char* tailptr;
+    if (i > 0) {
+        if (argc > (i + 1)) {
+            *value = strtol(argv[i + 1], &tailptr, 10);
+            if (0 == (char) *tailptr) {
+                return true;
+            }
+            if (!isspace((char) *tailptr)) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+bool cmd_parameter_float(int argc, char *argv[], const char *key, float *value)
+{
+    int i = cmd_parameter_index(argc, argv, key);
+    char* tailptr;
+    if (i > 0) {
+        if (argc > (i + 1)) {
+            *value = strtof(argv[i + 1], &tailptr);
+            if (0 == (char) *tailptr) {
+                return true;    //Should be correct read always
+            }
+            if (!isspace((char) *tailptr)) {
+                return false;   //Garbage in tailptr
+            } else {
+                return true;    //Spaces are fine after float
+            }
+        }
+    }
+    return false;
+}
+// convert hex string (eg. "76 ab ff") to binary array
+static int string_to_bytes(const char *str, uint8_t *buf, int bytes)
+{
+    int len = strlen(str);
+    if( len <= (3*bytes - 1)) {
+        int i;
+        for(i=0;i<bytes;i++){
+           if( i*3<len ){
+               buf[i] = (uint8_t)strtoul(str+i*3, 0, 16);
+           } else {
+               buf[i] = 0;
+           }
+        }
+        return 0;
+    }
+    return -1;
+}
+
+static uint64_t read_64_bit(const uint8_t data_buf[__static 8])
+{
+    uint64_t temp_64;
+    temp_64 = (uint64_t)(*data_buf++) << 56;
+    temp_64 += (uint64_t)(*data_buf++) << 48;
+    temp_64 += (uint64_t)(*data_buf++) << 40;
+    temp_64 += (uint64_t)(*data_buf++) << 32;
+    temp_64 += (uint64_t)(*data_buf++) << 24;
+    temp_64 += (uint64_t)(*data_buf++) << 16;
+    temp_64 += (uint64_t)(*data_buf++) << 8;
+    temp_64 += *data_buf++;
+    return temp_64;
+}
+
+bool cmd_parameter_timestamp(int argc, char *argv[], const char *key, int64_t *value)
 {
     int i = cmd_parameter_index(argc, argv, key);
     if (i > 0) {
         if (argc > (i + 1)) {
-            *value = strtol(argv[i + 1], 0, 10);
+            if (strchr(argv[i + 1],',') != 0) {
+                // Format seconds,tics
+                const char splitValue[] = ", ";
+                char *token;
+                token = strtok(argv[i + 1], splitValue);
+                if (token) {
+                    *value = strtoul(token, 0, 10) << 16;
+                }
+                token = strtok(NULL, splitValue);
+                if (token) {
+                    *value |= (0xffff & strtoul(token, 0, 10));
+                }
+            } else if (strchr(argv[i + 1],':') != 0 ) {
+                // Format 00:00:00:00:00:00:00:00
+                uint8_t buf[8];
+                if (string_to_bytes(argv[i + 1], buf, 8) == 0) {
+                    *value = read_64_bit(buf);
+                } else {
+                  cmd_printf("timestamp should be 8 bytes long\r\n");
+                }
+            } else {
+                // Format uint64
+                *value = strtol(argv[i + 1], 0, 10);
+            }
             return true;
         }
     }

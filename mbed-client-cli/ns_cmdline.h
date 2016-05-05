@@ -1,9 +1,10 @@
 /*
- * Copyright (c) 2014-2015 ARM. All rights reserved.
+ * Copyright (c) 2016 ARM Limited. All rights reserved.
  */
+
 /**
  * \file ns_cmdline.h
- * 
+ *
  * Command line library - mbedOS shell
  *
  * Usage example:
@@ -94,19 +95,9 @@ extern "C" {
 #endif
 
 #include <stdarg.h>
-
-#if defined(_WIN32) || defined(__unix__) || defined(__unix) || defined(unix) || defined(YOTTA_CFG)
-
-#if defined(YOTTA_CFG)
-#include "mbed-client-cli/ns_types.h"
-#else
 #include <stdint.h>
 #include <stddef.h>
-#endif
-
-#else
-#include "ns_types.h"
-#endif
+#include <stdbool.h>
 
 #define CMDLINE_RETCODE_COMMAND_BUSY            2   //!< Command Busy
 #define CMDLINE_RETCODE_EXCUTING_CONTINUE       1   //!< Execution continue in background
@@ -241,7 +232,7 @@ void cmd_exe(char *str);
  * \param alias     alias name
  * \param value     value for alias. Values can be any visible ASCII -characters.
  */
-void cmd_alias_add(char *alias, char *value);
+void cmd_alias_add(const char *alias, const char *value);
 /** Add Variable to interpreter.
  * Variables are replaced with values before executing a command.
  * To use variables from cli, use dollar ($) -character so that interpreter knows user want to use variable in that place.
@@ -264,15 +255,15 @@ void cmd_variable_add(char *variable, char *value);
             cmd_exe("mycmd enable")
       }
       int mycmd_command(int argc, char *argv[]) {
-        bool found = cmd_parameter_exists( argc, argv, "enable" );
+        bool found = cmd_parameter_index( argc, argv, "enable" ) > 0;
       }
  * \endcode
  * \param argc  argc is the count of arguments given in argv pointer list. value begins from 1 and this means that the 0 item in list argv is a string to name of command.
  * \param argv  is list of arguments. List size is given in argc parameter. Value in argv[0] is string to name of command.
  * \param key   option key, which index you want to find out.
- * \return index where parameter was or <=0 when not found
+ * \return index where parameter was or -1 when not found
  */
-int cmd_parameter_index(int argc, char *argv[], char *key);
+int cmd_parameter_index(int argc, char *argv[], const char *key);
 /** check if command option is present.
  * e.g. cmd: "mycmd -c"
  * \code
@@ -301,7 +292,7 @@ bool cmd_has_option(int argc, char *argv[], char *key);
  * \param value parameter value to be fetch, if key not found value are untouched. "1" and "on" and "true" and "enable" and "allow" are True -value, all others false.
  * \return true if parameter key and value found otherwise false
  */
-bool cmd_parameter_bool(int argc, char *argv[], char *key, bool *value);
+bool cmd_parameter_bool(int argc, char *argv[], const char *key, bool *value);
 /** find command parameter by key and return value (next parameter).
  * if exists, return parameter pointer, otherwise null.
  * e.g. cmd: "mycmd mykey myvalue"
@@ -319,33 +310,67 @@ bool cmd_parameter_bool(int argc, char *argv[], char *key, bool *value);
  * \param value pointer to pointer, which will point to cli input data when key and value found. if key or value not found this parameter are untouched.
  * \return true if parameter key and value found otherwise false
  */
-bool cmd_parameter_val(int argc, char *argv[], char *key, char **value);
-/** find command parameter by key and return value (next parameter) in integer.
+bool cmd_parameter_val(int argc, char *argv[], const char *key, char **value);
+/** find command parameter by key and return value (next parameter) in integer. Only whitespaces are allowed in addition to the float to be read.
  * e.g. cmd: "mycmd mykey myvalue"
  * \code
- *   int32_t i;
- *   cmd_parameter_val_int( argc, argv, "mykey", &i );
+     int32_t value;
+     cmd_parameter_int( argc, argv, "key", &value );
  * \endcode
+ * \param argc  argc is the count of arguments given in argv pointer list. value begins from 1 and this means that the item 0 in the list argv is a string to name of command.
+ * \param argv  is list of arguments. List size is given in argc parameter. Value in argv[0] is string to name of command.
+ * \param key   parameter key to be found
+ * \param value A pointer to a variable where to write the converted number. If value cannot be converted, it is not touched.
+ * \return true if parameter key and an integer is found, otherwise return false
+ */
+bool cmd_parameter_int(int argc, char *argv[], const char *key, int32_t *value);
+/** find command parameter by key and return value (next parameter) in float. Only whitespaces are allowed in addition to the float to be read.
+ * e.g. cmd: "mycmd mykey myvalue"
+ * \code
+     float value;
+     cmd_parameter_float( argc, argv, "key", &value );
+ * \endcode
+ * \param argc  argc is the count of arguments given in argv pointer list. values begin from 1 and this means that the item 0 in the list argv is a string to name of command.
+ * \param argv  is list of arguments. List size is given in argc parameter. Value in argv[0] is string to name of command.
+ * \param key   parameter key to be found
+ * \param value A pointer to a variable where to write the converted number. If value cannot be converted, it is not touched.
+ * \return true if parameter key and a float found, otherwise return false
+ */
+bool cmd_parameter_float(int argc, char *argv[], const char *key, float *value);
+/** Get last command line parameter as string.
+ * e.g.
+ *     cmd: "mycmd hello world"
+ *     cmd_parameter_last -> "world"
+ *     cmd: "mycmd"
+ *     cmd_parameter_last() -> NULL
+ * \code
+    cmd_parameter_last(argc, argv)
+ * \endcode
+ * \param argc  argc is the count of arguments given in argv pointer list. value begins from 1 and this means that the 0 item in list argv is a string to name of command.
+ * \param argv  is list of arguments. List size is given in argc parameter. Value in argv[0] is string to name of command.
+ * \return pointer to last parameter or NULL when there is no any parameters.
+ */
+char *cmd_parameter_last(int argc, char *argv[]);
+
+/** find command parameter by key and return value (next parameter) in int64.
+ * e.g. cmd: "mycmd mykey myvalue"
+ * \code
+     uint32_t i;
+     cmd_parameter_timestamp( argc, argv, "mykey", &i );
+ * \endcode
+ *
+ * Supports following formats:
+ *  number -> direct conversion
+ *  11:22:33:44:55:66:77:88 -> converts to number
+ *  seconds,tics -> converts thread type timestamp to int64
+ *
  * \param argc  argc is the count of arguments given in argv pointer list. value begins from 1 and this means that the 0 item in list argv is a string to name of command.
  * \param argv  is list of arguments. List size is given in argc parameter. Value in argv[0] is string to name of command.
  * \param key   parameter key to be find
  * \param value parameter value to be fetch, if key not found value are untouched.
  * \return true if parameter key and value found otherwise false
  */
-bool cmd_parameter_int(int argc, char *argv[], char *key, int32_t *value);
-/** Get last command line parameter as string.
- * e.g.
- * \code
-    cmd: "mycmd hello world"
-        cmd_parameter_last -> "world"
-    cmd: "mycmd"
-        cmd_parameter_last() -> NULL
-   \endcode
- * \param argc  argc is the count of arguments given in argv pointer list. value begins from 1 and this means that the 0 item in list argv is a string to name of command.
- * \param argv  is list of arguments. List size is given in argc parameter. Value in argv[0] is string to name of command.
- * \return pointer to last parameter or NULL when there is no any parameters.
- */
-char *cmd_parameter_last(int argc, char *argv[]);
+bool cmd_parameter_timestamp(int argc, char *argv[], const char *key, int64_t *value);
 
 #ifdef __cplusplus
 }
