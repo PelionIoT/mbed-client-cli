@@ -38,7 +38,9 @@
 #include "ns_list.h"
 #include "ns_cmdline.h"
 #include "ns_trace.h"
+#ifndef NS_TRACE_USE_MBED_TRACE
 #define mbed_trace_exclude_filters_set set_trace_exclude_filters
+#endif
 #if (HAVE_DEBUG) || defined(FEA_TRACE_SUPPORT)
 #define YOTTA_CFG_MBED_TRACE
 #endif
