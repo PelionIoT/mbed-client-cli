@@ -161,6 +161,12 @@ uint8_t cmd_history_size(uint8_t max);
  *  \param fmt   console print function (like printf)
  */
 void cmd_printf(const char *fmt, ...);
+/** command line print function
+ *  This function should be used when user want to print something to the console with vprintf functionality
+ *  \param fmt  The format string is a character string, beginning and ending in its initial shift state, if any. The format string is composed of zero or more directives.
+ *  \param ap   list of parameters needed by format string. This must correspond properly with the conversion specifier.
+ */
+void cmd_vprintf(const char *fmt, va_list ap);
 /** Reconfigure default cmdline out function (cmd_printf)
  *  \param outf  select console print function
  */
