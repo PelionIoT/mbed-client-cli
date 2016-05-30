@@ -214,8 +214,12 @@ void cmd_printf(const char *fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
-    cmd.out(fmt, ap);
+    cmd_vprintf(fmt, ap);
     va_end(ap);
+}
+void cmd_vprintf(const char *fmt, va_list ap)
+{
+    cmd.out(fmt, ap);
 }
 /* Function definitions
  */
