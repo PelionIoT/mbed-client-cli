@@ -154,9 +154,11 @@ typedef struct cmd_class_s {
 
     cmd_print_t *out;                  // print cb function
     void (*ctrl_fnc)(uint8_t c);      // control cb function
+    void (*mutex_wait_fnc)();         // mutex wait cb function
+    void (*mutex_release_fnc)();      // mutex release cb function
 } cmd_class_t;
 
-cmd_class_t cmd = { .init = false,  .retcode_fmt = NULL, .cmd_ptr = NULL };
+cmd_class_t cmd = { .init = false,  .retcode_fmt = NULL, .cmd_ptr = NULL, .mutex_wait_fnc = NULL, .mutex_release_fnc = NULL };
 
 /* Function prototypes
  */
@@ -219,7 +221,13 @@ void cmd_printf(const char *fmt, ...)
 }
 void cmd_vprintf(const char *fmt, va_list ap)
 {
+    if (cmd.mutex_wait_fnc != NULL){
+        cmd.mutex_wait_fnc();
+    }
     cmd.out(fmt, ap);
+    if (cmd.mutex_release_fnc != NULL){
+        cmd.mutex_release_fnc();
+    }
 }
 /* Function definitions
  */
@@ -238,6 +246,8 @@ void cmd_init(cmd_print_t *outf)
 #endif
     cmd.out = outf ? outf : default_cmd_response_out;
     cmd.ctrl_fnc = NULL;
+    cmd.mutex_wait_fnc = NULL;
+    cmd.mutex_release_fnc = NULL;
     cmd.echo = true;
     cmd.print_retcode = false;
     cmd.escaping = false;
@@ -476,6 +486,15 @@ void cmd_out_func(cmd_print_t *outf)
 void cmd_ctrl_func(void (*sohf)(uint8_t c))
 {
     cmd.ctrl_fnc = sohf;
+}
+
+void cmd_mutex_wait_func(void (*mutex_wait_f)())
+{
+    cmd.mutex_wait_fnc = mutex_wait_f;
+}
+void cmd_mutex_release_func(void (*mutex_release_f)())
+{
+    cmd.mutex_release_fnc = mutex_release_f;
 }
 void cmd_init_screen()
 {

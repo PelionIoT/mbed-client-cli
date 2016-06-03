@@ -51,6 +51,17 @@ void input(const char *str)
     }
 }
 
+static int mutex_call_count = 0;
+void my_mutex_wait()
+{
+    mutex_call_count++;
+}
+
+void my_mutex_release()
+{
+    mutex_call_count--;
+}
+
 #define REQUEST(x)          input(x);INIT_BUF();cmd_char_input('\r');
 #define RESPONSE(x)         "\r\n" x "\r\n\r\x1B[2K/> \x1B[1D"
 #define CMDLINE(x)          "\r\x1b[2K/>" x "\x1b[1D"
@@ -97,6 +108,20 @@ TEST_GROUP(cli)
 
 TEST(cli, init)
 {
+}
+TEST(cli, mutex_not_set)
+{
+  REQUEST("echo Hello hello!");
+  ARRAY_CMP(RESPONSE("Hello hello! ") , buf);
+}
+TEST(cli, mutex_set)
+{
+  cmd_mutex_wait_func( my_mutex_wait );
+  cmd_mutex_release_func( my_mutex_release );
+
+  REQUEST("echo Hello hello!");
+  ARRAY_CMP(RESPONSE("Hello hello! ") , buf);
+  CHECK(mutex_call_count == 0);
 }
 TEST(cli, parameters_index)
 {
