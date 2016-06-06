@@ -39,8 +39,23 @@ int cmd_dummy(int argc, char *argv[])
     return 0;
 }
 
+int mutex_wait_count = 0;
+int mutex_release_count = 0;
+bool check_mutex_lock_state = false;
+void my_mutex_wait()
+{
+    mutex_wait_count++;
+}
+void my_mutex_release()
+{
+    mutex_release_count++;
+}
+
 void myprint(const char *fmt, va_list ap)
 {
+    if (check_mutex_lock_state) {
+        CHECK((mutex_wait_count - mutex_release_count) == 1);
+    }
     vsnprintf(buf + strlen(buf), BUFSIZE - strlen(buf), fmt, ap);
     //printf("\nMYPRINT: %s\n", buf); //for test test
 }
@@ -49,17 +64,6 @@ void input(const char *str)
     while (*str != 0) {
         cmd_char_input(*str++);
     }
-}
-
-static int mutex_call_count = 0;
-void my_mutex_wait()
-{
-    mutex_call_count++;
-}
-
-void my_mutex_release()
-{
-    mutex_call_count--;
 }
 
 #define REQUEST(x)          input(x);INIT_BUF();cmd_char_input('\r');
@@ -109,19 +113,35 @@ TEST_GROUP(cli)
 TEST(cli, init)
 {
 }
-TEST(cli, mutex_not_set)
+TEST(cli, cmd_printf_with_mutex_not_set)
 {
-  REQUEST("echo Hello hello!");
-  ARRAY_CMP(RESPONSE("Hello hello! ") , buf);
-}
-TEST(cli, mutex_set)
-{
-  cmd_mutex_wait_func( my_mutex_wait );
-  cmd_mutex_release_func( my_mutex_release );
+    cmd_mutex_wait_func(0);
+    cmd_mutex_release_func(0);
+    int mutex_call_count_at_entry = mutex_wait_count;
+    check_mutex_lock_state = false;
 
-  REQUEST("echo Hello hello!");
-  ARRAY_CMP(RESPONSE("Hello hello! ") , buf);
-  CHECK(mutex_call_count == 0);
+    cmd_printf("Hello hello!");
+    STRCMP_EQUAL("Hello hello!" , buf);
+
+    CHECK(mutex_call_count_at_entry == mutex_wait_count);
+    CHECK(mutex_call_count_at_entry == mutex_release_count);
+
+    cmd_mutex_wait_func(my_mutex_wait);
+    cmd_mutex_release_func(my_mutex_release);
+}
+TEST(cli, cmd_printf_with_mutex_set)
+{
+    cmd_mutex_wait_func(my_mutex_wait);
+    cmd_mutex_release_func(my_mutex_release);
+    check_mutex_lock_state = true;
+
+    cmd_printf("!olleh olleH");
+    STRCMP_EQUAL("!olleh olleH" , buf);
+    CHECK(mutex_wait_count == mutex_release_count);
+
+    check_mutex_lock_state = false;
+    cmd_mutex_wait_func(0);
+    cmd_mutex_release_func(0);
 }
 TEST(cli, parameters_index)
 {

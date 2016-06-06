@@ -154,8 +154,8 @@ typedef struct cmd_class_s {
 
     cmd_print_t *out;                  // print cb function
     void (*ctrl_fnc)(uint8_t c);      // control cb function
-    void (*mutex_wait_fnc)();         // mutex wait cb function
-    void (*mutex_release_fnc)();      // mutex release cb function
+    void (*mutex_wait_fnc)(void);         // mutex wait cb function
+    void (*mutex_release_fnc)(void);      // mutex release cb function
 } cmd_class_t;
 
 cmd_class_t cmd = { .init = false,  .retcode_fmt = NULL, .cmd_ptr = NULL, .mutex_wait_fnc = NULL, .mutex_release_fnc = NULL };
@@ -221,11 +221,11 @@ void cmd_printf(const char *fmt, ...)
 }
 void cmd_vprintf(const char *fmt, va_list ap)
 {
-    if (cmd.mutex_wait_fnc != NULL){
+    if (cmd.mutex_wait_fnc) {
         cmd.mutex_wait_fnc();
     }
     cmd.out(fmt, ap);
-    if (cmd.mutex_release_fnc != NULL){
+    if (cmd.mutex_release_fnc) {
         cmd.mutex_release_fnc();
     }
 }
@@ -488,11 +488,11 @@ void cmd_ctrl_func(void (*sohf)(uint8_t c))
     cmd.ctrl_fnc = sohf;
 }
 
-void cmd_mutex_wait_func(void (*mutex_wait_f)())
+void cmd_mutex_wait_func(void (*mutex_wait_f)(void))
 {
     cmd.mutex_wait_fnc = mutex_wait_f;
 }
-void cmd_mutex_release_func(void (*mutex_release_f)())
+void cmd_mutex_release_func(void (*mutex_release_f)(void))
 {
     cmd.mutex_release_fnc = mutex_release_f;
 }

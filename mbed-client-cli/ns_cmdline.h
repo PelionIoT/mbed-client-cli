@@ -181,14 +181,14 @@ void cmd_ctrl_func(void (*sohf)(uint8_t c));
  * This can be used to set a callback function that will be called before each cmd_printf call.
  * The specific implementation is up to the application developer, but simple mutex locking is assumed.
  */
-void cmd_mutex_wait_func(void (*mutex_wait_f)());
+void cmd_mutex_wait_func(void (*mutex_wait_f)(void));
 /**
  * Configure mutex wait function
  * By default, cmd_printf calls may not be thread safe, depending on the implementation of the used output.
  * This can be used to set a callback function that will be called after each cmd_printf call.
  * The specific implementation is up to the application developer, but simple mutex locking is assumed.
  */
-void cmd_mutex_release_func(void (*mutex_release_f)());
+void cmd_mutex_release_func(void (*mutex_release_f)(void));
 /** Refresh output */
 void cmd_output(void);
 /** default cmd response function, use stdout
