@@ -21,6 +21,11 @@ cmd_set_ready_cb( (func)(int retcode)  );
 cmd_add( <command>, (int func)(int argc, char *argv[]), <help>, <man>); 
 //execute some existing commands
 cmd_exe( <command> );
+// if thread safety for CLI terminal output is needed
+// configure output mutex wait cb
+cmd_set_mutex_wait_func( (func)(void) );
+// configure output mutex release cb 
+cmd_set_mutex_wait_func( (func)(void) );
 ```
 
 ## Usage example
@@ -62,4 +67,33 @@ void main(void) {
    //execute dummy and long commands
    cmd_exe( "dymmy;long" );
 }
+```
+
+## Thread safety
+The CLI library is not thread safe, but the CLI terminal output can be locked against other 
+output streams, for example if both traces and CLI output are using serial out.
+
+```c++
+static Mutex MyMutex;
+
+// mutex wait cb, acquires the mutex, waiting if necessary
+static void mutex_wait(void)
+{
+    MyMutex.lock();
+}
+
+// mutex release cb, releases the mutex
+static void my_mutex_release(void)
+{
+    MyMutex.unlock();
+}
+
+void main(void) {
+   cmd_init( &myprint );              // initialize cmdline with print function
+   cmd_set_ready_cb( cmd_ready_cb );  // configure ready cb.
+   cmd_mutex_wait_func( my_mutex_wait ); // configure mutex wait function
+   cmd_mutex_release_func( my_mutex_release ); // configure mutex release function
+   //CLI terminal output now locks against MyMutex
+}
+
 ```
