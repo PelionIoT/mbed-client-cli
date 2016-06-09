@@ -41,7 +41,7 @@
 #ifndef NS_TRACE_USE_MBED_TRACE
 #define mbed_trace_exclude_filters_set set_trace_exclude_filters
 #endif
-#if (HAVE_DEBUG) || defined(FEA_TRACE_SUPPORT)
+#if (MBED_CONF_MBED_TRACE_ENABLE) || (HAVE_DEBUG) || defined(FEA_TRACE_SUPPORT)
 #define YOTTA_CFG_MBED_TRACE
 #endif
 #endif
