@@ -1519,6 +1519,15 @@ int set_command(int argc, char *argv[])
         bool state;
         if (cmd_parameter_bool(argc, argv, "--vt100", &state)) {
             cmd.vt100_on = state;
+            
+            uint8_t cfg = mbed_trace_config_get();
+            if(state) {
+            	cfg |= TRACE_MODE_COLOR;
+            } else {
+            	cfg &=~ TRACE_MODE_COLOR;
+            }
+            mbed_trace_config_set(cfg);
+            
             return 0;
         }
         if (cmd_parameter_bool(argc, argv, "--retcode", &state)) {
