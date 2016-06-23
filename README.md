@@ -1,6 +1,6 @@
 # mbed-client-cli
 
-Command Line Library for a CLI application. This library provides methods for:
+This is the Command Line Library for a CLI application. This library provides methods for:
 
 * Adding commands to the interpreter.
 * Deleting commands from the interpreter.
@@ -15,7 +15,7 @@ Command Line Library API is described in the snipplet below:
 ```c++
 // initialize cmdline with print function
 cmd_init( (func)(const char* fmt, va_list ap) );
-// configure ready cb.
+// configure ready cb
 cmd_set_ready_cb( (func)(int retcode)  );
 // register command for library
 cmd_add( <command>, (int func)(int argc, char *argv[]), <help>, <man>); 
@@ -49,7 +49,7 @@ int cmd_dummy(int argc, char *argv[]){
   return CMDLINE_RETCODE_SUCCESS;
 }
 
-// timer cb ( pseudo-timer-code )
+// timer cb (pseudo-timer-code)
 void timer_ready_cb(void) {
    cmd_ready(CMDLINE_RETCODE_SUCCESS);
 }
@@ -61,11 +61,11 @@ int cmd_long(int argc, char *argv[] ) {
 }
 void main(void) {
    cmd_init( &myprint );              // initialize cmdline with print function
-   cmd_set_ready_cb( cmd_ready_cb );  // configure ready cb.
+   cmd_set_ready_cb( cmd_ready_cb );  // configure ready cb
    cmd_add("dummy", cmd_dummy, 0, 0); // add one dummy command
    cmd_add("long", cmd_long, 0, 0);   // add one dummy command
    //execute dummy and long commands
-   cmd_exe( "dymmy;long" );
+   cmd_exe( "dummy;long" );
 }
 ```
 
