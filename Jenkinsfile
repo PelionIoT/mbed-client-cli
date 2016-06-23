@@ -19,12 +19,11 @@ def stepsForParallel = [:]
 // Jenkins pipeline does not support map.each, we need to use oldschool for loop
 for (int i = 0; i < morpheusTargets.size(); i++) {
   for(int j = 0; j < toolchains.size(); j++) {
-      def target = morpheusTargets.get(i)
-      def toolchain = toolchains.keySet().asList().get(j)
-      def compilerLabel = toolchains.get(toolchain)
-      def stepName = "${target} ${toolchain}"
-      stepsForParallel[stepName] = morpheusBuildStep(target, compilerLabel, toolchain)
-    }
+    def target = morpheusTargets.get(i)
+    def toolchain = toolchains.keySet().asList().get(j)
+    def compilerLabel = toolchains.get(toolchain)
+    def stepName = "${target} ${toolchain}"
+    stepsForParallel[stepName] = morpheusBuildStep(target, compilerLabel, toolchain)
   }
 }
 
@@ -45,29 +44,29 @@ def execute(cmd) {
 
 //Create morpheus build steps for parallel execution
 def morpheusBuildStep(target, compilerLabel, toolchain) {
-    return {
-      node ("${compilerLabel}") {
-        deleteDir()
-        dir("mbed-client-cli") {
-          checkout scm
-          execute("mbed | grep \"^version\"")
+  return {
+    node ("${compilerLabel}") {
+      deleteDir()
+      dir("mbed-client-cli") {
+        checkout scm
+        execute("mbed | grep \"^version\"")
+        execute("mbed deploy --protocol ssh")
+        dir("mbed-os") {
+          deleteDir()
+          git url: 'git@github.com:ARMmbed/mbed-os'
           execute("mbed deploy --protocol ssh")
-          dir("mbed-os") {
-            deleteDir()
-            git url: 'git@github.com:ARMmbed/mbed-os'
-            execute("mbed deploy --protocol ssh")
-            execute("echo mbed-os revision:")
-            execute("git rev-parse HEAD")
-          }
-
-          // workaround because of this: https://github.com/ARMmbed/mbed-os/issues/125
-          if(isUnix()) {
-             execute("cp /builds/scripts/mbed_settings.py .")
-          } else {
-             execute("cp C:/mbed_tools/scripts/mbed_settings.py .")
-          }
-          execute("mbed compile -m ${target} -t ${toolchain} --library")
+          execute("echo mbed-os revision:")
+          execute("git rev-parse HEAD")
         }
+
+        // workaround because of this: https://github.com/ARMmbed/mbed-os/issues/125
+        if(isUnix()) {
+           execute("cp /builds/scripts/mbed_settings.py .")
+        } else {
+           execute("cp C:/mbed_tools/scripts/mbed_settings.py .")
+        }
+        execute("mbed compile -m ${target} -t ${toolchain} --library")
       }
     }
+  }
 }
