@@ -51,14 +51,6 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
         checkout scm
         execute("mbed | grep \"^version\"")
         execute("mbed deploy --protocol ssh")
-        dir("mbed-os") {
-          deleteDir()
-          git url: 'git@github.com:ARMmbed/mbed-os'
-          execute("mbed deploy --protocol ssh")
-          execute("echo mbed-os revision:")
-          execute("git rev-parse HEAD")
-        }
-
         // workaround because of this: https://github.com/ARMmbed/mbed-os/issues/125
         if(isUnix()) {
            execute("cp /builds/scripts/mbed_settings.py .")
