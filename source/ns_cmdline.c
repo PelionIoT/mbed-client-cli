@@ -237,8 +237,6 @@ void cmd_init(cmd_print_t *outf)
     mbed_trace_exclude_filters_set(TRACE_GROUP);
     cmd.out = outf ? outf : default_cmd_response_out;
     cmd.ctrl_fnc = NULL;
-    cmd.mutex_wait_fnc = NULL;
-    cmd.mutex_release_fnc = NULL;
     cmd.echo = true;
     cmd.print_retcode = false;
     cmd.escaping = false;
@@ -315,6 +313,8 @@ void cmd_free(void)
         ns_list_remove(&cmd.history_list, cur_ptr);
         MEM_FREE(cur_ptr);
     }
+    cmd.mutex_wait_fnc = NULL;
+    cmd.mutex_release_fnc = NULL;
 }
 void cmd_exe(char *str)
 {
