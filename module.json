@@ -15,7 +15,8 @@
   "homepage": "https://github.com/ARMmbed/mbed-client-cli.git",
   "licenses": [
     {
-      "type": "LicenseRef-mbed-os-license.txt"
+      "url": "https://spdx.org/licenses/Apache-2.0",
+      "type": "Apache-2.0"
     }
   ],
   "dependencies": {
