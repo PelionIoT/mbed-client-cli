@@ -1,6 +1,6 @@
 {
   "name": "mbed-client-cli",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Command Line Library for mbedOS",
   "keywords": [
     "cli",
@@ -15,7 +15,8 @@
   "homepage": "https://github.com/ARMmbed/mbed-client-cli.git",
   "licenses": [
     {
-      "type": "LicenseRef-mbed-os-license.txt"
+      "url": "https://spdx.org/licenses/Apache-2.0",
+      "type": "Apache-2.0"
     }
   ],
   "dependencies": {
@@ -23,10 +24,10 @@
   },
   "testTargetDependencies": {
     "x86-linux-native": {
-        "cpputest": "ARMmbed/cpputest"
-    }, 
+      "cpputest": "ARMmbed/cpputest"
+    },
     "x86-windows-native": {
-        "cpputest": "ARMmbed/cpputest"
+      "cpputest": "ARMmbed/cpputest"
     }
   }
 }

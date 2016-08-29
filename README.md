@@ -13,6 +13,11 @@ This is the Command Line Library for a CLI application. This library provides me
 Command Line Library API is described in the snipplet below: 
 
 ```c++
+// if thread safety for CLI terminal output is needed
+// configure output mutex wait cb before initialization so it's available immediately
+cmd_set_mutex_wait_func( (func)(void) );
+// configure output mutex release cb before initialization so it's available immediately
+cmd_set_mutex_wait_func( (func)(void) );
 // initialize cmdline with print function
 cmd_init( (func)(const char* fmt, va_list ap) );
 // configure ready cb
@@ -21,11 +26,6 @@ cmd_set_ready_cb( (func)(int retcode)  );
 cmd_add( <command>, (int func)(int argc, char *argv[]), <help>, <man>); 
 //execute some existing commands
 cmd_exe( <command> );
-// if thread safety for CLI terminal output is needed
-// configure output mutex wait cb
-cmd_set_mutex_wait_func( (func)(void) );
-// configure output mutex release cb 
-cmd_set_mutex_wait_func( (func)(void) );
 ```
 
 ## Usage example
@@ -89,10 +89,10 @@ static void my_mutex_release(void)
 }
 
 void main(void) {
+   cmd_mutex_wait_func( my_mutex_wait ); // configure mutex wait function before initializing
+   cmd_mutex_release_func( my_mutex_release ); // configure mutex release function before initializing
    cmd_init( &myprint );              // initialize cmdline with print function
    cmd_set_ready_cb( cmd_ready_cb );  // configure ready cb.
-   cmd_mutex_wait_func( my_mutex_wait ); // configure mutex wait function
-   cmd_mutex_release_func( my_mutex_release ); // configure mutex release function
    //CLI terminal output now locks against MyMutex
 }
 
