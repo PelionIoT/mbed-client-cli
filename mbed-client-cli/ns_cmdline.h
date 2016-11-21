@@ -201,6 +201,32 @@ void cmd_mutex_wait_func(void (*mutex_wait_f)(void));
  * The specific implementation is up to the application developer, but simple mutex locking is assumed.
  */
 void cmd_mutex_release_func(void (*mutex_release_f)(void));
+/**
+ * Retrieve output mutex lock
+ * This can be used to retrieve the output mutex when multiple cmd_printf/cmd_vprintf calls must be
+ * guaranteed to be grouped together in a thread safe manner. Must be released by a following call to
+ * cmd_mutex_unlock()
+ * For example:
+ * * \code
+ * cmd_mutex_lock();
+   for (i = 0; i < 10; i++) {
+       cmd_printf("%02x ", i);
+   }
+   // without locking a print from another thread could happen here
+   cmd_printf("\r\n);
+   cmd_mutex_unlock();
+ * \endcode
+ * Exact behaviour depends on the implementation of the configured mutex,
+ * but counting mutexes are required.
+ */
+void cmd_mutex_lock(void);
+/**
+ * Release output mutex lock
+ * This can be used to release the output mutex once it has been retrieved with cmd_mutex_lock()
+ * Exact behaviour depends on the implementation of the configured mutex,
+ * but counting mutexes are required.
+ */
+void cmd_mutex_unlock(void);
 /** Refresh output */
 void cmd_output(void);
 /** default cmd response function, use stdout
