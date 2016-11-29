@@ -499,6 +499,21 @@ void cmd_mutex_release_func(void (*mutex_release_f)(void))
 {
     cmd.mutex_release_fnc = mutex_release_f;
 }
+
+void cmd_mutex_lock()
+{
+    if (cmd.mutex_wait_fnc) {
+        cmd.mutex_wait_fnc();
+    }
+}
+
+void cmd_mutex_unlock()
+{
+    if (cmd.mutex_release_fnc) {
+        cmd.mutex_release_fnc();
+    }
+}
+
 void cmd_init_screen()
 {
     if (cmd.vt100_on) {
