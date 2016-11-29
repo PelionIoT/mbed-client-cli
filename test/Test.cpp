@@ -53,6 +53,7 @@ int cmd_dummy(int argc, char *argv[])
 
 int mutex_wait_count = 0;
 int mutex_release_count = 0;
+int mutex_count_expected_difference = 1;
 bool check_mutex_lock_state = false;
 void my_mutex_wait()
 {
@@ -66,7 +67,7 @@ void my_mutex_release()
 void myprint(const char *fmt, va_list ap)
 {
     if (check_mutex_lock_state) {
-        CHECK((mutex_wait_count - mutex_release_count) == 1);
+        CHECK((mutex_wait_count - mutex_release_count) == mutex_count_expected_difference);
     }
     vsnprintf(buf + strlen(buf), BUFSIZE - strlen(buf), fmt, ap);
     //printf("\nMYPRINT: %s\n", buf); //for test test
@@ -151,6 +152,24 @@ TEST(cli, cmd_printf_with_mutex_set)
     STRCMP_EQUAL("!olleh olleH" , buf);
     CHECK(mutex_wait_count == mutex_release_count);
 
+    check_mutex_lock_state = false;
+    cmd_mutex_wait_func(0);
+    cmd_mutex_release_func(0);
+}
+TEST(cli, external_mutex_handles)
+{
+    cmd_mutex_wait_func(my_mutex_wait);
+    cmd_mutex_release_func(my_mutex_release);
+    check_mutex_lock_state = true;
+    mutex_count_expected_difference = 2;
+
+    cmd_mutex_lock();
+    cmd_printf("!olleh olleH");
+    STRCMP_EQUAL("!olleh olleH" , buf);
+    cmd_mutex_unlock();
+    CHECK(mutex_wait_count == mutex_release_count);
+
+    mutex_count_expected_difference = 1;
     check_mutex_lock_state = false;
     cmd_mutex_wait_func(0);
     cmd_mutex_release_func(0);
