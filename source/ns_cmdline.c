@@ -77,8 +77,24 @@
 #define TAB 0x09
 #define CAN 0x18
 
+// Maximum length of input line
+#ifdef MBED_CMDLINE_MAX_LINE_LENGTH
+#define MAX_LINE MBED_CMDLINE_MAX_LINE_LENGTH
+#else
 #define MAX_LINE 2000
+#endif
+// Maximum number of arguments in a single command
+#ifdef MBED_CMDLINE_ARGUMENTS_MAX_COUNT
+#define MAX_ARGUMENTS MBED_CMDLINE_ARGUMENTS_MAX_COUNT
+#else
 #define MAX_ARGUMENTS 30
+#endif
+// Maximum number of commands saved in history
+#ifdef MBED_CMDLINE_HISTORY_MAX_COUNT
+#define HISTORY_MAX_COUNT MBED_CMDLINE_HISTORY_MAX_COUNT
+#else
+#define HISTORY_MAX_COUNT 32
+#endif
 
 //include manuals or not (save memory a little when not include)
 #define INCLUDE_MAN
@@ -255,7 +271,7 @@ void cmd_init(cmd_print_t *outf)
     cmd.insert = true;
     cmd.cursor = 0;
     cmd.vt100_on = true;
-    cmd.history_max_count = 32;   // by default
+    cmd.history_max_count = HISTORY_MAX_COUNT;
     cmd.tab_lookup = 0;
     cmd.tab_lookup_cmd_n = 0;
     cmd.tab_lookup_n = 0;
