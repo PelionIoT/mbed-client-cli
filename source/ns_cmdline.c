@@ -1596,8 +1596,8 @@ int echo_command(int argc, char *argv[])
 
 int clear_command(int argc, char *argv[])
 {
-	(void)argc;
-	(void	)argv;
+    (void)argc;
+    (void	)argv;
 
     cmd_echo(true);
     cmd_init_screen();
@@ -1707,7 +1707,7 @@ bool cmd_parameter_int(int argc, char *argv[], const char *key, int32_t *value)
             if (0 == (char) *tailptr) {
                 return true;
             }
-            if (!isspace((char) *tailptr)) {
+            if (!isspace((int) *tailptr)) {
                 return false;
             } else {
                 return true;
@@ -1726,7 +1726,7 @@ bool cmd_parameter_float(int argc, char *argv[], const char *key, float *value)
             if (0 == (char) *tailptr) {
                 return true;    //Should be correct read always
             }
-            if (!isspace((char) *tailptr)) {
+            if (!isspace((int) *tailptr)) {
                 return false;   //Garbage in tailptr
             } else {
                 return true;    //Spaces are fine after float
