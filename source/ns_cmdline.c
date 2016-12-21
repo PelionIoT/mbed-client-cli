@@ -771,7 +771,7 @@ static int cmd_run(char *string_ptr)
 
     tr_info("Executing cmd: '%s'", string_ptr);
     char *command_str = MEM_ALLOC(MAX_LINE);
-    while (isspace((int)*string_ptr) &&
+    while (isspace((unsigned char) *string_ptr) &&
             *string_ptr != '\n' &&
             *string_ptr != 0) {
         string_ptr++; //skip white spaces
@@ -1704,10 +1704,10 @@ bool cmd_parameter_int(int argc, char *argv[], const char *key, int32_t *value)
     if (i > 0) {
         if (argc > (i + 1)) {
             *value = strtol(argv[i + 1], &tailptr, 10);
-            if (0 == (char) *tailptr) {
+            if (0 == *tailptr) {
                 return true;
             }
-            if (!isspace((int) *tailptr)) {
+            if (!isspace((unsigned char) *tailptr)) {
                 return false;
             } else {
                 return true;
@@ -1723,10 +1723,10 @@ bool cmd_parameter_float(int argc, char *argv[], const char *key, float *value)
     if (i > 0) {
         if (argc > (i + 1)) {
             *value = strtof(argv[i + 1], &tailptr);
-            if (0 == (char) *tailptr) {
+            if (0 == *tailptr) {
                 return true;    //Should be correct read always
             }
-            if (!isspace((int) *tailptr)) {
+            if (!isspace((unsigned char) *tailptr)) {
                 return false;   //Garbage in tailptr
             } else {
                 return true;    //Spaces are fine after float
