@@ -1176,7 +1176,7 @@ int replace_alias(char *str, const char *old_str, const char *new_str)
 {
     int old_len = strlen(old_str),
         new_len = strlen(new_str);
-    if ((memcmp(str, old_str, old_len) == 0) &&
+    if ((strncmp(str, old_str, old_len) == 0) &&
             ((str[ old_len ] == ' ') || (str[ old_len ] == 0) ||
              (str[ old_len ] == ';') || (str[ old_len ] == '&'))) {
         memmove(str + new_len, str + old_len, strlen(str + old_len) + 1);
