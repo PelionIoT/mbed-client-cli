@@ -79,20 +79,23 @@ void input(const char *str)
 }
 
 #define ESCAPE(x) "\x1b" x
-
+#define LF                  '\n'
+#define LF_S                "\n"
+#define CR                  '\r'
+#define CR_S                "\r"
 #define DEFAULT_PROMPT      "/>"
 #define FORWARD             "C"
 #define BACKWARD            "D"
-#define REQUEST(x)          input(x);INIT_BUF();cmd_char_input('\n');
-#define PROMPT(input, prompt)    "\r" ESCAPE("[2K") prompt input ESCAPE("[1D")
-#define RAW_RESPONSE_WITH_PROMPT(x, prompt) "\r\n" x PROMPT(" ", prompt)
-#define RESPONSE_WITH_PROMPT(x, prompt) RAW_RESPONSE_WITH_PROMPT(x "\r\n", prompt)
+#define REQUEST(x)          input(x);INIT_BUF();cmd_char_input(LF);
+#define PROMPT(input, prompt)    CR_S ESCAPE("[2K") prompt input ESCAPE("[1D")
+#define RAW_RESPONSE_WITH_PROMPT(x, prompt) CR_S LF_S x PROMPT(" ", prompt)
+#define RESPONSE_WITH_PROMPT(x, prompt) RAW_RESPONSE_WITH_PROMPT(x CR_S LF_S, prompt)
 #define RESPONSE(x)         RESPONSE_WITH_PROMPT(x, DEFAULT_PROMPT)
 
-#define CMDLINE(x)          "\r" ESCAPE("[2K") "/>" x ESCAPE("[1D")
+#define CMDLINE(x)          CR_S ESCAPE("[2K") DEFAULT_PROMPT x ESCAPE("[1D")
 #define CMDLINE_EMPTY       CMDLINE(" ")
-#define CMDLINE_CUR(x, cursor, dir)  "\r" ESCAPE("[2K") DEFAULT_PROMPT x ESCAPE("[" cursor dir)
-#define CLEAN()             cmd_char_input('\r');INIT_BUF();
+#define CMDLINE_CUR(x, cursor, dir)  CR_S ESCAPE("[2K") DEFAULT_PROMPT x ESCAPE("[" cursor dir)
+#define CLEAN()             cmd_char_input(LF);INIT_BUF();
 
 //vt100 keycodes
 #define HOME()      input(ESCAPE("[1~"))
@@ -108,6 +111,8 @@ void input(const char *str)
 #define ESC()       input("\x03")
 #define PAGE_DOWN() input(ESCAPE("[6~"))
 #define PAGE_UP()   input(ESCAPE("[5~"))
+#define ALT_LEFT()  input(ESCAPE("[b"))
+#define ALT_RIGHT()  input(ESCAPE("[f"))
 
 int previous_retcode = 0;
 #define CHECK_RETCODE(retcode) CHECK_EQUAL(previous_retcode, retcode)
@@ -533,6 +538,35 @@ TEST(cli, cmd_text_pageup_up)
     PAGE_DOWN(); //goto beginning of history - it should be just writted "hello"
     ARRAY_CMP(CMDLINE("hello "), buf);
     CLEAN();
+}
+TEST(cli, cmd_alt_left_right)
+{
+  input("11 22 33");
+  INIT_BUF();
+  ALT_LEFT();
+  ARRAY_CMP(CMDLINE_CUR("11 22 33 ", "3", BACKWARD), buf);
+  INIT_BUF();
+  ALT_LEFT();
+  ARRAY_CMP(CMDLINE_CUR("11 22 33 ", "6", BACKWARD), buf);
+  INIT_BUF();
+  ALT_LEFT();
+  ARRAY_CMP(CMDLINE_CUR("11 22 33 ", "9", BACKWARD), buf);
+  INIT_BUF();
+  input("a");
+  ARRAY_CMP(CMDLINE_CUR("a11 22 33 ", "9", BACKWARD), buf);
+  INIT_BUF();
+  ALT_RIGHT();
+  ARRAY_CMP(CMDLINE_CUR("a11 22 33 ", "7", BACKWARD), buf);
+  INIT_BUF();
+  ALT_RIGHT();
+  ARRAY_CMP(CMDLINE_CUR("a11 22 33 ", "4", BACKWARD), buf);
+  INIT_BUF();
+  ALT_RIGHT();
+  ARRAY_CMP(CMDLINE_CUR("a11 22 33 ", "1", BACKWARD), buf);
+  INIT_BUF();
+  input("a");
+  ARRAY_CMP(CMDLINE_CUR("a11 22 33a ", "1", BACKWARD), buf);
+  CLEAN();
 }
 TEST(cli, cmd_text_delete)
 {
