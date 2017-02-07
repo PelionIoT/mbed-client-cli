@@ -249,7 +249,14 @@ void cmd_echo_on(void);
  * \param u_data char to be added to console
  */
 void cmd_char_input(int16_t u_data);
-
+/*
+ * Configure input to work in redirection mode. In redirection mode any characters input using cmd_char_input function
+ * are appended to redir_buf until redir_len bytes have been received after which the redirection mode is disabled and normal command
+ * mode is resumed.
+ * \param redir_buf Buffer where incoming characters should be redirected to
+ * \param redir_len Number of characters to redirect
+ */
+bool cmd_redirect(char *redir_buf, const int redir_len);
 
 /* Methods used for adding and handling of commands and aliases
  */
