@@ -177,9 +177,10 @@ typedef struct cmd_class_s {
     void (*ctrl_fnc)(uint8_t c);      // control cb function
     void (*mutex_wait_fnc)(void);         // mutex wait cb function
     void (*mutex_release_fnc)(void);      // mutex release cb function
+    input_passthrough_func_t passthrough_fnc; // input passthrough cb function
 } cmd_class_t;
 
-cmd_class_t cmd = { .init = false,  .retcode_fmt = NULL, .cmd_ptr = NULL, .mutex_wait_fnc = NULL, .mutex_release_fnc = NULL };
+cmd_class_t cmd = { .init = false,  .retcode_fmt = NULL, .cmd_ptr = NULL, .mutex_wait_fnc = NULL, .mutex_release_fnc = NULL, .passthrough_fnc = NULL };
 
 /* Function prototypes
  */
@@ -278,6 +279,7 @@ void cmd_init(cmd_print_t *outf)
     cmd.cmd_buffer_ptr = 0;
     cmd.idle = true;
     cmd.ready_cb = cmd_next;
+    cmd.passthrough_fnc = NULL;
     cmd_set_retfmt("retcode: %i\r\n");
     cmd_line_clear(0);            // clear line
     cmd_history_save(0);          // the current line is the 0 item
@@ -344,6 +346,12 @@ void cmd_free(void)
     cmd.mutex_wait_fnc = NULL;
     cmd.mutex_release_fnc = NULL;
 }
+
+void cmd_input_passthrough_func(input_passthrough_func_t passthrough_fnc)
+{
+    cmd.passthrough_fnc = passthrough_fnc;
+}
+
 void cmd_exe(char *str)
 {
     cmd_split(str);
@@ -1016,6 +1024,12 @@ static void cmd_reset_tab(void)
 }
 void cmd_char_input(int16_t u_data)
 {
+    /*Handle passthrough*/
+    if (cmd.passthrough_fnc != NULL) {
+        cmd.passthrough_fnc(u_data);
+        return;
+    }
+
     /*handle ecape command*/
     if (cmd.escaping == true) {
         cmd_escape_read(u_data);

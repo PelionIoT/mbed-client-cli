@@ -715,3 +715,31 @@ TEST(cli, ampersand)
     ARRAY_CMP(RESPONSE("hello world ") , buf);
 }
 
+#define REDIR_DATA "echo Hi!"
+#define PASSTHROUGH_BUF_LENGTH 10
+char passthrough_buffer[PASSTHROUGH_BUF_LENGTH];
+char* passthrough_ptr = NULL;
+void passthrough_cb(uint8_t c)
+{
+    if (passthrough_ptr != NULL) {
+        *passthrough_ptr++ = c;
+    }
+}
+TEST(cli, passthrough_set)
+{
+    passthrough_ptr = passthrough_buffer;
+    memset(&passthrough_buffer, 0, PASSTHROUGH_BUF_LENGTH);
+    INIT_BUF();
+
+    cmd_input_passthrough_func(passthrough_cb);
+    input(REDIR_DATA);
+
+    CHECK(strlen(buf) == 0);
+    ARRAY_CMP(REDIR_DATA, passthrough_buffer);
+
+    cmd_input_passthrough_func(NULL);
+
+    REQUEST(REDIR_DATA);
+    ARRAY_CMP(RESPONSE("Hi! ") , buf);
+}
+
