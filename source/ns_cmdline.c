@@ -159,6 +159,9 @@ typedef struct cmd_class_s {
     bool init;                        // true when lists are initialized already
     bool escaping;                    // escaping input
     bool insert;                      // insert enabled
+    bool redirecting;
+    size_t redirecting_count;
+    char *redirecting_buf;
     int  tab_lookup;                  // originally lookup characters count
     int  tab_lookup_cmd_n;            // index in command list
     int  tab_lookup_n;                //
@@ -278,6 +281,9 @@ void cmd_init(cmd_print_t *outf)
     cmd.cmd_buffer_ptr = 0;
     cmd.idle = true;
     cmd.ready_cb = cmd_next;
+    cmd.redirecting = false;
+    cmd.redirecting_count = 0;
+    cmd.redirecting_buf = NULL;
     cmd_set_retfmt("retcode: %i\r\n");
     cmd_line_clear(0);            // clear line
     cmd_history_save(0);          // the current line is the 0 item
@@ -344,6 +350,18 @@ void cmd_free(void)
     cmd.mutex_wait_fnc = NULL;
     cmd.mutex_release_fnc = NULL;
 }
+
+bool cmd_redirect(char *redir_buf, const size_t redir_len)
+{
+    if (cmd.redirecting || redir_buf == NULL || redir_len == 0) {
+        return false;
+    }
+    cmd.redirecting = true;
+    cmd.redirecting_count = redir_len;
+    cmd.redirecting_buf = redir_buf;
+    return true;
+}
+
 void cmd_exe(char *str)
 {
     cmd_split(str);
@@ -1016,6 +1034,21 @@ static void cmd_reset_tab(void)
 }
 void cmd_char_input(int16_t u_data)
 {
+    /*Handle redirecting*/
+    if (cmd.redirecting == true) {
+        // Append the character into redirect buffer and decrease counter
+        *(cmd.redirecting_buf)++ = u_data;
+        cmd.redirecting_count--;
+        if (cmd.redirecting_count > 0) {
+            // Bytes left to read, so return immediately
+            return;
+        }
+        // All bytes received, so clear redirecting variables and set flag to false
+        cmd.redirecting_buf = NULL;
+        cmd.redirecting = false;
+        return;
+    }
+
     /*handle ecape command*/
     if (cmd.escaping == true) {
         cmd_escape_read(u_data);
