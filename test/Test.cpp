@@ -715,12 +715,9 @@ TEST(cli, ampersand)
     ARRAY_CMP(RESPONSE("hello world ") , buf);
 }
 #define REDIR_DATA "echo Hi!"
-TEST(cli, redirecting)
+TEST(cli, redirecting_null_buffer)
 {
     bool ok;
-    int buflen = 100;
-    char* redirbuf = (char*)malloc(buflen);
-    memset(redirbuf, 0, buflen);
 
     // NULL buffer, should not enable redirect
     ok = cmd_redirect(NULL, 1);
@@ -728,12 +725,26 @@ TEST(cli, redirecting)
     REQUEST(REDIR_DATA);
     ARRAY_CMP(RESPONSE("Hi! ") , buf);
 
+}
+TEST(cli, redirecting_zero_length)
+{
+    bool ok;
+    int buflen = 100;
+    char* redirbuf = (char*)malloc(buflen);
+    memset(redirbuf, 0, buflen);
     // ZERO length should not enable redirect
     ok = cmd_redirect(buf, 0);
     CHECK_EQUAL(false, ok);
     REQUEST(REDIR_DATA);
     ARRAY_CMP(RESPONSE("Hi! ") , buf);
-
+    free(redirbuf);
+}
+TEST(cli, redirecting_success)
+{
+    bool ok;
+    int buflen = 100;
+    char* redirbuf = (char*)malloc(buflen);
+    memset(redirbuf, 0, buflen);
     // buf and length ok, redirect should be enabled, buf should be 0 and bytes should go to redirect buffer
     INIT_BUF();
     ok = cmd_redirect(redirbuf, strlen(REDIR_DATA));
@@ -743,4 +754,5 @@ TEST(cli, redirecting)
     ARRAY_CMP(REDIR_DATA, redirbuf);
     REQUEST(REDIR_DATA);
     ARRAY_CMP(RESPONSE("Hi! ") , buf);
+    free(redirbuf);
 }
