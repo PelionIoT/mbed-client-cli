@@ -1046,7 +1046,6 @@ void cmd_char_input(int16_t u_data)
         // All bytes received, so clear redirecting variables and set flag to false
         cmd.redirecting_buf = NULL;
         cmd.redirecting = false;
-        cmd.redirecting_count = 0;
         return;
     }
 
