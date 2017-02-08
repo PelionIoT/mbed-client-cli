@@ -256,7 +256,7 @@ void cmd_char_input(int16_t u_data);
  * \param redir_buf Buffer where incoming characters should be redirected to
  * \param redir_len Number of characters to redirect
  */
-bool cmd_redirect(char *redir_buf, const int redir_len);
+bool cmd_redirect(char *redir_buf, const size_t redir_len);
 
 /* Methods used for adding and handling of commands and aliases
  */

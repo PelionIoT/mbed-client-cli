@@ -160,7 +160,7 @@ typedef struct cmd_class_s {
     bool escaping;                    // escaping input
     bool insert;                      // insert enabled
     bool redirecting;
-    int redirecting_count;
+    size_t redirecting_count;
     char *redirecting_buf;
     int  tab_lookup;                  // originally lookup characters count
     int  tab_lookup_cmd_n;            // index in command list
@@ -351,9 +351,9 @@ void cmd_free(void)
     cmd.mutex_release_fnc = NULL;
 }
 
-bool cmd_redirect(char *redir_buf, const int redir_len)
+bool cmd_redirect(char *redir_buf, const size_t redir_len)
 {
-    if (cmd.redirecting || redir_buf == NULL || redir_len <= 0) {
+    if (cmd.redirecting || redir_buf == NULL || redir_len == 0) {
         return false;
     }
     cmd.redirecting = true;
