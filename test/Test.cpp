@@ -743,3 +743,25 @@ TEST(cli, passthrough_set)
     ARRAY_CMP(RESPONSE("Hi! ") , buf);
 }
 
+
+TEST(cli, cmd_out_func_set_null)
+{
+    cmd_out_func(NULL);
+}
+
+static int outf_called = 0;
+void outf(const char *fmt, va_list ap) {
+    outf_called++;
+}
+TEST(cli, cmd_out_func_set)
+{
+    outf_called = 0;
+    cmd_out_func(&outf);
+    cmd_vprintf(NULL, NULL);
+    CHECK_EQUAL(outf_called, 1);
+}
+
+TEST(cli, cmd_ctrl_func_set_null)
+{
+    cmd_ctrl_func(NULL);
+}
