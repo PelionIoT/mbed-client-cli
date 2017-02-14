@@ -776,3 +776,10 @@ TEST(cli, cmd_history_size_set)
     cmd_history_size(0);
     CHECK_EQUAL(cmd_history_size(1), 1);
 }
+
+TEST(cli, cmd_add_invalid_params)
+{
+    cmd_add(NULL, cmd_dummy, NULL, NULL);
+    cmd_add("", cmd_dummy, NULL, NULL);
+    cmd_add("abc", NULL, NULL, NULL);
+}
