@@ -770,3 +770,9 @@ TEST(cli, cmd_delete_null)
 {
     cmd_delete(NULL);
 }
+
+TEST(cli, cmd_history_size_set)
+{
+    cmd_history_size(0);
+    CHECK_EQUAL(cmd_history_size(1), 1);
+}
