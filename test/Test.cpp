@@ -765,3 +765,8 @@ TEST(cli, cmd_ctrl_func_set_null)
 {
     cmd_ctrl_func(NULL);
 }
+
+TEST(cli, cmd_delete_null)
+{
+    cmd_delete(NULL);
+}

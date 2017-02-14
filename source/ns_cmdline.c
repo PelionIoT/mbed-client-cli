@@ -571,16 +571,15 @@ static cmd_command_t *cmd_find_n(char *name, int nameLength, int n)
 {
     cmd_command_t *cmd_ptr = NULL;
     int i = 0;
-    if (name == NULL || nameLength == 0) {
-        return NULL;
-    }
-    ns_list_foreach(cmd_command_t, cur_ptr, &cmd.command_list) {
-        if (strncmp(name, cur_ptr->name_ptr, nameLength) == 0) {
-            if (i == n) {
-                cmd_ptr = cur_ptr;
-                break;
+    if (name != NULL && nameLength != 0) {
+        ns_list_foreach(cmd_command_t, cur_ptr, &cmd.command_list) {
+            if (strncmp(name, cur_ptr->name_ptr, nameLength) == 0) {
+                if (i == n) {
+                    cmd_ptr = cur_ptr;
+                    break;
+                }
+                i++;
             }
-            i++;
         }
     }
     return cmd_ptr;
