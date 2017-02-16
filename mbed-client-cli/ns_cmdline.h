@@ -249,7 +249,13 @@ void cmd_echo_on(void);
  * \param u_data char to be added to console
  */
 void cmd_char_input(int16_t u_data);
-
+/*
+ * Set the passthrough mode callback function. In passthrough mode normal command input handling is skipped and any
+ * received characters are passed to the passthrough callback function. Setting this to null will disable passthrough mode.
+ * \param passthrough_fnc The passthrough callback function
+ */
+typedef void (*input_passthrough_func_t)(uint8_t c);
+void cmd_input_passthrough_func(input_passthrough_func_t passthrough_fnc);
 
 /* Methods used for adding and handling of commands and aliases
  */
