@@ -715,3 +715,71 @@ TEST(cli, ampersand)
     ARRAY_CMP(RESPONSE("hello world ") , buf);
 }
 
+#define REDIR_DATA "echo Hi!"
+#define PASSTHROUGH_BUF_LENGTH 10
+char passthrough_buffer[PASSTHROUGH_BUF_LENGTH];
+char* passthrough_ptr = NULL;
+void passthrough_cb(uint8_t c)
+{
+    if (passthrough_ptr != NULL) {
+        *passthrough_ptr++ = c;
+    }
+}
+TEST(cli, passthrough_set)
+{
+    passthrough_ptr = passthrough_buffer;
+    memset(&passthrough_buffer, 0, PASSTHROUGH_BUF_LENGTH);
+    INIT_BUF();
+
+    cmd_input_passthrough_func(passthrough_cb);
+    input(REDIR_DATA);
+
+    CHECK(strlen(buf) == 0);
+    ARRAY_CMP(REDIR_DATA, passthrough_buffer);
+
+    cmd_input_passthrough_func(NULL);
+
+    REQUEST(REDIR_DATA);
+    ARRAY_CMP(RESPONSE("Hi! ") , buf);
+}
+
+
+TEST(cli, cmd_out_func_set_null)
+{
+    cmd_out_func(NULL);
+}
+
+static int outf_called = 0;
+void outf(const char *fmt, va_list ap) {
+    outf_called++;
+}
+TEST(cli, cmd_out_func_set)
+{
+    outf_called = 0;
+    cmd_out_func(&outf);
+    cmd_vprintf(NULL, NULL);
+    CHECK_EQUAL(outf_called, 1);
+}
+
+TEST(cli, cmd_ctrl_func_set_null)
+{
+    cmd_ctrl_func(NULL);
+}
+
+TEST(cli, cmd_delete_null)
+{
+    cmd_delete(NULL);
+}
+
+TEST(cli, cmd_history_size_set)
+{
+    cmd_history_size(0);
+    CHECK_EQUAL(cmd_history_size(1), 1);
+}
+
+TEST(cli, cmd_add_invalid_params)
+{
+    cmd_add(NULL, cmd_dummy, NULL, NULL);
+    cmd_add("", cmd_dummy, NULL, NULL);
+    cmd_add("abc", NULL, NULL, NULL);
+}
