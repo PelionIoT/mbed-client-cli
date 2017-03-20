@@ -172,13 +172,21 @@ uint8_t cmd_history_size(uint8_t max);
  *  This function should be used when user want to print something to the console
  *  \param fmt   console print function (like printf)
  */
+#if defined(__GNUC__) || defined(__CC_ARM)
+void cmd_printf(const char *fmt, ...)  __attribute__ ((__format__(__printf__, 1, 2)));
+#else
 void cmd_printf(const char *fmt, ...);
+#endif
 /** command line print function
  *  This function should be used when user want to print something to the console with vprintf functionality
  *  \param fmt  The format string is a character string, beginning and ending in its initial shift state, if any. The format string is composed of zero or more directives.
  *  \param ap   list of parameters needed by format string. This must correspond properly with the conversion specifier.
  */
+#if defined(__GNUC__) || defined(__CC_ARM)
+void cmd_vprintf(const char *fmt, va_list ap)  __attribute__ ((__format__(__printf__, 1, 0)));
+#else
 void cmd_vprintf(const char *fmt, va_list ap);
+#endif
 /** Reconfigure default cmdline out function (cmd_printf)
  *  \param outf  select console print function
  */
