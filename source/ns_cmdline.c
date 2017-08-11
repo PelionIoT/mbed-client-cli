@@ -544,11 +544,7 @@ void cmd_init_screen()
         cmd_printf("\r\x1b[2J"); /* Clear screen */
         cmd_printf("\x1b[7h"); /* enable line wrap */
     }
-    //cmd_printf("ARM Ltd\r\n");
-    cmd_printf("   _   ___ __  __               _            _  ___  ___ \r\n");
-    cmd_printf("  /_\\ | _ \\  \\/  |  ___   _ __ | |__  ___ __| |/ _ \\/ __|\r\n");
-    cmd_printf(" / _ \\|   / |\\/| | |___| | '  \\| '_ \\/ -_) _` | (_) \\__ \r\n");
-    cmd_printf("/_/ \\_\\_|_\\_|  |_|       |_|_|_|_.__/\\___\\__,_|\\___/|___/\r\n\n");
+    cmd_printf("ARM Ltd\r\n");
     cmd_output();
 }
 uint8_t cmd_history_size(uint8_t max)
