@@ -1664,7 +1664,7 @@ int cmd_parameter_index(int argc, char *argv[], const char *key)
     }
     return -1;
 }
-bool cmd_has_option(int argc, char *argv[], char *key)
+bool cmd_has_option(int argc, char *argv[], const char *key)
 {
     int i = 0;
     for (i = 1; i < argc; i++) {

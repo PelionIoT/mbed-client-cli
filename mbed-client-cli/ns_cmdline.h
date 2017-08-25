@@ -346,7 +346,7 @@ int cmd_parameter_index(int argc, char *argv[], const char *key);
  * \param key   option key to be find
  * \return true if option found otherwise false
  */
-bool cmd_has_option(int argc, char *argv[], char *key);
+bool cmd_has_option(int argc, char *argv[], const char *key);
 /** find command parameter by key.
  * if exists, return true, otherwise false.
  * e.g. cmd: "mycmd enable 1"
