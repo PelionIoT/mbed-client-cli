@@ -656,7 +656,7 @@ void cmd_delete(const char *name)
 static int cmd_parse_argv(char *string_ptr, char **argv)
 {
     int argc = 0;
-    char *str_ptr, *end_quote_ptr;
+    char *str_ptr, *end_quote_ptr = NULL;
 
     if (string_ptr == NULL || strlen(string_ptr) == 0) {
         tr_error("Invalid parameters");
@@ -1166,7 +1166,7 @@ bool cmd_tab_lookup(void)
 void cmd_output(void)
 {
     if (cmd.vt100_on && cmd.idle) {
-        cmd_printf("\r\x1b[2K/>%s \x1b[%dD", cmd.input, strlen(cmd.input) - cmd.cursor + 1);
+        cmd_printf("\r\x1b[2K/>%s \x1b[%dD", cmd.input, (int)strlen(cmd.input) - cmd.cursor + 1);
     }
 }
 void cmd_echo_off(void)
@@ -1624,9 +1624,9 @@ int help_command(int argc, char *argv[])
         if (cmd_ptr) {
             cmd_printf("Command: %s\r\n", cmd_ptr->name_ptr);
             if (cmd_ptr->man_ptr) {
-                cmd_printf(cmd_ptr->man_ptr);
+                cmd_printf("%s\r\n", cmd_ptr->man_ptr);
             } else if (cmd_ptr->info_ptr) {
-                cmd_printf(cmd_ptr->info_ptr);
+                cmd_printf("%s\r\n", cmd_ptr->info_ptr);
             }
         } else {
             cmd_printf("Command '%s' not found", argv[1]);
@@ -1637,7 +1637,7 @@ int help_command(int argc, char *argv[])
 int history_command(int argc, char *argv[])
 {
     if (argc == 1) {
-        cmd_printf("History [%i/%i]:\r\n", ns_list_count(&cmd.history_list), cmd.history_max_count);
+        cmd_printf("History [%i/%i]:\r\n", (int)ns_list_count(&cmd.history_list), cmd.history_max_count);
         int i = 0;
         ns_list_foreach_reverse(cmd_history_t, cur_ptr, &cmd.history_list) {
             cmd_printf("[%i]: %s\r\n", i++, cur_ptr->command_ptr);
