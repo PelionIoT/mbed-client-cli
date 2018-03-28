@@ -54,10 +54,20 @@
 //#define TRACE_DEEP
 //#define TRACE_PRINTF
 
-
 #ifdef TRACE_PRINTF
 #undef tr_debug
 #define tr_debug(...) printf( __VA_ARGS__);printf("\r\n")
+#endif
+
+#ifndef MBED_CLIENT_CLI_TRACE_ENABLE
+#undef tr_error
+#define tr_error(...)
+#undef tr_warn
+#define tr_warn(...)
+#undef tr_debug
+#define tr_debug(...)
+#undef tr_info
+#define tr_info(...)
 #endif
 
 #ifdef TRACE_DEEP
@@ -65,7 +75,6 @@
 #else
 #define tr_deep(...)
 #endif
-
 
 #define TRACE_GROUP "cmdL"
 
@@ -263,7 +272,6 @@ void cmd_init(cmd_print_t *outf)
         ns_list_init(&cmd.cmd_buffer);
         cmd.init = true;
     }
-    mbed_trace_exclude_filters_set(TRACE_GROUP);
     cmd.out = outf ? outf : default_cmd_response_out;
     cmd.ctrl_fnc = NULL;
     cmd.echo = true;
