@@ -59,6 +59,8 @@
 #define tr_debug(...) printf( __VA_ARGS__);printf("\r\n")
 #endif
 
+// MBED_CLIENT_CLI_TRACE_ENABLE is to enable the traces for debugging,
+// default all debug traces are disabled.
 #ifndef MBED_CLIENT_CLI_TRACE_ENABLE
 #undef tr_error
 #define tr_error(...)
