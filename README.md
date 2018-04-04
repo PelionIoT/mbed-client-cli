@@ -28,6 +28,11 @@ cmd_add( <command>, (int func)(int argc, char *argv[]), <help>, <man>);
 cmd_exe( <command> );
 ```
 
+## Tracing
+
+Command Line Library has trace messages, which are disabled by default.
+"MBED_CLIENT_CLI_TRACE_ENABLE" flag if defined, enables all the trace prints for debugging.
+
 ## Usage example
 
 Adding new commands to the Command Line Library and executing the commands:
