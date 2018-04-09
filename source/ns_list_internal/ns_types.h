@@ -98,35 +98,32 @@ typedef int_fast32_t int_fast24_t;
 #define PRIiFAST24 PRIiFAST32
 #endif
 
-/* C11's "noreturn" macro, emulated if necessary */
-#ifndef noreturn
+/* Function attribute - C11 "noreturn" or C++11 "[[noreturn]]" */
+#ifndef NS_NORETURN
 #if defined  __cplusplus && __cplusplus >= 201103L
-// noreturn is a C++11 keyword
-#elif __STDC_VERSION__ >= 201112L
-#include <stdnoreturn.h>
-/* Following lines commented because they are causing strange yotta compiling error "
-   error: '__noreturn__' was not declared in this scope". Might be GCC bug.
-*/
-//#elif defined __GNUC__
-//#define noreturn __attribute__((__noreturn__))
+#define NS_NORETURN [[noreturn]]
+#elif !defined  __cplusplus && __STDC_VERSION__ >= 201112L
+#define NS_NORETURN _Noreturn
+#elif defined __GNUC__
+#define NS_NORETURN __attribute__((__noreturn__))
 #elif defined __CC_ARM
-#define noreturn __declspec(noreturn)
+#define NS_NORETURN __declspec(noreturn)
 #elif defined __IAR_SYSTEMS_ICC__
-#define noreturn __noreturn
+#define NS_NORETURN __noreturn
 #else
-#define noreturn
+#define NS_NORETURN
 #endif
 #endif
 
 /* C11's "alignas" macro, emulated for integer expressions if necessary */
 #ifndef __alignas_is_defined
-#if __STDC_VERSION__ >= 201112L || (defined __cplusplus && __cplusplus >= 201103L)
+#if defined __CC_ARM || defined __TASKING__
+#define alignas(n) __align(n)
+#define __alignas_is_defined 1
+#elif (__STDC_VERSION__ >= 201112L) || (defined __cplusplus && __cplusplus >= 201103L)
 #include <stdalign.h>
 #elif defined __GNUC__
 #define alignas(n) __attribute__((__aligned__(n)))
-#define __alignas_is_defined 1
-#elif defined __CC_ARM || defined __TASKING__
-#define alignas(n) __align(n)
 #define __alignas_is_defined 1
 #elif defined __IAR_SYSTEMS_ICC__
 /* Does this really just apply to the next variable? */
@@ -215,6 +212,21 @@ typedef int_fast32_t int_fast24_t;
 # if __STDC_VERSION__ >= 201112L
 # define NS_STATIC_ASSERT(test, str) _Static_assert(test, str);
 # elif defined __GNUC__ && NS_GCC_VERSION >= 40600 && !defined __CC_ARM
+# ifdef _Static_assert
+    /*
+     * Some versions of glibc cdefs.h (which comes in via <stdint.h> above)
+     * attempt to define their own _Static_assert (if GCC < 4.6 or
+     * __STRICT_ANSI__) using an extern declaration, which doesn't work in a
+     * struct/union.
+     *
+     * For GCC >= 4.6 and __STRICT_ANSI__, we can do better - just use
+     * the built-in _Static_assert with __extension__. We have to do this, as
+     * ns_list.h needs to use it in a union. No way to get at it though, without
+     * overriding their define.
+     */
+#   undef _Static_assert
+#   define _Static_assert(x, y) __extension__ _Static_assert(x, y)
+# endif
 # define NS_STATIC_ASSERT(test, str) __extension__ _Static_assert(test, str);
 # else
 # define NS_STATIC_ASSERT(test, str)

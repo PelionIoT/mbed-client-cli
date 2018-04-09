@@ -1,6 +1,19 @@
 /*
- * Copyright (c) 2014-2015 ARM. All rights reserved.
+ * Copyright (c) 2016 ARM Limited. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ * Licensed under the Apache License, Version 2.0 (the License); you may
+ * not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an AS IS BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 /**
  * \file ns_cmdline.h
  *
@@ -96,6 +109,7 @@ extern "C" {
 #include <stdarg.h>
 #include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
 
 #define CMDLINE_RETCODE_COMMAND_BUSY            2   //!< Command Busy
 #define CMDLINE_RETCODE_EXCUTING_CONTINUE       1   //!< Execution continue in background
@@ -158,7 +172,21 @@ uint8_t cmd_history_size(uint8_t max);
  *  This function should be used when user want to print something to the console
  *  \param fmt   console print function (like printf)
  */
+#if defined(__GNUC__) || defined(__CC_ARM)
+void cmd_printf(const char *fmt, ...)  __attribute__ ((__format__(__printf__, 1, 2)));
+#else
 void cmd_printf(const char *fmt, ...);
+#endif
+/** command line print function
+ *  This function should be used when user want to print something to the console with vprintf functionality
+ *  \param fmt  The format string is a character string, beginning and ending in its initial shift state, if any. The format string is composed of zero or more directives.
+ *  \param ap   list of parameters needed by format string. This must correspond properly with the conversion specifier.
+ */
+#if defined(__GNUC__) || defined(__CC_ARM)
+void cmd_vprintf(const char *fmt, va_list ap)  __attribute__ ((__format__(__printf__, 1, 0)));
+#else
+void cmd_vprintf(const char *fmt, va_list ap);
+#endif
 /** Reconfigure default cmdline out function (cmd_printf)
  *  \param outf  select console print function
  */
@@ -167,6 +195,46 @@ void cmd_out_func(cmd_print_t *outf);
  * \param sohf control function which called every time when user input control keys
  */
 void cmd_ctrl_func(void (*sohf)(uint8_t c));
+/**
+ * Configure mutex wait function
+ * By default, cmd_printf calls may not be thread safe, depending on the implementation of the used output.
+ * This can be used to set a callback function that will be called before each cmd_printf call.
+ * The specific implementation is up to the application developer, but simple mutex locking is assumed.
+ */
+void cmd_mutex_wait_func(void (*mutex_wait_f)(void));
+/**
+ * Configure mutex wait function
+ * By default, cmd_printf calls may not be thread safe, depending on the implementation of the used output.
+ * This can be used to set a callback function that will be called after each cmd_printf call.
+ * The specific implementation is up to the application developer, but simple mutex locking is assumed.
+ */
+void cmd_mutex_release_func(void (*mutex_release_f)(void));
+/**
+ * Retrieve output mutex lock
+ * This can be used to retrieve the output mutex when multiple cmd_printf/cmd_vprintf calls must be
+ * guaranteed to be grouped together in a thread safe manner. Must be released by a following call to
+ * cmd_mutex_unlock()
+ * For example:
+ * * \code
+ * cmd_mutex_lock();
+   for (i = 0; i < 10; i++) {
+       cmd_printf("%02x ", i);
+   }
+   // without locking a print from another thread could happen here
+   cmd_printf("\r\n);
+   cmd_mutex_unlock();
+ * \endcode
+ * Exact behaviour depends on the implementation of the configured mutex,
+ * but counting mutexes are required.
+ */
+void cmd_mutex_lock(void);
+/**
+ * Release output mutex lock
+ * This can be used to release the output mutex once it has been retrieved with cmd_mutex_lock()
+ * Exact behaviour depends on the implementation of the configured mutex,
+ * but counting mutexes are required.
+ */
+void cmd_mutex_unlock(void);
 /** Refresh output */
 void cmd_output(void);
 /** default cmd response function, use stdout
@@ -189,7 +257,13 @@ void cmd_echo_on(void);
  * \param u_data char to be added to console
  */
 void cmd_char_input(int16_t u_data);
-
+/*
+ * Set the passthrough mode callback function. In passthrough mode normal command input handling is skipped and any
+ * received characters are passed to the passthrough callback function. Setting this to null will disable passthrough mode.
+ * \param passthrough_fnc The passthrough callback function
+ */
+typedef void (*input_passthrough_func_t)(uint8_t c);
+void cmd_input_passthrough_func(input_passthrough_func_t passthrough_fnc);
 
 /* Methods used for adding and handling of commands and aliases
  */
@@ -272,7 +346,7 @@ int cmd_parameter_index(int argc, char *argv[], const char *key);
  * \param key   option key to be find
  * \return true if option found otherwise false
  */
-bool cmd_has_option(int argc, char *argv[], char *key);
+bool cmd_has_option(int argc, char *argv[], const char *key);
 /** find command parameter by key.
  * if exists, return true, otherwise false.
  * e.g. cmd: "mycmd enable 1"
@@ -309,27 +383,41 @@ bool cmd_parameter_bool(int argc, char *argv[], const char *key, bool *value);
  * \return true if parameter key and value found otherwise false
  */
 bool cmd_parameter_val(int argc, char *argv[], const char *key, char **value);
-/** find command parameter by key and return value (next parameter) in integer.
+/** find command parameter by key and return value (next parameter) in integer. Only whitespaces are allowed in addition to the float to be read.
  * e.g. cmd: "mycmd mykey myvalue"
  * \code
- *   int32_t i;
- *   cmd_parameter_val_int( argc, argv, "mykey", &i );
+     int32_t value;
+     cmd_parameter_int( argc, argv, "key", &value );
  * \endcode
- * \param argc  argc is the count of arguments given in argv pointer list. value begins from 1 and this means that the 0 item in list argv is a string to name of command.
+ * \param argc  argc is the count of arguments given in argv pointer list. value begins from 1 and this means that the item 0 in the list argv is a string to name of command.
  * \param argv  is list of arguments. List size is given in argc parameter. Value in argv[0] is string to name of command.
- * \param key   parameter key to be find
- * \param value parameter value to be fetch, if key not found value are untouched.
- * \return true if parameter key and value found otherwise false
+ * \param key   parameter key to be found
+ * \param value A pointer to a variable where to write the converted number. If value cannot be converted, it is not touched.
+ * \return true if parameter key and an integer is found, otherwise return false
  */
 bool cmd_parameter_int(int argc, char *argv[], const char *key, int32_t *value);
+/** find command parameter by key and return value (next parameter) in float. Only whitespaces are allowed in addition to the float to be read.
+ * e.g. cmd: "mycmd mykey myvalue"
+ * \code
+     float value;
+     cmd_parameter_float( argc, argv, "key", &value );
+ * \endcode
+ * \param argc  argc is the count of arguments given in argv pointer list. values begin from 1 and this means that the item 0 in the list argv is a string to name of command.
+ * \param argv  is list of arguments. List size is given in argc parameter. Value in argv[0] is string to name of command.
+ * \param key   parameter key to be found
+ * \param value A pointer to a variable where to write the converted number. If value cannot be converted, it is not touched.
+ * \return true if parameter key and a float found, otherwise return false
+ */
+bool cmd_parameter_float(int argc, char *argv[], const char *key, float *value);
 /** Get last command line parameter as string.
  * e.g.
+ *     cmd: "mycmd hello world"
+ *     cmd_parameter_last -> "world"
+ *     cmd: "mycmd"
+ *     cmd_parameter_last() -> NULL
  * \code
-    cmd: "mycmd hello world"
-        cmd_parameter_last -> "world"
-    cmd: "mycmd"
-        cmd_parameter_last() -> NULL
-   \endcode
+    cmd_parameter_last(argc, argv)
+ * \endcode
  * \param argc  argc is the count of arguments given in argv pointer list. value begins from 1 and this means that the 0 item in list argv is a string to name of command.
  * \param argv  is list of arguments. List size is given in argc parameter. Value in argv[0] is string to name of command.
  * \return pointer to last parameter or NULL when there is no any parameters.
@@ -339,8 +427,8 @@ char *cmd_parameter_last(int argc, char *argv[]);
 /** find command parameter by key and return value (next parameter) in int64.
  * e.g. cmd: "mycmd mykey myvalue"
  * \code
- *   uint32_t i;
- *   cmd_parameter_timestamp( argc, argv, "mykey", &i );
+     uint32_t i;
+     cmd_parameter_timestamp( argc, argv, "mykey", &i );
  * \endcode
  *
  * Supports following formats:

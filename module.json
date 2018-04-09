@@ -1,7 +1,7 @@
 {
   "name": "mbed-client-cli",
-  "version": "0.0.1",
-  "description": "Command Line Library for mbed client",
+  "version": "0.3.0",
+  "description": "Command Line Library for mbedOS",
   "keywords": [
     "cli",
     "client",
@@ -20,14 +20,14 @@
     }
   ],
   "dependencies": {
-    "mbed-client-trace": "ARMmbed/mbed-client-trace"
+    "mbed-trace": "^1.1.2"
   },
   "testTargetDependencies": {
     "x86-linux-native": {
-        "cpputest": "ARMmbed/cpputest"
-    }, 
+      "cpputest": "ARMmbed/cpputest"
+    },
     "x86-windows-native": {
-        "cpputest": "ARMmbed/cpputest"
+      "cpputest": "ARMmbed/cpputest"
     }
   }
 }

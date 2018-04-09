@@ -1,6 +1,19 @@
 /*
- * Copyright (c) 2014-2015 ARM. All rights reserved.
+ * Copyright (c) 2016 ARM Limited. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ * Licensed under the Apache License, Version 2.0 (the License); you may
+ * not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an AS IS BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -25,27 +38,38 @@
 #endif
 #endif
 
-//#define YOTTA_CFG_TRACE
+// force traces for this module
+//#define FEA_TRACE_SUPPORT
 
 
 #ifdef YOTTA_CFG
 #include "ns_list_internal/ns_list.h"
 #include "mbed-client-cli/ns_cmdline.h"
-#include "mbed-client-trace/mbed_client_trace.h"
 #else
 #include "ns_list.h"
 #include "ns_cmdline.h"
-#include "ns_trace.h"
-#define mbed_client_trace_exclude_filters_set set_trace_exclude_filters
 #endif
+#include "mbed-trace/mbed_trace.h"
 
 //#define TRACE_DEEP
 //#define TRACE_PRINTF
 
-
 #ifdef TRACE_PRINTF
 #undef tr_debug
 #define tr_debug(...) printf( __VA_ARGS__);printf("\r\n")
+#endif
+
+// MBED_CLIENT_CLI_TRACE_ENABLE is to enable the traces for debugging,
+// default all debug traces are disabled.
+#ifndef MBED_CLIENT_CLI_TRACE_ENABLE
+#undef tr_error
+#define tr_error(...)
+#undef tr_warn
+#define tr_warn(...)
+#undef tr_debug
+#define tr_debug(...)
+#undef tr_info
+#define tr_info(...)
 #endif
 
 #ifdef TRACE_DEEP
@@ -53,7 +77,6 @@
 #else
 #define tr_deep(...)
 #endif
-
 
 #define TRACE_GROUP "cmdL"
 
@@ -65,8 +88,24 @@
 #define TAB 0x09
 #define CAN 0x18
 
+// Maximum length of input line
+#ifdef MBED_CMDLINE_MAX_LINE_LENGTH
+#define MAX_LINE MBED_CMDLINE_MAX_LINE_LENGTH
+#else
 #define MAX_LINE 2000
+#endif
+// Maximum number of arguments in a single command
+#ifdef MBED_CMDLINE_ARGUMENTS_MAX_COUNT
+#define MAX_ARGUMENTS MBED_CMDLINE_ARGUMENTS_MAX_COUNT
+#else
 #define MAX_ARGUMENTS 30
+#endif
+// Maximum number of commands saved in history
+#ifdef MBED_CMDLINE_HISTORY_MAX_COUNT
+#define HISTORY_MAX_COUNT MBED_CMDLINE_HISTORY_MAX_COUNT
+#else
+#define HISTORY_MAX_COUNT 32
+#endif
 
 //include manuals or not (save memory a little when not include)
 #define INCLUDE_MAN
@@ -147,9 +186,12 @@ typedef struct cmd_class_s {
 
     cmd_print_t *out;                  // print cb function
     void (*ctrl_fnc)(uint8_t c);      // control cb function
+    void (*mutex_wait_fnc)(void);         // mutex wait cb function
+    void (*mutex_release_fnc)(void);      // mutex release cb function
+    input_passthrough_func_t passthrough_fnc; // input passthrough cb function
 } cmd_class_t;
 
-cmd_class_t cmd = { .init = false,  .retcode_fmt = NULL, .cmd_ptr = NULL };
+cmd_class_t cmd = { .init = false,  .retcode_fmt = NULL, .cmd_ptr = NULL, .mutex_wait_fnc = NULL, .mutex_release_fnc = NULL, .passthrough_fnc = NULL };
 
 /* Function prototypes
  */
@@ -201,13 +243,24 @@ int history_command(int argc, char *argv[]);
 void default_cmd_response_out(const char *fmt, va_list ap)
 {
     vprintf(fmt, ap);
+    fflush(stdout);
 }
 void cmd_printf(const char *fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
-    cmd.out(fmt, ap);
+    cmd_vprintf(fmt, ap);
     va_end(ap);
+}
+void cmd_vprintf(const char *fmt, va_list ap)
+{
+    if (cmd.mutex_wait_fnc) {
+        cmd.mutex_wait_fnc();
+    }
+    cmd.out(fmt, ap);
+    if (cmd.mutex_release_fnc) {
+        cmd.mutex_release_fnc();
+    }
 }
 /* Function definitions
  */
@@ -221,9 +274,6 @@ void cmd_init(cmd_print_t *outf)
         ns_list_init(&cmd.cmd_buffer);
         cmd.init = true;
     }
-#if defined(HAVE_DEBUG) || defined(FEA_TRACE_SUPPORT)
-    mbed_client_trace_exclude_filters_set(TRACE_GROUP);
-#endif
     cmd.out = outf ? outf : default_cmd_response_out;
     cmd.ctrl_fnc = NULL;
     cmd.echo = true;
@@ -232,13 +282,15 @@ void cmd_init(cmd_print_t *outf)
     cmd.insert = true;
     cmd.cursor = 0;
     cmd.vt100_on = true;
-    cmd.history_max_count = 32;   // by default
+    cmd.history_max_count = HISTORY_MAX_COUNT;
     cmd.tab_lookup = 0;
     cmd.tab_lookup_cmd_n = 0;
     cmd.tab_lookup_n = 0;
     cmd.cmd_buffer_ptr = 0;
     cmd.idle = true;
     cmd_set_retfmt("\r\nretcode: %i\r\n");
+    cmd.ready_cb = cmd_next;
+    cmd.passthrough_fnc = NULL;
     cmd_line_clear(0);            // clear line
     cmd_history_save(0);          // the current line is the 0 item
     //cmd_free();
@@ -301,7 +353,15 @@ void cmd_free(void)
         ns_list_remove(&cmd.history_list, cur_ptr);
         MEM_FREE(cur_ptr);
     }
+    cmd.mutex_wait_fnc = NULL;
+    cmd.mutex_release_fnc = NULL;
 }
+
+void cmd_input_passthrough_func(input_passthrough_func_t passthrough_fnc)
+{
+    cmd.passthrough_fnc = passthrough_fnc;
+}
+
 void cmd_exe(char *str)
 {
     cmd_split(str);
@@ -353,7 +413,7 @@ void cmd_next(int retcode)
         retcode = cmd_run(cmd.cmd_buffer_ptr->cmd_s);
         //check if execution goes to the backend or not
         if (retcode == CMDLINE_RETCODE_EXCUTING_CONTINUE ) {
-            if( cmd.cmd_buffer_ptr->operator == OPERATOR_BACKGROUND )
+            if( (NULL != cmd.cmd_buffer_ptr) && cmd.cmd_buffer_ptr->operator == OPERATOR_BACKGROUND )
             {
                 //execution continue in background, but operator say that it's "ready"
                 cmd_ready(CMDLINE_RETCODE_SUCCESS);
@@ -464,17 +524,37 @@ void cmd_ctrl_func(void (*sohf)(uint8_t c))
 {
     cmd.ctrl_fnc = sohf;
 }
+
+void cmd_mutex_wait_func(void (*mutex_wait_f)(void))
+{
+    cmd.mutex_wait_fnc = mutex_wait_f;
+}
+void cmd_mutex_release_func(void (*mutex_release_f)(void))
+{
+    cmd.mutex_release_fnc = mutex_release_f;
+}
+
+void cmd_mutex_lock()
+{
+    if (cmd.mutex_wait_fnc) {
+        cmd.mutex_wait_fnc();
+    }
+}
+
+void cmd_mutex_unlock()
+{
+    if (cmd.mutex_release_fnc) {
+        cmd.mutex_release_fnc();
+    }
+}
+
 void cmd_init_screen()
 {
     if (cmd.vt100_on) {
         cmd_printf("\r\x1b[2J"); /* Clear screen */
         cmd_printf("\x1b[7h"); /* enable line wrap */
     }
-    //cmd_printf("ARM Ltd\r\n");
-    cmd_printf("   _   ___ __  __               _            _  ___  ___ \r\n");
-    cmd_printf("  /_\\ | _ \\  \\/  |  ___   _ __ | |__  ___ __| |/ _ \\/ __|\r\n");
-    cmd_printf(" / _ \\|   / |\\/| | |___| | '  \\| '_ \\/ -_) _` | (_) \\__ \r\n");
-    cmd_printf("/_/ \\_\\_|_\\_|  |_|       |_|_|_|_.__/\\___\\__,_|\\___/|___/\r\n\n");
+    cmd_printf("ARM Ltd\r\n");
     cmd_output();
 }
 uint8_t cmd_history_size(uint8_t max)
@@ -497,16 +577,15 @@ static cmd_command_t *cmd_find_n(char *name, int nameLength, int n)
 {
     cmd_command_t *cmd_ptr = NULL;
     int i = 0;
-    if (name == NULL || nameLength == 0) {
-        return NULL;
-    }
-    ns_list_foreach(cmd_command_t, cur_ptr, &cmd.command_list) {
-        if (strncmp(name, cur_ptr->name_ptr, nameLength) == 0) {
-            if (i == n) {
-                cmd_ptr = cur_ptr;
-                break;
+    if (name != NULL && nameLength != 0) {
+        ns_list_foreach(cmd_command_t, cur_ptr, &cmd.command_list) {
+            if (strncmp(name, cur_ptr->name_ptr, nameLength) == 0) {
+                if (i == n) {
+                    cmd_ptr = cur_ptr;
+                    break;
+                }
+                i++;
             }
-            i++;
         }
     }
     return cmd_ptr;
@@ -587,7 +666,7 @@ void cmd_delete(const char *name)
 static int cmd_parse_argv(char *string_ptr, char **argv)
 {
     int argc = 0;
-    char *str_ptr, *end_quote_ptr;
+    char *str_ptr, *end_quote_ptr = NULL;
 
     if (string_ptr == NULL || strlen(string_ptr) == 0) {
         tr_error("Invalid parameters");
@@ -705,7 +784,7 @@ static int cmd_run(char *string_ptr)
 
     tr_info("Executing cmd: '%s'", string_ptr);
     char *command_str = MEM_ALLOC(MAX_LINE);
-    while (isspace((int)*string_ptr) &&
+    while (isspace((unsigned char) *string_ptr) &&
             *string_ptr != '\n' &&
             *string_ptr != 0) {
         string_ptr++; //skip white spaces
@@ -950,6 +1029,12 @@ static void cmd_reset_tab(void)
 }
 void cmd_char_input(int16_t u_data)
 {
+    /*Handle passthrough*/
+    if (cmd.passthrough_fnc != NULL) {
+        cmd.passthrough_fnc(u_data);
+        return;
+    }
+
     /*handle ecape command*/
     if (cmd.escaping == true) {
         cmd_escape_read(u_data);
@@ -1091,7 +1176,7 @@ bool cmd_tab_lookup(void)
 void cmd_output(void)
 {
     if (cmd.vt100_on && cmd.idle) {
-        cmd_printf("\r\x1b[2K/>%s \x1b[%dD", cmd.input, strlen(cmd.input) - cmd.cursor + 1);
+        cmd_printf("\r\x1b[2K/>%s \x1b[%dD", cmd.input, (int)strlen(cmd.input) - cmd.cursor + 1);
     }
 }
 void cmd_echo_off(void)
@@ -1110,7 +1195,7 @@ int replace_alias(char *str, const char *old_str, const char *new_str)
 {
     int old_len = strlen(old_str),
         new_len = strlen(new_str);
-    if ((memcmp(str, old_str, old_len) == 0) &&
+    if ((strncmp(str, old_str, old_len) == 0) &&
             ((str[ old_len ] == ' ') || (str[ old_len ] == 0) ||
              (str[ old_len ] == ';') || (str[ old_len ] == '&'))) {
         memmove(str + new_len, str + old_len, strlen(str + old_len) + 1);
@@ -1504,24 +1589,27 @@ int set_command(int argc, char *argv[])
 }
 int echo_command(int argc, char *argv[])
 {
-    int n;
+    bool printEcho = false;
     if (argc == 1) {
-        cmd_printf("ECHO is %s\r\n", cmd.echo ? "on" : "off");
-        return 0;
+        printEcho = true;
     } else if (argc == 2) {
         if (strcmp(argv[1], "off") == 0) {
             cmd_echo(false);
-            return 0;
+            printEcho = true;
         } else if (strcmp(argv[1], "on") == 0) {
             cmd_echo(true);
-            return 0;
+            printEcho = true;
         }
     }
-    for (n = 1; n < argc; n++) {
-        tr_deep("ECHO: %s\r\n", argv[n]);
-        cmd_printf("%s ", argv[n]);
+    if( printEcho ) {
+        cmd_printf("ECHO is %s\r\n", cmd.echo ? "on" : "off");
+    } else {
+        for (int n = 1; n < argc; n++) {
+            tr_deep("ECHO: %s\r\n", argv[n]);
+            cmd_printf("%s ", argv[n]);
+        }
+        cmd_printf("\r\n");
     }
-    cmd_printf("\r\n");
     return 0;
 }
 
@@ -1545,9 +1633,9 @@ int help_command(int argc, char *argv[])
         if (cmd_ptr) {
             cmd_printf("Command: %s\r\n", cmd_ptr->name_ptr);
             if (cmd_ptr->man_ptr) {
-                cmd_printf(cmd_ptr->man_ptr);
+                cmd_printf("%s\r\n", cmd_ptr->man_ptr);
             } else if (cmd_ptr->info_ptr) {
-                cmd_printf(cmd_ptr->info_ptr);
+                cmd_printf("%s\r\n", cmd_ptr->info_ptr);
             }
         } else {
             cmd_printf("Command '%s' not found", argv[1]);
@@ -1558,7 +1646,7 @@ int help_command(int argc, char *argv[])
 int history_command(int argc, char *argv[])
 {
     if (argc == 1) {
-        cmd_printf("History [%i/%i]:\r\n", ns_list_count(&cmd.history_list), cmd.history_max_count);
+        cmd_printf("History [%i/%i]:\r\n", (int)ns_list_count(&cmd.history_list), cmd.history_max_count);
         int i = 0;
         ns_list_foreach_reverse(cmd_history_t, cur_ptr, &cmd.history_list) {
             cmd_printf("[%i]: %s\r\n", i++, cur_ptr->command_ptr);
@@ -1585,7 +1673,7 @@ int cmd_parameter_index(int argc, char *argv[], const char *key)
     }
     return -1;
 }
-bool cmd_has_option(int argc, char *argv[], char *key)
+bool cmd_has_option(int argc, char *argv[], const char *key)
 {
     int i = 0;
     for (i = 1; i < argc; i++) {
@@ -1630,10 +1718,37 @@ bool cmd_parameter_val(int argc, char *argv[], const char *key, char **value)
 bool cmd_parameter_int(int argc, char *argv[], const char *key, int32_t *value)
 {
     int i = cmd_parameter_index(argc, argv, key);
+    char* tailptr;
     if (i > 0) {
         if (argc > (i + 1)) {
-            *value = strtol(argv[i + 1], 0, 10);
-            return true;
+            *value = strtol(argv[i + 1], &tailptr, 10);
+            if (0 == *tailptr) {
+                return true;
+            }
+            if (!isspace((unsigned char) *tailptr)) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+bool cmd_parameter_float(int argc, char *argv[], const char *key, float *value)
+{
+    int i = cmd_parameter_index(argc, argv, key);
+    char* tailptr;
+    if (i > 0) {
+        if (argc > (i + 1)) {
+            *value = strtof(argv[i + 1], &tailptr);
+            if (0 == *tailptr) {
+                return true;    //Should be correct read always
+            }
+            if (!isspace((unsigned char) *tailptr)) {
+                return false;   //Garbage in tailptr
+            } else {
+                return true;    //Spaces are fine after float
+            }
         }
     }
     return false;

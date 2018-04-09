@@ -1,10 +1,23 @@
 /*
- * Copyright (c) 2014-2015 ARM. All rights reserved.
- */
-/**
- * \file \test_libTrace\Test.c
+ * Copyright (c) 2016 ARM Limited. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ * Licensed under the Apache License, Version 2.0 (the License); you may
+ * not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * \brief Unit tests for libTrace
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an AS IS BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * \file \test\Test.c
+ *
+ * \brief Unit tests for mbed-client-cli
  */
 #include <string.h>
 #include <stdlib.h>
@@ -17,9 +30,9 @@
 #include "mbed-cpputest/CppUTest/SimpleString.h"
 #include "mbed-cpputest/CppUTest/CommandLineTestRunner.h"
 
-#define MBED_CLIENT_TRACE_FEA_IPV6 0
-#define YOTTA_CFG_TRACE
-#include "mbed-client-trace/mbed_client_trace.h"
+#define YOTTA_CFG_MBED_TRACE 1
+#define YOTTA_CFG_MBED_TRACE_FEA_IPV6 0
+#include "mbed-trace/mbed_trace.h"
 #include "mbed-client-cli/ns_cmdline.h"
 #define MAX(x,y)   (x>y?x:y)
 #define ARRAY_CMP(x, y) \
@@ -38,8 +51,24 @@ int cmd_dummy(int argc, char *argv[])
     return 0;
 }
 
+int mutex_wait_count = 0;
+int mutex_release_count = 0;
+int mutex_count_expected_difference = 1;
+bool check_mutex_lock_state = false;
+void my_mutex_wait()
+{
+    mutex_wait_count++;
+}
+void my_mutex_release()
+{
+    mutex_release_count++;
+}
+
 void myprint(const char *fmt, va_list ap)
 {
+    if (check_mutex_lock_state) {
+        CHECK((mutex_wait_count - mutex_release_count) == mutex_count_expected_difference);
+    }
     vsnprintf(buf + strlen(buf), BUFSIZE - strlen(buf), fmt, ap);
     //printf("\nMYPRINT: %s\n", buf); //for test test
 }
@@ -51,12 +80,12 @@ void input(const char *str)
 }
 
 #define REQUEST(x)          input(x);INIT_BUF();cmd_char_input('\r');
-#define RESPONSE(x)         "\r\n"x"\r\n\r\x1B[2K/> \x1B[1D"
-#define CMDLINE(x)          "\r\x1b[2K/>"x"\x1b[1D"
+#define RESPONSE(x)         "\r\n" x "\r\n\r\x1B[2K/> \x1B[1D"
+#define CMDLINE(x)          "\r\x1b[2K/>" x "\x1b[1D"
 
 #define FORWARD             "C"
 #define BACKWARD            "D"
-#define CMDLINE_CUR(x, cursor, dir)  "\r\x1b[2K/>"x"\x1b["cursor""dir
+#define CMDLINE_CUR(x, cursor, dir)  "\r\x1b[2K/>" x "\x1b[" cursor "" dir
 #define CLEAN()             cmd_char_input('\r');INIT_BUF();
 
 //vt100 keycodes
@@ -96,6 +125,54 @@ TEST_GROUP(cli)
 
 TEST(cli, init)
 {
+}
+TEST(cli, cmd_printf_with_mutex_not_set)
+{
+    cmd_mutex_wait_func(0);
+    cmd_mutex_release_func(0);
+    int mutex_call_count_at_entry = mutex_wait_count;
+    check_mutex_lock_state = false;
+
+    cmd_printf("Hello hello!");
+    STRCMP_EQUAL("Hello hello!" , buf);
+
+    CHECK(mutex_call_count_at_entry == mutex_wait_count);
+    CHECK(mutex_call_count_at_entry == mutex_release_count);
+
+    cmd_mutex_wait_func(my_mutex_wait);
+    cmd_mutex_release_func(my_mutex_release);
+}
+TEST(cli, cmd_printf_with_mutex_set)
+{
+    cmd_mutex_wait_func(my_mutex_wait);
+    cmd_mutex_release_func(my_mutex_release);
+    check_mutex_lock_state = true;
+
+    cmd_printf("!olleh olleH");
+    STRCMP_EQUAL("!olleh olleH" , buf);
+    CHECK(mutex_wait_count == mutex_release_count);
+
+    check_mutex_lock_state = false;
+    cmd_mutex_wait_func(0);
+    cmd_mutex_release_func(0);
+}
+TEST(cli, external_mutex_handles)
+{
+    cmd_mutex_wait_func(my_mutex_wait);
+    cmd_mutex_release_func(my_mutex_release);
+    check_mutex_lock_state = true;
+    mutex_count_expected_difference = 2;
+
+    cmd_mutex_lock();
+    cmd_printf("!olleh olleH");
+    STRCMP_EQUAL("!olleh olleH" , buf);
+    cmd_mutex_unlock();
+    CHECK(mutex_wait_count == mutex_release_count);
+
+    mutex_count_expected_difference = 1;
+    check_mutex_lock_state = false;
+    cmd_mutex_wait_func(0);
+    cmd_mutex_release_func(0);
 }
 TEST(cli, parameters_index)
 {
@@ -149,15 +226,41 @@ TEST(cli, parameters_int)
 {
     bool ok;
     int val;
-    char *argv[] =  { "cmd", "p1", "p2", "3", "p4", "p5" };
+    char *argv[] =  { "cmd", "p1", "p2", "3", "p4", "555fail", "p5" };
 
     ok = cmd_parameter_int(6, argv, "p2", &val);
     CHECK_EQUAL(true, ok);
     CHECK_EQUAL(3, val);
 
+    ok = cmd_parameter_int(6, argv, "p1", &val);
+    CHECK_EQUAL(false, ok);
+
     ok = cmd_parameter_int(6, argv, "p4", &val);
+    CHECK_EQUAL(false, ok);
+
+    ok = cmd_parameter_int(6, argv, "p5", &val);
+    CHECK_EQUAL(false, ok);
+}
+TEST(cli, parameters_float)
+{
+    bool ok;
+    float val;
+    float val2 = 3.14159;
+    char *argv[] =  { "cmd", "p1", "3.14159", "p3", "3.14159 ", "p4", "3.14fail ", "p5" };
+
+    ok = cmd_parameter_float(8, argv, "p1", &val);
     CHECK_EQUAL(true, ok);
-    CHECK_EQUAL(0, val);
+    CHECK_EQUAL(val2, val);
+
+    ok = cmd_parameter_float(8, argv, "p3", &val);
+    CHECK_EQUAL(true, ok);
+    CHECK_EQUAL(val2, val);
+
+    ok = cmd_parameter_float(8, argv, "p4", &val);
+    CHECK_EQUAL(false, ok);
+
+    ok = cmd_parameter_float(8, argv, "p5", &val);
+    CHECK_EQUAL(false, ok);
 }
 TEST(cli, cmd_parameter_last)
 {
@@ -612,3 +715,71 @@ TEST(cli, ampersand)
     ARRAY_CMP(RESPONSE("hello world ") , buf);
 }
 
+#define REDIR_DATA "echo Hi!"
+#define PASSTHROUGH_BUF_LENGTH 10
+char passthrough_buffer[PASSTHROUGH_BUF_LENGTH];
+char* passthrough_ptr = NULL;
+void passthrough_cb(uint8_t c)
+{
+    if (passthrough_ptr != NULL) {
+        *passthrough_ptr++ = c;
+    }
+}
+TEST(cli, passthrough_set)
+{
+    passthrough_ptr = passthrough_buffer;
+    memset(&passthrough_buffer, 0, PASSTHROUGH_BUF_LENGTH);
+    INIT_BUF();
+
+    cmd_input_passthrough_func(passthrough_cb);
+    input(REDIR_DATA);
+
+    CHECK(strlen(buf) == 0);
+    ARRAY_CMP(REDIR_DATA, passthrough_buffer);
+
+    cmd_input_passthrough_func(NULL);
+
+    REQUEST(REDIR_DATA);
+    ARRAY_CMP(RESPONSE("Hi! ") , buf);
+}
+
+
+TEST(cli, cmd_out_func_set_null)
+{
+    cmd_out_func(NULL);
+}
+
+static int outf_called = 0;
+void outf(const char *fmt, va_list ap) {
+    outf_called++;
+}
+TEST(cli, cmd_out_func_set)
+{
+    outf_called = 0;
+    cmd_out_func(&outf);
+    cmd_vprintf(NULL, NULL);
+    CHECK_EQUAL(outf_called, 1);
+}
+
+TEST(cli, cmd_ctrl_func_set_null)
+{
+    cmd_ctrl_func(NULL);
+}
+
+TEST(cli, cmd_delete_null)
+{
+    cmd_delete(NULL);
+}
+
+TEST(cli, cmd_history_size_set)
+{
+    cmd_history_size(0);
+    CHECK_EQUAL(cmd_history_size(1), 1);
+}
+
+TEST(cli, cmd_add_invalid_params)
+{
+    cmd_add(NULL, cmd_dummy, NULL, NULL);
+    cmd_add("", cmd_dummy, NULL, NULL);
+    cmd_add("abc", NULL, NULL, NULL);
+}
