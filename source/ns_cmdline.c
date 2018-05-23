@@ -59,8 +59,9 @@
 #define tr_debug(...) printf( __VA_ARGS__);printf("\r\n")
 #endif
 
+// #define MBED_CLIENT_CLI_TRACE_ENABLE
 // MBED_CLIENT_CLI_TRACE_ENABLE is to enable the traces for debugging,
-// default all debug traces are disabled.
+// By default all debug traces are disabled.
 #ifndef MBED_CLIENT_CLI_TRACE_ENABLE
 #undef tr_error
 #define tr_error(...)
@@ -511,7 +512,16 @@ static void cmd_push(char *cmd_str, operator_t oper)
 {
     //store this command to the stack
     cmd_exe_t *cmd_ptr = MEM_ALLOC(sizeof(cmd_exe_t));
+    if (cmd_ptr == NULL) {
+        tr_error("mem alloc failed in cmd_push1");
+        return;
+    }
     cmd_ptr->cmd_s = MEM_ALLOC(strlen(cmd_str) + 1);
+    if (cmd_ptr->cmd_s == NULL) {
+        MEM_FREE(cmd_ptr);
+        tr_error("mem alloc failed in cmd_push2");
+        return;
+    }
     strcpy(cmd_ptr->cmd_s, cmd_str);
     cmd_ptr->operator = oper;
     ns_list_add_to_end(&cmd.cmd_buffer, cmd_ptr);
@@ -642,6 +652,10 @@ void cmd_add(const char *name, cmd_run_cb *callback, const char *info, const cha
         return;
     }
     cmd_ptr = (cmd_command_t *)MEM_ALLOC(sizeof(cmd_command_t));
+    if (cmd_ptr == NULL) {
+        tr_error("mem alloc failed in cmd_add");
+        return;
+    }
     cmd_ptr->name_ptr = name;
     cmd_ptr->info_ptr = info;
     cmd_ptr->man_ptr = man;
@@ -784,6 +798,10 @@ static int cmd_run(char *string_ptr)
 
     tr_info("Executing cmd: '%s'", string_ptr);
     char *command_str = MEM_ALLOC(MAX_LINE);
+    if (command_str == NULL) {
+        tr_error("mem alloc failed in cmd_run");
+        return CMDLINE_RETCODE_FAIL;
+    }
     while (isspace((unsigned char) *string_ptr) &&
             *string_ptr != '\n' &&
             *string_ptr != 0) {
@@ -1286,6 +1304,10 @@ static void cmd_history_save(int16_t index)
     if (entry_ptr == NULL) {
         /*new entry*/
         entry_ptr = (cmd_history_t *)MEM_ALLOC(sizeof(cmd_history_t));
+        if (entry_ptr == NULL) {
+            tr_error("mem alloc failed in cmd_history_save");
+            return;
+        }
         entry_ptr->command_ptr = NULL;
         ns_list_add_to_start(&cmd.history_list, entry_ptr);
     }
@@ -1294,6 +1316,11 @@ static void cmd_history_save(int16_t index)
         MEM_FREE(entry_ptr->command_ptr);
     }
     entry_ptr->command_ptr = (char *)MEM_ALLOC(len + 1);
+    if (entry_ptr->command_ptr == NULL) {
+        tr_error("mem alloc failed in cmd_history_save2");
+        cmd_history_item_delete(entry_ptr);
+        return;
+    }
     strcpy(entry_ptr->command_ptr, cmd.input);
 
     cmd_history_clean_overflow();
@@ -1448,8 +1475,17 @@ void cmd_alias_add(const char *alias, const char *value)
             return;    // no need to add new empty one
         }
         alias_ptr = (cmd_alias_t *)MEM_ALLOC(sizeof(cmd_alias_t));
-        ns_list_add_to_end(&cmd.alias_list, alias_ptr);
+        if (alias_ptr == NULL) {
+            tr_error("Mem alloc fail in cmd_alias_add");
+            return;
+        }
         alias_ptr->name_ptr = (char *)MEM_ALLOC(strlen(alias) + 1);
+        if (alias_ptr->name_ptr == NULL) {
+            MEM_FREE(alias_ptr);
+            tr_error("Mem alloc fail in cmd_alias_add name_ptr");
+            return;
+        }
+        ns_list_add_to_end(&cmd.alias_list, alias_ptr);
         strcpy(alias_ptr->name_ptr, alias);
         alias_ptr->value_ptr = NULL;
     }
@@ -1465,6 +1501,11 @@ void cmd_alias_add(const char *alias, const char *value)
             MEM_FREE(alias_ptr->value_ptr);
         }
         alias_ptr->value_ptr = (char *)MEM_ALLOC(strlen(value) + 1);
+        if (alias_ptr->value_ptr == NULL) {
+            cmd_alias_add(alias, NULL);
+            tr_error("Mem alloc fail in cmd_alias_add value_ptr");
+            return;
+        }
         strcpy(alias_ptr->value_ptr, value);
     }
     return;
@@ -1486,8 +1527,18 @@ void cmd_variable_add(char *variable, char *value)
             return;    // no need to add new empty one
         }
         variable_ptr = (cmd_variable_t *)MEM_ALLOC(sizeof(cmd_variable_t));
-        ns_list_add_to_end(&cmd.variable_list, variable_ptr);
+        if (variable_ptr == NULL) {
+            tr_error("Mem alloc failed cmd_variable_add");
+            return;
+        }
         variable_ptr->name_ptr = (char *)MEM_ALLOC(strlen(variable) + 1);
+        if (variable_ptr->name_ptr == NULL) {
+            MEM_FREE(variable_ptr);
+            tr_error("Mem alloc failed cmd_variable_add name_ptr");
+            return;
+        }
+
+        ns_list_add_to_end(&cmd.variable_list, variable_ptr);
         strcpy(variable_ptr->name_ptr, variable);
         variable_ptr->value_ptr = NULL;
     }
@@ -1503,6 +1554,11 @@ void cmd_variable_add(char *variable, char *value)
             MEM_FREE(variable_ptr->value_ptr);
         }
         variable_ptr->value_ptr = (char *)MEM_ALLOC(strlen(value) + 1);
+        if (variable_ptr->value_ptr == NULL) {
+            cmd_variable_add(variable, NULL);
+            tr_error("Mem alloc failed cmd_variable_add value_ptr");
+            return;
+        }
         strcpy(variable_ptr->value_ptr, value);
     }
     return;
@@ -1525,6 +1581,10 @@ static void cmd_set_retfmt(char *fmt)
         MEM_FREE(cmd.retcode_fmt);
     }
     cmd.retcode_fmt = MEM_ALLOC(strlen(fmt) + 1);
+    if (cmd.retcode_fmt == NULL) {
+        tr_error("Mem alloc failed in cmd_set_retfmt");
+        return;
+    }
     strcpy(cmd.retcode_fmt, fmt);
 }
 /*Basic commands for cmd line
