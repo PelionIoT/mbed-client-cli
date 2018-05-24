@@ -513,13 +513,13 @@ static void cmd_push(char *cmd_str, operator_t oper)
     //store this command to the stack
     cmd_exe_t *cmd_ptr = MEM_ALLOC(sizeof(cmd_exe_t));
     if (cmd_ptr == NULL) {
-        tr_error("mem alloc failed in cmd_push1");
+        tr_error("mem alloc failed in cmd_push");
         return;
     }
     cmd_ptr->cmd_s = MEM_ALLOC(strlen(cmd_str) + 1);
     if (cmd_ptr->cmd_s == NULL) {
         MEM_FREE(cmd_ptr);
-        tr_error("mem alloc failed in cmd_push2");
+        tr_error("mem alloc failed in cmd_push cmd_s");
         return;
     }
     strcpy(cmd_ptr->cmd_s, cmd_str);
@@ -1317,7 +1317,7 @@ static void cmd_history_save(int16_t index)
     }
     entry_ptr->command_ptr = (char *)MEM_ALLOC(len + 1);
     if (entry_ptr->command_ptr == NULL) {
-        tr_error("mem alloc failed in cmd_history_save2");
+        tr_error("mem alloc failed in cmd_history_save command_ptr");
         cmd_history_item_delete(entry_ptr);
         return;
     }
