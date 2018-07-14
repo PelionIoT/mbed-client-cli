@@ -20,7 +20,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#if defined(_WIN32) || defined(__unix__) || defined(__unix) || defined(unix) || defined(YOTTA_CFG)
+#if defined(_WIN32) || defined(__unix__) || defined(__unix) || defined(unix) || defined(YOTTA_CFG) || defined(__APPLE__)
 #include <stdlib.h> //malloc
 #ifndef MEM_ALLOC
 #define MEM_ALLOC malloc
