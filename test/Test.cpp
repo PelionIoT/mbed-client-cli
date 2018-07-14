@@ -103,8 +103,11 @@ void input(const char *str)
 #define PAGE_DOWN() input("\x1b[6~")
 #define PAGE_UP()   input("\x1b[5~")
 
+int previous_retcode = 0;
+
 void cmd_ready_cb(int retcode)
 {
+    previous_retcode = retcode;
     cmd_next(retcode);
 }
 
@@ -276,11 +279,13 @@ TEST(cli, help)
 {
     REQUEST("help");
     CHECK(strlen(buf) > 20 );
+    CHECK_EQUAL(previous_retcode, 0);
 }
 TEST(cli, hello)
 {
     REQUEST("echo Hi!");
     ARRAY_CMP(RESPONSE("Hi! ") , buf);
+    CHECK_EQUAL(previous_retcode, 0);
 }
 TEST(cli, cmd_echo1)
 {
@@ -614,7 +619,7 @@ TEST(cli, cmd_tab_4)
 //     char str[] = "hello a men";
 //     replace_alias(str, "a", "b");
 //     ARRAY_CMP("hello a men", str);
-// 
+//
 //     replace_alias(str, "hello", "echo");
 //     ARRAY_CMP("echo a men", str);
 //     INIT_BUF();
@@ -685,16 +690,44 @@ TEST(cli, cmd_var_2)
     REQUEST("echo $foo$faa");
     ARRAY_CMP(RESPONSE("hello world! ") , buf);
 }
-TEST(cli, multiple_cmd)
+TEST(cli, cmd__)
+{
+  REQUEST("echo foo");
+  ARRAY_CMP(RESPONSE("foo ") , buf);
+  REQUEST("_");
+  ARRAY_CMP(RESPONSE("foo ") , buf);
+}
+// operators
+#define CHECK_RETCODE(retcode) CHECK_EQUAL(previous_retcode, retcode)
+#define TEST_RETCODE_WITH_COMMAND(cmd, retcode) REQUEST(cmd);CHECK_RETCODE(retcode)
+
+TEST(cli, operator_semicolon)
 {
     REQUEST("set foo \"hello world\";echo $foo");
     ARRAY_CMP(RESPONSE("hello world ") , buf);
+    CHECK_RETCODE(CMDLINE_RETCODE_SUCCESS);
 
     REQUEST("setd faa \"hello world\";echo $faa");
     ARRAY_CMP("\r\nCommand 'setd' not found.\r\n$faa \r\n\r\x1B[2K/> \x1B[1D" , buf);
+    CHECK_RETCODE(CMDLINE_RETCODE_SUCCESS);
 
     REQUEST("setd foo \"hello guy\"&&echo $foo");
-    ARRAY_CMP(RESPONSE("Command 'setd' not found.") , buf);
+    ARRAY_CMP(RESPONSE("Command 'setd' not found."), buf);
+    CHECK_RETCODE(CMDLINE_RETCODE_COMMAND_NOT_FOUND);
+}
+TEST(cli, operators_and)
+{
+  TEST_RETCODE_WITH_COMMAND("true && true", CMDLINE_RETCODE_SUCCESS);
+  TEST_RETCODE_WITH_COMMAND("true && false", CMDLINE_RETCODE_FAIL);
+  TEST_RETCODE_WITH_COMMAND("false && true", CMDLINE_RETCODE_FAIL);
+  TEST_RETCODE_WITH_COMMAND("false && false", CMDLINE_RETCODE_FAIL);
+}
+TEST(cli, operators_or)
+{
+  TEST_RETCODE_WITH_COMMAND("true || true", CMDLINE_RETCODE_SUCCESS);
+  TEST_RETCODE_WITH_COMMAND("true || false", CMDLINE_RETCODE_SUCCESS);
+  TEST_RETCODE_WITH_COMMAND("false || true", CMDLINE_RETCODE_SUCCESS);
+  TEST_RETCODE_WITH_COMMAND("false || false", CMDLINE_RETCODE_FAIL);
 }
 TEST(cli, maxlength)
 {

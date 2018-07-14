@@ -108,8 +108,14 @@
 #define HISTORY_MAX_COUNT 32
 #endif
 
+#ifndef CMDLINE_INCLUDE_COMMAND_UNDERSCORE
+#define CMDLINE_INCLUDE_COMMAND_UNDERSCORE 1
+#endif
+
 //include manuals or not (save memory a little when not include)
-#define INCLUDE_MAN
+#ifndef CMDLINE_INCLUDE_MAN
+#define CMDLINE_INCLUDE_MAN 1
+#endif
 
 
 typedef struct cmd_history_s {
@@ -234,6 +240,8 @@ static void             cmd_push(char *cmd_str, operator_t oper);
 
 /*internal shell commands
  */
+int true_command(int argc, char *argv[]);
+int false_command(int argc, char *argv[]);
 int echo_command(int argc, char *argv[]);
 int alias_command(int argc, char *argv[]);
 int set_command(int argc, char *argv[]);
@@ -300,7 +308,7 @@ void cmd_init(cmd_print_t *outf)
     return;
 }
 
-#ifdef INCLUDE_MAN
+#if CMDLINE_INCLUDE_MAN == 1
 #define MAN_ECHO    "Displays messages, or turns command echoing on or off\r\n"\
                     "echo <data_to_be_print>\r\n"\
                     "some special parameters:\r\n"\
@@ -332,6 +340,8 @@ static void cmd_init_base_commands(void)
     cmd_add("set",      set_command,      "Handle variables",     MAN_SET);
     cmd_add("clear",    clear_command,    "Clears the display",   MAN_CLEAR);
     cmd_add("history",  history_command,  "View your command Line History", MAN_HISTORY);
+    cmd_add("true",     true_command, 0, 0);
+    cmd_add("false",    false_command, 0, 0);
 }
 void cmd_reset(void)
 {
@@ -442,7 +452,7 @@ static cmd_exe_t *cmd_pop(void)
                *next_cmd = ns_list_get_next(&cmd.cmd_buffer, cmd_ptr);
 
     if (cmd.cmd_buffer_ptr == 0) {
-        //was first in bool--
+        //was first in bool
         next_cmd = ns_list_get_first(&cmd.cmd_buffer);
     } else {
         MEM_FREE(cmd_ptr->cmd_s);
@@ -483,7 +493,9 @@ static cmd_exe_t *cmd_next_ptr(int retcode)
             next_cmd = cmd_pop();
             break;
         case (OPERATOR_PIPE):
-        /// @TODO
+            cmd_printf("pipe is not supported\r\n");
+            while ((next_cmd = cmd_pop()) != 0);
+            break;
         case (OPERATOR_SEMI_COLON):
         default:
             //get next command to be execute (might be null if there is no more)
@@ -658,7 +670,11 @@ void cmd_add(const char *name, cmd_run_cb *callback, const char *info, const cha
     }
     cmd_ptr->name_ptr = name;
     cmd_ptr->info_ptr = info;
+#if CMDLINE_INCLUDE_MAN == 1
     cmd_ptr->man_ptr = man;
+#else
+    cmd_ptr->man_ptr = 0;
+#endif
     cmd_ptr->run_cb = callback;
     cmd_ptr->busy = false;
     ns_list_add_to_end(&cmd.command_list, cmd_ptr);
@@ -768,7 +784,6 @@ static char *next_command(char *string_ptr, operator_t *oper)
                         }
                     case ('|'):
                         if (ptr[1] == '|') {
-                            tr_warn("or operator not supported");
                             if (oper) {
                                 *oper = OPERATOR_OR;
                                 *ptr = 0;
@@ -843,8 +858,8 @@ static int cmd_run(char *string_ptr)
     // Run the actual callback
     cmd.cmd_ptr->busy = true;
     ret = cmd.cmd_ptr->run_cb(argc, argv);
-#ifndef TEST
-    cmd_alias_add("_", command_str); // last executed command
+#if CMDLINE_INCLUDE_COMMAND_UNDERSCORE == 1
+    cmd_alias_add("_", string_ptr); // last executed command
 #endif
     MEM_FREE(command_str);
     switch (ret) {
@@ -1703,6 +1718,12 @@ int help_command(int argc, char *argv[])
         }
     }
     return 0;
+}
+int true_command(int argc, char *argv[]) {
+    return CMDLINE_RETCODE_SUCCESS;
+}
+int false_command(int argc, char *argv[]) {
+    return CMDLINE_RETCODE_FAIL;
 }
 int history_command(int argc, char *argv[])
 {
