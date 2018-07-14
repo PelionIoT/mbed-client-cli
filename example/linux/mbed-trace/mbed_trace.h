@@ -17,7 +17,8 @@
 #define MBED_TRACE_H_
 // this is very dummy version of trace library - just for example
 #define mbed_trace_init(x)
-#define tr_debug(x)
-#define tr_info(x) printf("\r%s\r\n", x)
+#define trace(x) printf("\r%s\r\n", x)
+#define tr_debug trace
+#define tr_info trace
 
 #endif
