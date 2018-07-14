@@ -48,7 +48,7 @@ int main(void)
 
     // Initialize trace library
     mbed_trace_init();
-    cmd_init( 0 );              // initialize cmdline with print function
+    cmd_init( 0 ); // initialize cmdline with print function
     cmd_add("exit", cmd_exit, "exit shell", 0);
     cmd_add("dummy", cmd_dummy,
       "dummy command",
@@ -57,7 +57,7 @@ int main(void)
 
     tr_info("write 'help' and press ENTER");
     while(running) {
-        int c = getchar();
+        int c = getch();
         switch(c) {
           case(CTRL('c')):
             running = false;
