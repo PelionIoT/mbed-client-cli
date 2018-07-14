@@ -1707,9 +1707,13 @@ int help_command(int argc, char *argv[])
 int history_command(int argc, char *argv[])
 {
     if (argc == 1) {
-        cmd_printf("History [%i/%i]:\r\n", (int)ns_list_count(&cmd.history_list), cmd.history_max_count);
+        int history_size = (int)ns_list_count(&cmd.history_list) - 1;
+        cmd_printf("History [%i/%i]:\r\n", history_size-1, cmd.history_max_count);
         int i = 0;
         ns_list_foreach_reverse(cmd_history_t, cur_ptr, &cmd.history_list) {
+            if (history_size == i) {
+              break;
+            }
             cmd_printf("[%i]: %s\r\n", i++, cur_ptr->command_ptr);
         }
     } else if (argc == 2) {
