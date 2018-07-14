@@ -86,6 +86,7 @@
 #define DEL 0x7F
 #define BS  0x08
 #define ETX 0x03
+#define ETB 0x17
 #define TAB 0x09
 #define CAN 0x18
 
@@ -215,6 +216,9 @@ static void             cmd_history_clean(void);
 static void             cmd_echo(bool on);
 static cmd_history_t   *cmd_history_find(int16_t index);
 static bool             cmd_tab_lookup(void);
+static void             cmd_clear_last_word(void);
+static void             cmd_move_cursor_to_last_space(void);
+static void             cmd_move_cursor_to_next_space(void);
 static const char      *cmd_input_lookup(char *name, int namelength, int n);
 static char            *cmd_input_lookup_var(char *name, int namelength, int n);
 static cmd_command_t   *cmd_find(const char *name);
@@ -903,9 +907,9 @@ void cmd_escape_read(int16_t u_data)
 
     tr_debug("cmd_escape_read: %02x '%c'", u_data, (isprint(u_data) ? u_data : '?'));
 
-    if (u_data == '[') {
+    if (strchr("[?", u_data)) {
         /*first character for longer escape sequence ends in character*/
-        cmd.escape[cmd.escape_index++] = '[';
+        cmd.escape[cmd.escape_index++] = u_data;
         return;
     }
     if (u_data == 'D') {
@@ -959,6 +963,10 @@ void cmd_escape_read(int16_t u_data)
             cmd_history_save(old_entry);
             cmd_history_get(cmd.history);
         }
+    } else if (u_data == 'b') {
+      cmd_move_cursor_to_last_space();
+    } else if (u_data == 'f') {
+      cmd_move_cursor_to_next_space();
     } else if (u_data == 'B') {
         /* Arrow Down*/
         old_entry = cmd.history--;
@@ -1112,6 +1120,13 @@ void cmd_char_input(int16_t u_data)
         if (cmd.echo) {
             cmd_output();
         }
+    } else if (u_data == ETB) {
+      //ctrl+w (End of xmit block)
+      tr_debug("ctrl+w - remove last word to cursor");
+      cmd_clear_last_word();
+      if (cmd.echo) {
+          cmd_output();
+      }
     } else if (u_data == TAB) {
         bool inc = false;
         if (cmd.tab_lookup > 0) {
@@ -1205,6 +1220,63 @@ bool cmd_tab_lookup(void)
     }
 
     return false;
+}
+const char* strrchr_(const char* from, const char* to, const char c)
+{
+  if(from <= to) return 0;
+  while(from > to & *from == 0) {
+    from--;
+  }
+  while(from > to & *from == c) {
+    from--;
+  }
+  while(from > to)
+  {
+    if(*from == c) {
+      return from + 1;
+    }
+    from--;
+  }
+  return 0;
+}
+static void cmd_move_cursor_to_last_space(void)
+{
+  if(cmd.cursor) cmd.cursor--;
+  else return;
+  const char* last_space = strrchr_(cmd.input + cmd.cursor, cmd.input, ' ');
+  if( last_space )
+  {
+    cmd.cursor = last_space - cmd.input;
+  }
+  else {
+    cmd.cursor = 0;
+  }
+}
+static void cmd_move_cursor_to_next_space(void)
+{
+  while(cmd.input[cmd.cursor] == ' ') cmd.cursor++;
+  const char* next_space = strchr(cmd.input + cmd.cursor, ' ');
+  if( next_space )
+  {
+    cmd.cursor = next_space - cmd.input;
+  }
+  else {
+    cmd.cursor = (int)strlen(cmd.input);
+  }
+}
+static void cmd_clear_last_word()
+{
+    if(cmd.cursor) cmd.cursor--;
+    else return;
+    const char* last_space = strrchr_(cmd.input + cmd.cursor, cmd.input, ' ');
+    if (last_space) {
+        memmove(last_space, cmd.input + cmd.cursor, strlen(cmd.input + cmd.cursor) + 1);
+        cmd.cursor = last_space - cmd.input;
+    } else {
+      memmove(cmd.input, cmd.input + cmd.cursor, strlen(cmd.input + cmd.cursor) + 1);
+      cmd.cursor = 0;
+    }
+
 }
 void cmd_output(void)
 {
