@@ -59,7 +59,7 @@
 #define tr_debug(...) printf( __VA_ARGS__);printf("\r\n")
 #endif
 
-// #define MBED_CLIENT_CLI_TRACE_ENABLE
+#define MBED_CLIENT_CLI_TRACE_ENABLE
 // MBED_CLIENT_CLI_TRACE_ENABLE is to enable the traces for debugging,
 // By default all debug traces are disabled.
 #ifndef MBED_CLIENT_CLI_TRACE_ENABLE
@@ -80,6 +80,17 @@
 #endif
 
 #define TRACE_GROUP "cmdL"
+
+#ifndef MBED_CMDLINE_BOOT_MESSAGE
+#define MBED_CMDLINE_BOOT_MESSAGE "ARM Ltd\r\n"
+#endif
+#define ESCAPE(x) "\x1b" x
+#define CR_S "\r"
+#define LF_S "\n"
+#define CLEAR_ENTIRE_LINE ESCAPE("[2K")
+#define CLEAR_ENTIRE_SCREEN ESCAPE("[2J")
+#define ENABLE_AUTO_WRAP_MODE ESCAPE("[7h")
+#define MOVE_CURSOR_LEFT_N_CHAR ESCAPE("[%dD")
 
 /*ASCII defines*/
 #define ESC 0x1B
@@ -178,6 +189,7 @@ typedef struct cmd_class_s {
     int  tab_lookup_cmd_n;            // index in command list
     int  tab_lookup_n;                //
     bool echo;                        // echo inputs
+    char *prompt;                     // prompt format
     char *retcode_fmt;                // retcode format
     bool print_retcode;               // print retcode after command is executed
     cmd_ready_cb_f *ready_cb;           // ready cb function
@@ -249,6 +261,12 @@ int clear_command(int argc, char *argv[]);
 int help_command(int argc, char *argv[]);
 int history_command(int argc, char *argv[]);
 
+/** Internal helper functions
+ */
+const char* strrchr_(const char* from, const char* to, const char c);
+static char *strrevchr(const char *begin, const char *end, const char ch);
+
+
 void default_cmd_response_out(const char *fmt, va_list ap)
 {
     vprintf(fmt, ap);
@@ -297,6 +315,7 @@ void cmd_init(cmd_print_t *outf)
     cmd.tab_lookup_n = 0;
     cmd.cmd_buffer_ptr = 0;
     cmd.idle = true;
+    cmd.prompt = ">";
     cmd.ready_cb = cmd_next;
     cmd.passthrough_fnc = NULL;
     cmd_set_retfmt("retcode: %i\r\n");
@@ -572,10 +591,10 @@ void cmd_mutex_unlock()
 void cmd_init_screen()
 {
     if (cmd.vt100_on) {
-        cmd_printf("\r\x1b[2J"); /* Clear screen */
-        cmd_printf("\x1b[7h"); /* enable line wrap */
+        cmd_printf(CR_S CLEAR_ENTIRE_SCREEN); /* Clear screen */
+        cmd_printf(ENABLE_AUTO_WRAP_MODE); /* enable line wrap */
     }
-    cmd_printf("ARM Ltd\r\n");
+    cmd_printf(MBED_CMDLINE_BOOT_MESSAGE);
     cmd_output();
 }
 uint8_t cmd_history_size(uint8_t max)
@@ -881,108 +900,132 @@ void cmd_escape_start(void)
     memset(cmd.escape, 0, sizeof(cmd.escape));
     cmd.escape_index = 0;
 }
-char *strrevchr(const char *begin, const char *end, char ch)
+static void cmd_arrow_right(bool shift)
 {
-    char *ptr = (char *)end;
-    while (begin <= ptr) {
-        if (*ptr == ch) {
-            return ptr;
+    // @todo handle shift
+    if ((cmd.escape_index == 1 && cmd.escape[0] == 'O') ||
+            (cmd.escape_index == 4 && strncmp(cmd.escape + 1, "1;5", 3) == 0)) {
+        char *ptr = cmd.input + cmd.cursor;
+        if (*ptr == ' ') {
+            ptr++;
         }
-        if (*ptr == 0) {
-            return ptr;
+        ptr = strchr(ptr, ' ');
+        if (ptr) {
+            cmd.cursor = ptr - cmd.input;
+        } else {
+            cmd.cursor = strlen(cmd.input);
         }
-        ptr--;
+    } else {
+        cmd.cursor ++;
     }
-    return 0;
+    if ((int)cmd.cursor > (int)strlen(cmd.input)) {
+        cmd.cursor = strlen(cmd.input);
+    }
+}
+static void cmd_arrow_left(bool shift)
+{
+    // @todo handle shift
+    if ((cmd.escape_index == 1 && cmd.escape[0] == 'O') ||
+        (cmd.escape_index == 4 && strncmp(cmd.escape + 1, "1;5", 3) == 0)) {
+
+        char *ptr = cmd.input + cmd.cursor;
+        if (*ptr == ' ' || *ptr == 0) {
+            ptr--;
+        }
+        ptr = strrevchr(cmd.input, ptr, ' '); //@todo not working way that we want
+        if (ptr) {
+            cmd.cursor = ptr - cmd.input;
+        } else {
+            cmd.cursor = 0;
+        }
+    } else {
+        cmd.cursor --;
+    }
+    if (cmd.cursor < 0) {
+        cmd.cursor = 0;
+    }
+}
+static void cmd_arrow_up()
+{
+    int16_t old_entry = cmd.history++;
+    if (NULL == cmd_history_find(cmd.history)) {
+        cmd.history = old_entry;
+    }
+    if (old_entry != cmd.history) {
+        cmd_history_save(old_entry);
+        cmd_history_get(cmd.history);
+    }
+}
+static void cmd_arrow_down(void)
+{
+    int16_t old_entry = cmd.history--;
+    if (cmd.history < 0) {
+        cmd.history = 0;
+    }
+
+    if (old_entry != cmd.history) {
+        cmd_history_save(old_entry);
+        cmd_history_get(cmd.history);
+    }
 }
 void cmd_escape_read(int16_t u_data)
 {
     int16_t old_entry;
 
-    tr_debug("cmd_escape_read: %02x '%c'", u_data, (isprint(u_data) ? u_data : '?'));
+    tr_debug("cmd_escape_read: %02x '%c' escape_index: %d: %s",
+      u_data,
+      (isprint(u_data) ? u_data : '?'),
+      cmd.escape_index,
+      cmd.escape);
 
-    if (strchr("[?", u_data)) {
-        /*first character for longer escape sequence ends in character*/
-        cmd.escape[cmd.escape_index++] = u_data;
-        return;
+    if (cmd.escape[0] == '[') {
+        bool shift = false;
+        if(strncmp(cmd.escape+1, "1;2", 3) == 0) {
+            tr_debug("Shift pressed");
+            shift = true;
+        }
+        // 'F','H','P','Q','R'
+        if (u_data == 'D') {
+            cmd_arrow_left(shift);
+        } else if (u_data == 'C') {
+            cmd_arrow_right(shift);
+        } else if (u_data == 'A') {
+            cmd_arrow_up();
+        } else if (u_data == 'B') {
+            cmd_arrow_down();
+        } else if (u_data == 'Z') {
+            // Shift+TAB
+            if (cmd.tab_lookup > 0) {
+                cmd.cursor = cmd.tab_lookup;
+                cmd.input[cmd.tab_lookup] = 0;
+                if (cmd.tab_lookup_cmd_n > 0) {
+                    cmd.tab_lookup_cmd_n--;
+                }
+            }
+            cmd_tab_lookup();
+        } else if (cmd.escape_index < 5){
+            cmd.escape[cmd.escape_index++] = u_data;
+            return;
+        }
     }
-    if (u_data == 'D') {
-        /* Arrow left*/
-        if ((cmd.escape_index == 1 && cmd.escape[0] == 'O') ||
-                (cmd.escape_index == 4 && strncmp(cmd.escape + 1, "1;5", 3) == 0)) {
-
-            char *ptr = cmd.input + cmd.cursor;
-            if (*ptr == ' ' || *ptr == 0) {
-                ptr--;
-            }
-            ptr = strrevchr(cmd.input, ptr, ' '); //@todo not working way that we want
-            if (ptr) {
-                cmd.cursor = ptr - cmd.input;
-            } else {
-                cmd.cursor = 0;
-            }
-        } else {
-            cmd.cursor --;
-        }
-        if (cmd.cursor < 0) {
-            cmd.cursor = 0;
-        }
-    } else if (u_data == 'C') {
-        /* Arrow Right*/
-        if ((cmd.escape_index == 1 && cmd.escape[0] == 'O') ||
-                (cmd.escape_index == 4 && strncmp(cmd.escape + 1, "1;5", 3) == 0)) {
-            char *ptr = cmd.input + cmd.cursor;
-            if (*ptr == ' ') {
-                ptr++;
-            }
-            ptr = strchr(ptr, ' ');
-            if (ptr) {
-                cmd.cursor = ptr - cmd.input;
-            } else {
-                cmd.cursor = strlen(cmd.input);
-            }
-        } else {
-            cmd.cursor ++;
-        }
-        if ((int)cmd.cursor > (int)strlen(cmd.input)) {
-            cmd.cursor = strlen(cmd.input);
-        }
-    } else if (u_data == 'A') {
-        /* Arrow Up*/
-        old_entry = cmd.history++;
-        if (NULL == cmd_history_find(cmd.history)) {
-            cmd.history = old_entry;
-        }
-        if (old_entry != cmd.history) {
-            cmd_history_save(old_entry);
-            cmd_history_get(cmd.history);
-        }
-    } else if (u_data == 'b') {
+    else if (u_data == 'b') {
       cmd_move_cursor_to_last_space();
-    } else if (u_data == 'f') {
+    }
+    else if (u_data == 'f') {
       cmd_move_cursor_to_next_space();
-    } else if (u_data == 'B') {
-        /* Arrow Down*/
-        old_entry = cmd.history--;
-        if (cmd.history < 0) {
-            cmd.history = 0;
-        }
-
-        if (old_entry != cmd.history) {
-            cmd_history_save(old_entry);
-            cmd_history_get(cmd.history);
-        }
-    } else if (u_data == 'Z') {
-        // Shift+TAB
-        if (cmd.tab_lookup > 0) {
-            cmd.cursor = cmd.tab_lookup;
-            cmd.input[cmd.tab_lookup] = 0;
-            if (cmd.tab_lookup_cmd_n > 0) {
-                cmd.tab_lookup_cmd_n--;
-            }
-        }
-        cmd_tab_lookup();
-    } else if (u_data == 'H') {
+    }
+    else if (u_data == 'n') {
+      if (cmd.escape[1] == '5') {
+        // Device status report
+        // Response: terminal is OK
+        cmd_printf("%c0n", ESC);
+      }
+      else if(cmd.escape[1] == '6') {
+        // Get cursor position
+        cmd_printf(ESCAPE("%d%d"), 0, cmd.cursor);
+      }
+    }
+    else if (u_data == 'H') {
         // Xterm support
         cmd.cursor =  0;
     } else if (u_data == 'F') {
@@ -1215,24 +1258,6 @@ bool cmd_tab_lookup(void)
 
     return false;
 }
-const char* strrchr_(const char* from, const char* to, const char c)
-{
-  if(from <= to) return 0;
-  while(from > to & *from == 0) {
-    from--;
-  }
-  while(from > to & *from == c) {
-    from--;
-  }
-  while(from > to)
-  {
-    if(*from == c) {
-      return from + 1;
-    }
-    from--;
-  }
-  return 0;
-}
 static void cmd_move_cursor_to_last_space(void)
 {
   if(cmd.cursor) cmd.cursor--;
@@ -1275,7 +1300,9 @@ static void cmd_clear_last_word()
 void cmd_output(void)
 {
     if (cmd.vt100_on && cmd.idle) {
-        cmd_printf("\r\x1b[2K/>%s \x1b[%dD", cmd.input, (int)strlen(cmd.input) - cmd.cursor + 1);
+        int curpos = (int)strlen(cmd.input) - cmd.cursor + 1;
+        cmd_printf(CR_S CLEAR_ENTIRE_LINE "%s %s" MOVE_CURSOR_LEFT_N_CHAR,
+          cmd.prompt, cmd.input, curpos);
     }
 }
 void cmd_echo_off(void)
@@ -1973,4 +2000,36 @@ char *cmd_parameter_last(int argc, char *argv[])
         return argv[ argc - 1 ];
     }
     return NULL;
+}
+const char* strrchr_(const char* from, const char* to, const char c)
+{
+  if(from <= to) return 0;
+  while(from > to & *from == 0) {
+    from--;
+  }
+  while(from > to & *from == c) {
+    from--;
+  }
+  while(from > to)
+  {
+    if(*from == c) {
+      return from + 1;
+    }
+    from--;
+  }
+  return 0;
+}
+static char *strrevchr(const char *begin, const char *end, const char ch)
+{
+    char *ptr = (char *)end;
+    while (begin <= ptr) {
+        if (*ptr == ch) {
+            return ptr;
+        }
+        if (*ptr == 0) {
+            return ptr;
+        }
+        ptr--;
+    }
+    return 0;
 }

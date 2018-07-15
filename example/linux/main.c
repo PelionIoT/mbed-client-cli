@@ -56,6 +56,7 @@ int main(void)
       "print text when o -option is given."); // add one dummy command
 
     tr_info("write 'help' and press ENTER");
+    cmd_output();
     while(running) {
         int c = getch();
         switch(c) {
