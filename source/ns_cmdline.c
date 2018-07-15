@@ -985,35 +985,32 @@ void cmd_escape_read(int16_t u_data)
       cmd.escape_index,
       cmd.escape);
 
+    bool shift = false;
+
     if (cmd.escape[0] == '[') {
-        bool shift = false;
-        if(strncmp(cmd.escape+1, "1;2", 3) == 0) {
-            tr_debug("Shift pressed");
-            shift = true;
-        }
-        // 'F','H','P','Q','R'
-        if (u_data == 'D') {
-            cmd_arrow_left(shift);
-        } else if (u_data == 'C') {
-            cmd_arrow_right(shift);
-        } else if (u_data == 'A') {
-            cmd_arrow_up();
-        } else if (u_data == 'B') {
-            cmd_arrow_down();
-        } else if (u_data == 'Z') {
-            // Shift+TAB
-            if (cmd.tab_lookup > 0) {
-                cmd.cursor = cmd.tab_lookup;
-                cmd.input[cmd.tab_lookup] = 0;
-                if (cmd.tab_lookup_cmd_n > 0) {
-                    cmd.tab_lookup_cmd_n--;
-                }
+      if(strncmp(cmd.escape+1, "1;2", 3) == 0) {
+          tr_debug("Shift pressed");
+          shift = true;
+      }
+    }
+    if (u_data == 'D') {
+        cmd_arrow_left(shift);
+    } else if (u_data == 'C') {
+        cmd_arrow_right(shift);
+    } else if (u_data == 'A') {
+        cmd_arrow_up();
+    } else if (u_data == 'B') {
+        cmd_arrow_down();
+    } else if (u_data == 'Z') {
+        // Shift+TAB
+        if (cmd.tab_lookup > 0) {
+            cmd.cursor = cmd.tab_lookup;
+            cmd.input[cmd.tab_lookup] = 0;
+            if (cmd.tab_lookup_cmd_n > 0) {
+                cmd.tab_lookup_cmd_n--;
             }
-            cmd_tab_lookup();
-        } else if (cmd.escape_index < 5){
-            cmd.escape[cmd.escape_index++] = u_data;
-            return;
         }
+        cmd_tab_lookup();
     }
     else if (u_data == 'b') {
       cmd_move_cursor_to_last_space();

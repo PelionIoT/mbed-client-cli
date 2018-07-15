@@ -670,12 +670,20 @@ TEST(cli, cmd_var_1)
     REQUEST("set foo \"bar test\"");
     INIT_BUF();
     REQUEST("set");
-    ARRAY_CMP("\r\nvariables:\r\nfoo               'bar test'\r\n\r\x1b[2K/> \x1b[1D", buf);
-
-    REQUEST("set foo");
+    ARRAY_CMP("\r\nvariables:\r\n"
+              "PS1               '/>'\r\n"
+              "foo               'bar test'\r\n"
+              "\r\x1b[2K/> \x1b[1D", buf);
+}
+TEST(cli, cmd_unset)
+{
+    REQUEST("set foo=a");
+    REQUEST("unset foo");
     INIT_BUF();
     REQUEST("set");
-    ARRAY_CMP("\r\nvariables:\r\n\r\x1b[2K/> \x1b[1D", buf);
+    ARRAY_CMP("\r\nvariables:\r\n"
+              "PS1               '/>'\r\n"
+              "\r\x1b[2K/> \x1b[1D", buf);
 }
 TEST(cli, cmd_var_2)
 {
