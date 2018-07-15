@@ -26,6 +26,9 @@
     "x86-linux-native": {
       "cpputest": "ARMmbed/cpputest"
     },
+    "x86-osx-native": {
+      "cpputest": "ARMmbed/cpputest"
+    },
     "x86-windows-native": {
       "cpputest": "ARMmbed/cpputest"
     }

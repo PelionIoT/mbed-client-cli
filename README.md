@@ -10,7 +10,7 @@ This is the Command Line Library for a CLI application. This library provides me
 
 ## API
 
-Command Line Library API is described in the snipplet below: 
+Command Line Library API is described in the snipplet below:
 
 ```c++
 // if thread safety for CLI terminal output is needed
@@ -23,10 +23,15 @@ cmd_init( (func)(const char* fmt, va_list ap) );
 // configure ready cb
 cmd_set_ready_cb( (func)(int retcode)  );
 // register command for library
-cmd_add( <command>, (int func)(int argc, char *argv[]), <help>, <man>); 
+cmd_add( <command>, (int func)(int argc, char *argv[]), <help>, <man>);
 //execute some existing commands
 cmd_exe( <command> );
 ```
+
+## Tracing
+
+Command Line Library has trace messages, which are disabled by default.
+"MBED_CLIENT_CLI_TRACE_ENABLE" flag if defined, enables all the trace prints for debugging.
 
 ## Usage example
 
@@ -70,7 +75,7 @@ void main(void) {
 ```
 
 ## Thread safety
-The CLI library is not thread safe, but the CLI terminal output can be locked against other 
+The CLI library is not thread safe, but the CLI terminal output can be locked against other
 output streams, for example if both traces and CLI output are using serial out.
 
 ```c++
@@ -95,5 +100,29 @@ void main(void) {
    cmd_set_ready_cb( cmd_ready_cb );  // configure ready cb.
    //CLI terminal output now locks against MyMutex
 }
+```
 
+## Unit tests
+
+To run unit tests:
+
+* In Linux
+
+```
+yotta target x86-linux-native
+yotta test
+```
+
+* In Mac
+
+```
+yotta target x86-osx-native
+yotta test
+```
+
+* In Windows
+
+```
+yotta target x86-windows-native
+yotta test
 ```

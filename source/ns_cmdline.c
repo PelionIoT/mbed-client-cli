@@ -54,10 +54,23 @@
 //#define TRACE_DEEP
 //#define TRACE_PRINTF
 
-
 #ifdef TRACE_PRINTF
 #undef tr_debug
 #define tr_debug(...) printf( __VA_ARGS__);printf("\r\n")
+#endif
+
+// #define MBED_CLIENT_CLI_TRACE_ENABLE
+// MBED_CLIENT_CLI_TRACE_ENABLE is to enable the traces for debugging,
+// By default all debug traces are disabled.
+#ifndef MBED_CLIENT_CLI_TRACE_ENABLE
+#undef tr_error
+#define tr_error(...)
+#undef tr_warn
+#define tr_warn(...)
+#undef tr_debug
+#define tr_debug(...)
+#undef tr_info
+#define tr_info(...)
 #endif
 
 #ifdef TRACE_DEEP
@@ -65,7 +78,6 @@
 #else
 #define tr_deep(...)
 #endif
-
 
 #define TRACE_GROUP "cmdL"
 
@@ -263,7 +275,6 @@ void cmd_init(cmd_print_t *outf)
         ns_list_init(&cmd.cmd_buffer);
         cmd.init = true;
     }
-    mbed_trace_exclude_filters_set(TRACE_GROUP);
     cmd.out = outf ? outf : default_cmd_response_out;
     cmd.ctrl_fnc = NULL;
     cmd.echo = true;
@@ -501,7 +512,16 @@ static void cmd_push(char *cmd_str, operator_t oper)
 {
     //store this command to the stack
     cmd_exe_t *cmd_ptr = MEM_ALLOC(sizeof(cmd_exe_t));
+    if (cmd_ptr == NULL) {
+        tr_error("mem alloc failed in cmd_push");
+        return;
+    }
     cmd_ptr->cmd_s = MEM_ALLOC(strlen(cmd_str) + 1);
+    if (cmd_ptr->cmd_s == NULL) {
+        MEM_FREE(cmd_ptr);
+        tr_error("mem alloc failed in cmd_push cmd_s");
+        return;
+    }
     strcpy(cmd_ptr->cmd_s, cmd_str);
     cmd_ptr->operator = oper;
     ns_list_add_to_end(&cmd.cmd_buffer, cmd_ptr);
@@ -544,11 +564,7 @@ void cmd_init_screen()
         cmd_printf("\r\x1b[2J"); /* Clear screen */
         cmd_printf("\x1b[7h"); /* enable line wrap */
     }
-    //cmd_printf("ARM Ltd\r\n");
-    cmd_printf("   _   ___ __  __               _            _  ___  ___ \r\n");
-    cmd_printf("  /_\\ | _ \\  \\/  |  ___   _ __ | |__  ___ __| |/ _ \\/ __|\r\n");
-    cmd_printf(" / _ \\|   / |\\/| | |___| | '  \\| '_ \\/ -_) _` | (_) \\__ \r\n");
-    cmd_printf("/_/ \\_\\_|_\\_|  |_|       |_|_|_|_.__/\\___\\__,_|\\___/|___/\r\n\n");
+    cmd_printf("ARM Ltd\r\n");
     cmd_output();
 }
 uint8_t cmd_history_size(uint8_t max)
@@ -636,6 +652,10 @@ void cmd_add(const char *name, cmd_run_cb *callback, const char *info, const cha
         return;
     }
     cmd_ptr = (cmd_command_t *)MEM_ALLOC(sizeof(cmd_command_t));
+    if (cmd_ptr == NULL) {
+        tr_error("mem alloc failed in cmd_add");
+        return;
+    }
     cmd_ptr->name_ptr = name;
     cmd_ptr->info_ptr = info;
     cmd_ptr->man_ptr = man;
@@ -660,7 +680,7 @@ void cmd_delete(const char *name)
 static int cmd_parse_argv(char *string_ptr, char **argv)
 {
     int argc = 0;
-    char *str_ptr, *end_quote_ptr;
+    char *str_ptr, *end_quote_ptr = NULL;
 
     if (string_ptr == NULL || strlen(string_ptr) == 0) {
         tr_error("Invalid parameters");
@@ -778,6 +798,10 @@ static int cmd_run(char *string_ptr)
 
     tr_info("Executing cmd: '%s'", string_ptr);
     char *command_str = MEM_ALLOC(MAX_LINE);
+    if (command_str == NULL) {
+        tr_error("mem alloc failed in cmd_run");
+        return CMDLINE_RETCODE_FAIL;
+    }
     while (isspace((unsigned char) *string_ptr) &&
             *string_ptr != '\n' &&
             *string_ptr != 0) {
@@ -1173,7 +1197,7 @@ bool cmd_tab_lookup(void)
 void cmd_output(void)
 {
     if (cmd.vt100_on && cmd.idle) {
-        cmd_printf("\r\x1b[2K/>%s \x1b[%dD", cmd.input, strlen(cmd.input) - cmd.cursor + 1);
+        cmd_printf("\r\x1b[2K/>%s \x1b[%dD", cmd.input, (int)strlen(cmd.input) - cmd.cursor + 1);
     }
 }
 void cmd_echo_off(void)
@@ -1283,6 +1307,10 @@ static void cmd_history_save(int16_t index)
     if (entry_ptr == NULL) {
         /*new entry*/
         entry_ptr = (cmd_history_t *)MEM_ALLOC(sizeof(cmd_history_t));
+        if (entry_ptr == NULL) {
+            tr_error("mem alloc failed in cmd_history_save");
+            return;
+        }
         entry_ptr->command_ptr = NULL;
         ns_list_add_to_start(&cmd.history_list, entry_ptr);
     }
@@ -1291,6 +1319,11 @@ static void cmd_history_save(int16_t index)
         MEM_FREE(entry_ptr->command_ptr);
     }
     entry_ptr->command_ptr = (char *)MEM_ALLOC(len + 1);
+    if (entry_ptr->command_ptr == NULL) {
+        tr_error("mem alloc failed in cmd_history_save command_ptr");
+        cmd_history_item_delete(entry_ptr);
+        return;
+    }
     strcpy(entry_ptr->command_ptr, cmd.input);
 
     cmd_history_clean_overflow();
@@ -1445,8 +1478,17 @@ void cmd_alias_add(const char *alias, const char *value)
             return;    // no need to add new empty one
         }
         alias_ptr = (cmd_alias_t *)MEM_ALLOC(sizeof(cmd_alias_t));
-        ns_list_add_to_end(&cmd.alias_list, alias_ptr);
+        if (alias_ptr == NULL) {
+            tr_error("Mem alloc fail in cmd_alias_add");
+            return;
+        }
         alias_ptr->name_ptr = (char *)MEM_ALLOC(strlen(alias) + 1);
+        if (alias_ptr->name_ptr == NULL) {
+            MEM_FREE(alias_ptr);
+            tr_error("Mem alloc fail in cmd_alias_add name_ptr");
+            return;
+        }
+        ns_list_add_to_end(&cmd.alias_list, alias_ptr);
         strcpy(alias_ptr->name_ptr, alias);
         alias_ptr->value_ptr = NULL;
     }
@@ -1462,6 +1504,11 @@ void cmd_alias_add(const char *alias, const char *value)
             MEM_FREE(alias_ptr->value_ptr);
         }
         alias_ptr->value_ptr = (char *)MEM_ALLOC(strlen(value) + 1);
+        if (alias_ptr->value_ptr == NULL) {
+            cmd_alias_add(alias, NULL);
+            tr_error("Mem alloc fail in cmd_alias_add value_ptr");
+            return;
+        }
         strcpy(alias_ptr->value_ptr, value);
     }
     return;
@@ -1483,8 +1530,18 @@ void cmd_variable_add(char *variable, char *value)
             return;    // no need to add new empty one
         }
         variable_ptr = (cmd_variable_t *)MEM_ALLOC(sizeof(cmd_variable_t));
-        ns_list_add_to_end(&cmd.variable_list, variable_ptr);
+        if (variable_ptr == NULL) {
+            tr_error("Mem alloc failed cmd_variable_add");
+            return;
+        }
         variable_ptr->name_ptr = (char *)MEM_ALLOC(strlen(variable) + 1);
+        if (variable_ptr->name_ptr == NULL) {
+            MEM_FREE(variable_ptr);
+            tr_error("Mem alloc failed cmd_variable_add name_ptr");
+            return;
+        }
+
+        ns_list_add_to_end(&cmd.variable_list, variable_ptr);
         strcpy(variable_ptr->name_ptr, variable);
         variable_ptr->value_ptr = NULL;
     }
@@ -1500,6 +1557,11 @@ void cmd_variable_add(char *variable, char *value)
             MEM_FREE(variable_ptr->value_ptr);
         }
         variable_ptr->value_ptr = (char *)MEM_ALLOC(strlen(value) + 1);
+        if (variable_ptr->value_ptr == NULL) {
+            cmd_variable_add(variable, NULL);
+            tr_error("Mem alloc failed cmd_variable_add value_ptr");
+            return;
+        }
         strcpy(variable_ptr->value_ptr, value);
     }
     return;
@@ -1522,6 +1584,10 @@ static void cmd_set_retfmt(char *fmt)
         MEM_FREE(cmd.retcode_fmt);
     }
     cmd.retcode_fmt = MEM_ALLOC(strlen(fmt) + 1);
+    if (cmd.retcode_fmt == NULL) {
+        tr_error("Mem alloc failed in cmd_set_retfmt");
+        return;
+    }
     strcpy(cmd.retcode_fmt, fmt);
 }
 /*Basic commands for cmd line
@@ -1631,9 +1697,9 @@ int help_command(int argc, char *argv[])
         if (cmd_ptr) {
             cmd_printf("Command: %s\r\n", cmd_ptr->name_ptr);
             if (cmd_ptr->man_ptr) {
-                cmd_printf(cmd_ptr->man_ptr);
+                cmd_printf("%s\r\n", cmd_ptr->man_ptr);
             } else if (cmd_ptr->info_ptr) {
-                cmd_printf(cmd_ptr->info_ptr);
+                cmd_printf("%s\r\n", cmd_ptr->info_ptr);
             }
         } else {
             cmd_printf("Command '%s' not found", argv[1]);
@@ -1644,7 +1710,7 @@ int help_command(int argc, char *argv[])
 int history_command(int argc, char *argv[])
 {
     if (argc == 1) {
-        cmd_printf("History [%i/%i]:\r\n", ns_list_count(&cmd.history_list), cmd.history_max_count);
+        cmd_printf("History [%i/%i]:\r\n", (int)ns_list_count(&cmd.history_list), cmd.history_max_count);
         int i = 0;
         ns_list_foreach_reverse(cmd_history_t, cur_ptr, &cmd.history_list) {
             cmd_printf("[%i]: %s\r\n", i++, cur_ptr->command_ptr);
@@ -1671,7 +1737,7 @@ int cmd_parameter_index(int argc, char *argv[], const char *key)
     }
     return -1;
 }
-bool cmd_has_option(int argc, char *argv[], char *key)
+bool cmd_has_option(int argc, char *argv[], const char *key)
 {
     int i = 0;
     for (i = 1; i < argc; i++) {
