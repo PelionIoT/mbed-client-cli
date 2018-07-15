@@ -317,6 +317,12 @@ void cmd_alias_add(const char *alias, const char *value);
  * \param value     Value for variable. Values can contains white spaces and '"' or '"' characters.
  */
 void cmd_variable_add(char *variable, char *value);
+/**
+ */
+void cmd_variable_add_int(char *variable, int value);
+
+void cmd_request_screen_size(void);
+
 
 /** find command parameter index by key.
  * e.g.
