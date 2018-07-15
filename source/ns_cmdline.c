@@ -189,7 +189,6 @@ typedef struct cmd_class_s {
     int  tab_lookup_cmd_n;            // index in command list
     int  tab_lookup_n;                //
     bool echo;                        // echo inputs
-    char *prompt;                     // prompt format
     char *retcode_fmt;                // retcode format
     bool print_retcode;               // print retcode after command is executed
     cmd_ready_cb_f *ready_cb;           // ready cb function
@@ -256,6 +255,7 @@ int true_command(int argc, char *argv[]);
 int false_command(int argc, char *argv[]);
 int echo_command(int argc, char *argv[]);
 int alias_command(int argc, char *argv[]);
+int unset_command(int argc, char *argv[]);
 int set_command(int argc, char *argv[]);
 int clear_command(int argc, char *argv[]);
 int help_command(int argc, char *argv[]);
@@ -315,10 +315,10 @@ void cmd_init(cmd_print_t *outf)
     cmd.tab_lookup_n = 0;
     cmd.cmd_buffer_ptr = 0;
     cmd.idle = true;
-    cmd.prompt = ">";
     cmd.ready_cb = cmd_next;
     cmd.passthrough_fnc = NULL;
     cmd_set_retfmt("retcode: %i\r\n");
+    cmd_variable_add("PS1", "/>");
     cmd_line_clear(0);            // clear line
     cmd_history_save(0);          // the current line is the 0 item
     //cmd_free();
@@ -327,12 +327,18 @@ void cmd_init(cmd_print_t *outf)
     return;
 }
 
+const char* cmdline_get_prompt(void) {
+  cmd_variable_t* var_ptr = variable_find("PS1");
+  return var_ptr ? var_ptr->value_ptr : "";
+}
+
 #if MBED_CMDLINE_INCLUDE_MAN == 1
 #define MAN_ECHO    "Displays messages, or turns command echoing on or off\r\n"\
                     "echo <data_to_be_print>\r\n"\
                     "some special parameters:\r\n"\
                     "<bool>                 On/Off echo input characters\r\n"
 #define MAN_ALIAS   "alias <theAlias> <command (parameters)>\r\n"
+#define MAN_UNSET     "unset <var_name>\r\n"
 #define MAN_SET     "set <var_name> <value>\r\n"\
                     "some special parameters\r\n"\
                     "--vt100 <bool>         On/Off vt100 controls\r\n"\
@@ -356,7 +362,8 @@ static void cmd_init_base_commands(void)
     cmd_add("help",     help_command,     "This help",            NULL);
     cmd_add("echo",     echo_command,     "Echo controlling",     MAN_ECHO);
     cmd_add("alias",    alias_command,    "Handle aliases",       MAN_ALIAS);
-    cmd_add("set",      set_command,      "Handle variables",     MAN_SET);
+    cmd_add("unset",    unset_command,    "unset variables",      MAN_UNSET);
+    cmd_add("set",      set_command,      "print or set variables", MAN_SET);
     cmd_add("clear",    clear_command,    "Clears the display",   MAN_CLEAR);
     cmd_add("history",  history_command,  "View your command Line History", MAN_HISTORY);
     cmd_add("true",     true_command, 0, 0);
@@ -1301,8 +1308,8 @@ void cmd_output(void)
 {
     if (cmd.vt100_on && cmd.idle) {
         int curpos = (int)strlen(cmd.input) - cmd.cursor + 1;
-        cmd_printf(CR_S CLEAR_ENTIRE_LINE "%s %s" MOVE_CURSOR_LEFT_N_CHAR,
-          cmd.prompt, cmd.input, curpos);
+        cmd_printf(CR_S CLEAR_ENTIRE_LINE "%s%s " MOVE_CURSOR_LEFT_N_CHAR,
+          cmdline_get_prompt(), cmd.input, curpos);
     }
 }
 void cmd_echo_off(void)
@@ -1723,6 +1730,15 @@ int alias_command(int argc, char *argv[])
     }
     return 0;
 }
+int unset_command(int argc, char *argv[])
+{
+    if (argc != 2) {
+        return CMDLINE_RETCODE_INVALID_PARAMETERS;
+    }
+    tr_debug("Deleting variable %s", argv[1]);
+    cmd_variable_add(argv[1], NULL);
+    return 0;
+}
 int set_command(int argc, char *argv[])
 {
     if (argc == 1) {
@@ -1730,9 +1746,12 @@ int set_command(int argc, char *argv[])
         cmd_printf("variables:\r\n");
         cmd_variable_print_all();
     } else if (argc == 2) {
-        // print alias
-        tr_debug("Deleting variable %s", argv[1]);
-        cmd_variable_add(argv[1], NULL);
+        char* separator_ptr = strchr(argv[1], '=');
+        if (!separator_ptr) {
+          return CMDLINE_RETCODE_INVALID_PARAMETERS;
+        }
+        *separator_ptr = 0;
+        cmd_variable_add(argv[1], separator_ptr+1);
     } else {
         // set alias
         tr_debug("Setting variable %s = %s", argv[1], argv[2]);
