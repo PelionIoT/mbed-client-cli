@@ -109,13 +109,9 @@
 #define HISTORY_MAX_COUNT 32
 #endif
 
-#ifndef CMDLINE_INCLUDE_COMMAND_UNDERSCORE
-#define CMDLINE_INCLUDE_COMMAND_UNDERSCORE 1
-#endif
-
 //include manuals or not (save memory a little when not include)
-#ifndef CMDLINE_INCLUDE_MAN
-#define CMDLINE_INCLUDE_MAN 1
+#ifndef MBED_CMDLINE_INCLUDE_MAN
+#define MBED_CMDLINE_INCLUDE_MAN 1
 #endif
 
 
@@ -312,7 +308,7 @@ void cmd_init(cmd_print_t *outf)
     return;
 }
 
-#if CMDLINE_INCLUDE_MAN == 1
+#if MBED_CMDLINE_INCLUDE_MAN == 1
 #define MAN_ECHO    "Displays messages, or turns command echoing on or off\r\n"\
                     "echo <data_to_be_print>\r\n"\
                     "some special parameters:\r\n"\
@@ -573,7 +569,6 @@ void cmd_mutex_unlock()
         cmd.mutex_release_fnc();
     }
 }
-
 void cmd_init_screen()
 {
     if (cmd.vt100_on) {
@@ -725,6 +720,7 @@ static int cmd_parse_argv(char *string_ptr, char **argv)
             break;
         }
         if (argc > MAX_ARGUMENTS) {
+            tr_warn("Maximum arguments (%d) rached", MAX_ARGUMENTS);
             break;
         }
         *str_ptr++ = 0;
@@ -862,9 +858,7 @@ static int cmd_run(char *string_ptr)
     // Run the actual callback
     cmd.cmd_ptr->busy = true;
     ret = cmd.cmd_ptr->run_cb(argc, argv);
-#if CMDLINE_INCLUDE_COMMAND_UNDERSCORE == 1
     cmd_alias_add("_", string_ptr); // last executed command
-#endif
     MEM_FREE(command_str);
     switch (ret) {
         case (CMDLINE_RETCODE_COMMAND_NOT_IMPLEMENTED):
@@ -1270,10 +1264,10 @@ static void cmd_clear_last_word()
     else return;
     const char* last_space = strrchr_(cmd.input + cmd.cursor, cmd.input, ' ');
     if (last_space) {
-        memmove(last_space, cmd.input + cmd.cursor, strlen(cmd.input + cmd.cursor) + 1);
+        memmove((void*)last_space, &cmd.input[cmd.cursor], strlen(cmd.input + cmd.cursor) + 1);
         cmd.cursor = last_space - cmd.input;
     } else {
-      memmove(cmd.input, cmd.input + cmd.cursor, strlen(cmd.input + cmd.cursor) + 1);
+      memmove((void*)cmd.input, &cmd.input[cmd.cursor], strlen(cmd.input + cmd.cursor) + 1);
       cmd.cursor = 0;
     }
 
