@@ -79,7 +79,7 @@ void input(const char *str)
     }
 }
 
-#define REQUEST(x)          input(x);INIT_BUF();cmd_char_input('\r');
+#define REQUEST(x)          input(x);INIT_BUF();cmd_char_input('\n');
 #define RESPONSE(x)         "\r\n" x "\r\n\r\x1B[2K/> \x1B[1D"
 #define CMDLINE(x)          "\r\x1b[2K/>" x "\x1b[1D"
 
@@ -336,14 +336,14 @@ TEST(cli, cmd_echo10)
 }
 TEST(cli, cmd_echo11)
 {
-    REQUEST("echo off\r");
+    REQUEST("echo off\n");
     INIT_BUF();
     input("echo test");
     ARRAY_CMP("" , buf);
-    input("\r");
+    input("\n");
     ARRAY_CMP("test \r\n" , buf);
     INIT_BUF();
-    REQUEST("echo on\r");
+    REQUEST("echo on\n");
     INIT_BUF();
     input("e");
     ARRAY_CMP(CMDLINE("e ") , buf);
@@ -509,12 +509,12 @@ TEST(cli, cmd_tab_1)
     input("\t");
     ARRAY_CMP(CMDLINE_CUR("echo ", "1", BACKWARD) , buf);
 
-    input("\rech");
+    input("\nech");
     INIT_BUF();
     input("\t");
     ARRAY_CMP(CMDLINE_CUR("echo ", "1", BACKWARD) , buf);
 
-    input("\r");
+    input("\n");
 }
 TEST(cli, cmd_tab_2)
 {
@@ -545,7 +545,7 @@ TEST(cli, cmd_tab_2)
     input("\x1b[Z");
     ARRAY_CMP(CMDLINE_CUR("role ", "1", BACKWARD) , buf);
 
-    input("\r");
+    input("\n");
 }
 TEST(cli, cmd_tab_3)
 {
@@ -599,12 +599,12 @@ TEST(cli, cmd_tab_4)
     input("\t");
     ARRAY_CMP(CMDLINE_CUR("echo $dut1 ", "1", BACKWARD) , buf);
 
-    input("\re");
+    input("\ne");
     INIT_BUF();
     input("\t");
     ARRAY_CMP(CMDLINE_CUR("echo ", "1", BACKWARD) , buf);
 
-    input("\r");
+    input("\n");
     INIT_BUF();
 }
 // // alias test
@@ -614,7 +614,7 @@ TEST(cli, cmd_tab_4)
 //     char str[] = "hello a men";
 //     replace_alias(str, "a", "b");
 //     ARRAY_CMP("hello a men", str);
-// 
+//
 //     replace_alias(str, "hello", "echo");
 //     ARRAY_CMP("echo a men", str);
 //     INIT_BUF();
