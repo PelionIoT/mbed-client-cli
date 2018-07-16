@@ -102,8 +102,13 @@ void input(const char *str)
 #define PAGE_DOWN() input("\x1b[6~")
 #define PAGE_UP()   input("\x1b[5~")
 
+int previous_retcode = 0;
+#define CHECK_RETCODE(retcode) CHECK_EQUAL(previous_retcode, retcode)
+#define TEST_RETCODE_WITH_COMMAND(cmd, retcode) REQUEST(cmd);CHECK_RETCODE(retcode)
+
 void cmd_ready_cb(int retcode)
 {
+    previous_retcode = retcode;
     cmd_next(retcode);
 }
 
@@ -275,11 +280,18 @@ TEST(cli, help)
 {
     REQUEST("help");
     CHECK(strlen(buf) > 20 );
+    CHECK_RETCODE(0);
+
+    INIT_BUF();
+    REQUEST("echo --help");
+    CHECK(strlen(buf) > 20 );
+    CHECK_RETCODE(0);
 }
 TEST(cli, hello)
 {
     REQUEST("echo Hi!");
     ARRAY_CMP(RESPONSE("Hi! ") , buf);
+    CHECK_RETCODE(0);
 }
 TEST(cli, cmd_echo1)
 {
@@ -546,6 +558,13 @@ TEST(cli, cmd_tab_2)
 
     input("\r");
 }
+TEST(cli, cmd_no_cb)
+{
+    INIT_BUF();
+    cmd_add("role", 0, 0, 0);
+    REQUEST("role");
+    CHECK_RETCODE(CMDLINE_RETCODE_COMMAND_NOT_FOUND);
+}
 TEST(cli, cmd_tab_3)
 {
     INIT_BUF();
@@ -613,7 +632,7 @@ TEST(cli, cmd_tab_4)
 //     char str[] = "hello a men";
 //     replace_alias(str, "a", "b");
 //     ARRAY_CMP("hello a men", str);
-// 
+//
 //     replace_alias(str, "hello", "echo");
 //     ARRAY_CMP("echo a men", str);
 //     INIT_BUF();
@@ -636,6 +655,7 @@ TEST(cli, cmd_alias_3)
 {
     cmd_alias_add("p", "echo");
     REQUEST("p toimii");
+    CHECK_RETCODE(0);
     ARRAY_CMP("\r\ntoimii \r\n\r\x1b[2K/> \x1b[1D", buf);
 
     cmd_alias_add("printtti", "echo");
@@ -645,9 +665,11 @@ TEST(cli, cmd_alias_3)
 TEST(cli, cmd_alias_4)
 {
     REQUEST("alias dut1 \"echo dut1\"");
+    CHECK_RETCODE(0);
     REQUEST("alias dut2 \"echo dut2\"");
     REQUEST("alias dut3 \"echo dut3\"");
     REQUEST("dut1");
+    CHECK_RETCODE(0);
     ARRAY_CMP(RESPONSE("dut1 "), buf);
 }
 TEST(cli, cmd_series)
@@ -674,24 +696,28 @@ TEST(cli, cmd_var_1)
 TEST(cli, cmd_var_2)
 {
     REQUEST("set foo \"hello world\"");
+    CHECK_RETCODE(0);
     REQUEST("echo foo");
     ARRAY_CMP(RESPONSE("foo ") , buf);
 
     REQUEST("echo $foo");
+    CHECK_RETCODE(0);
     ARRAY_CMP(RESPONSE("hello world ") , buf);
 
     REQUEST("set faa !");
     REQUEST("echo $foo$faa");
     ARRAY_CMP(RESPONSE("hello world! ") , buf);
 }
-TEST(cli, multiple_cmd)
+TEST(cli, operator_semicolon)
 {
     REQUEST("set foo \"hello world\";echo $foo");
     ARRAY_CMP(RESPONSE("hello world ") , buf);
 
     REQUEST("setd faa \"hello world\";echo $faa");
     ARRAY_CMP("\r\nCommand 'setd' not found.\r\n$faa \r\n\r\x1B[2K/> \x1B[1D" , buf);
-
+}
+TEST(cli, operators_and)
+{
     REQUEST("setd foo \"hello guy\"&&echo $foo");
     ARRAY_CMP(RESPONSE("Command 'setd' not found.") , buf);
 }
@@ -741,7 +767,6 @@ TEST(cli, passthrough_set)
     REQUEST(REDIR_DATA);
     ARRAY_CMP(RESPONSE("Hi! ") , buf);
 }
-
 
 TEST(cli, cmd_out_func_set_null)
 {
