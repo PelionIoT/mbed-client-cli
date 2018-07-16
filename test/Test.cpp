@@ -679,6 +679,7 @@ TEST(cli, cmd_series)
     REQUEST("alias dut2 \"echo dut2\"");
     REQUEST("alias dut3 \"echo dut3\"");
     REQUEST("dut1;dut2;dut3");
+    CHECK_RETCODE(0);
     ARRAY_CMP(RESPONSE("dut1 \r\ndut2 \r\ndut3 "), buf);
 }
 
