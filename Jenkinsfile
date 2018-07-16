@@ -13,8 +13,15 @@ properties ([
 def morpheusTargets = [
   //"LPC1768",
   //"NUCLEO_F401RE",
-  "NRF51DK",
-  "K64F"
+  //"NRF51DK",
+  //"K64F"
+]
+def yottaTargets = [
+  "frdm-k64f-gcc": "gcc",
+  "frdm-k64f-armcc": "armcc",
+  "nrf51dk-gcc": "gcc",
+  "stm32f429i-disco-gcc": "gcc",
+  "x86-linux-native": "linux"
 ]
   
 // Map morpheus toolchains to compiler labels on Jenkins
@@ -26,25 +33,25 @@ def toolchains = [
   
 // Initial maps for parallel build steps
 def stepsForParallel = [:]
-try {
 // Jenkins pipeline does not support map.each, we need to use oldschool for loop
 for (int i = 0; i < morpheusTargets.size(); i++) {
   for(int j = 0; j < toolchains.size(); j++) {
     def target = morpheusTargets.get(i)
     def toolchain = toolchains.keySet().asList().get(j)
     def compilerLabel = toolchains.get(toolchain)
-    //def stepName = "mbed-os5-${target} ${toolchain}"
-    //stepsForParallel[stepName] = morpheusBuildStep(target, compilerLabel, toolchain)
-    def ytStepName = "mbed-os3-${target} ${toolchain}"
-    stepsForParallel[ytStepName] = yottaBuildStep(target, compilerLabel, toolchain)
+    def stepName = "mbed-os5-${target} ${toolchain}"
+    stepsForParallel[stepName] = morpheusBuildStep(target, compilerLabel, toolchain)
   }
 }
-stepsForParallel["x86-linux-native"] = yottaTestStep("x86-linux-native", "arm-none-eabi-gcc")
-
-} catch (err) {
-    echo "Caught exception: ${err}"
-    throw err
+// map yotta steps
+for (int i = 0; i < yottaTargets.size(); i++) {
+    def target = yottaTargets.keySet().asList().get(i)
+    def compilerLabel = yottaTargets.get(target)
+    def stepName = "mbed-os3-${target}"
+    stepsForParallel[stepName] = yottaBuildStep(target, compilerLabel)
+  }
 }
+
 
 /* Jenkins does not allow stages inside parallel execution, 
  * https://issues.jenkins-ci.org/browse/JENKINS-26107 will solve this by adding labeled blocks
@@ -79,7 +86,7 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
 }
 
 //Create yotta build steps for parallel execution
-def yottaBuildStep(target, compilerLabel, toolchain) {
+def yottaBuildStep(target, compilerLabel) {
   return {
     node ("${compilerLabel}") {
       //String buildName = "${nodeType} ${toolchain} test"
@@ -87,23 +94,11 @@ def yottaBuildStep(target, compilerLabel, toolchain) {
       deleteDir()
       dir("mbed-client-cli") {
         checkout scm
-        execute("yotta --version")
-        execute("yotta target $target")
-        execute("yotta --plain build mbed-client-cli")
-      }
-    }
-  }
-}
-//Create unit test build step for parallel execution
-def yottaTestStep(target, compilerLabel) {
-  return {
-    node ("${compilerLabel}") {
-      deleteDir()
-      dir("mbed-client-cli") {
-          try{
-            checkout scm
-            execute("yotta --version")
-            execute("yotta target $target")
+        try{
+          execute("yotta --version")
+          execute("yotta target $target")
+          execute("yotta --plain build mbed-client-cli")
+          if (target == "x86-linux-native") {
             execute("yotta test mbed_client_cli_test")
             //execute("gcov ./build/x86-linux-native/test/CMakeFiles/mbed_client_trace_test.dir/Test.cpp.o")
             execute("lcov --base-directory . --directory . --capture --output-file coverage.info")
@@ -111,11 +106,14 @@ def yottaTestStep(target, compilerLabel) {
             execute("gcovr -x -o junit.xml")
             execute("cppcheck --enable=all --std=c99 --inline-suppr --xml --xml-version=2 -I mbed-client-trace/ source 2> cppcheck.xml")
             postBuild()
-          } catch (err) {
-            echo "Caught exception: ${err}"
+          }
+        }catch (err) {
+          echo "Caught exception: ${err}"
+          if (target == "x86-linux-native") {
             postBuild()
-            //setBuildStatus('FAILURE', "${buildName}", "test failed")
-            throw err
+          }
+          //setBuildStatus('FAILURE', "${buildName}", "test failed")
+          throw err
         }
       }
     }
