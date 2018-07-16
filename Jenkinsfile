@@ -103,7 +103,7 @@ def yottaBuildStep(target, compilerLabel) {
             execute("lcov --base-directory . --directory . --capture --output-file coverage.info")
             execute("genhtml -o ./test_coverage coverage.info")
             execute("gcovr -x -o junit.xml")
-            execute("cppcheck --enable=all --std=c99 --inline-suppr --template="{file},{line},{severity},{id},{message}" -I mbed-trace/ source 2> cppcheck.txt)
+            execute("cppcheck --enable=all --std=c99 --inline-suppr --template=\"{file},{line},{severity},{id},{message}\" -I mbed-trace/ source 2> cppcheck.txt")
             postBuild()
           }
         }catch (err) {
