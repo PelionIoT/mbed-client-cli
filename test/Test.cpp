@@ -558,10 +558,11 @@ TEST(cli, cmd_tab_2)
 
     input("\r");
 }
-TEST(cli, cmd_no_cb)
+TEST(cli, cmd_delete)
 {
     INIT_BUF();
-    cmd_add("role", 0, 0, 0);
+    cmd_add("role", cmd_dummy, 0, 0);
+    cmd_delete("role");
     REQUEST("role");
     CHECK_RETCODE(CMDLINE_RETCODE_COMMAND_NOT_FOUND);
 }
