@@ -172,13 +172,21 @@ uint8_t cmd_history_size(uint8_t max);
  *  This function should be used when user want to print something to the console
  *  \param fmt   console print function (like printf)
  */
+#if defined(__GNUC__) || defined(__CC_ARM)
+void cmd_printf(const char *fmt, ...)  __attribute__ ((__format__(__printf__, 1, 2)));
+#else
 void cmd_printf(const char *fmt, ...);
+#endif
 /** command line print function
  *  This function should be used when user want to print something to the console with vprintf functionality
  *  \param fmt  The format string is a character string, beginning and ending in its initial shift state, if any. The format string is composed of zero or more directives.
  *  \param ap   list of parameters needed by format string. This must correspond properly with the conversion specifier.
  */
+#if defined(__GNUC__) || defined(__CC_ARM)
+void cmd_vprintf(const char *fmt, va_list ap)  __attribute__ ((__format__(__printf__, 1, 0)));
+#else
 void cmd_vprintf(const char *fmt, va_list ap);
+#endif
 /** Reconfigure default cmdline out function (cmd_printf)
  *  \param outf  select console print function
  */
@@ -249,7 +257,13 @@ void cmd_echo_on(void);
  * \param u_data char to be added to console
  */
 void cmd_char_input(int16_t u_data);
-
+/*
+ * Set the passthrough mode callback function. In passthrough mode normal command input handling is skipped and any
+ * received characters are passed to the passthrough callback function. Setting this to null will disable passthrough mode.
+ * \param passthrough_fnc The passthrough callback function
+ */
+typedef void (*input_passthrough_func_t)(uint8_t c);
+void cmd_input_passthrough_func(input_passthrough_func_t passthrough_fnc);
 
 /* Methods used for adding and handling of commands and aliases
  */
@@ -332,7 +346,7 @@ int cmd_parameter_index(int argc, char *argv[], const char *key);
  * \param key   option key to be find
  * \return true if option found otherwise false
  */
-bool cmd_has_option(int argc, char *argv[], char *key);
+bool cmd_has_option(int argc, char *argv[], const char *key);
 /** find command parameter by key.
  * if exists, return true, otherwise false.
  * e.g. cmd: "mycmd enable 1"
