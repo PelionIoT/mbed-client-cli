@@ -646,20 +646,23 @@ TEST(cli, cmd_tab_4)
 //     ARRAY_CMP("echo a men", str);
 //     INIT_BUF();
 // }
-/* @todo this not working yet
 TEST(cli, cmd_alias_2)
 {
     REQUEST("alias foo bar");
     INIT_BUF();
     REQUEST("alias");
-    ARRAY_CMP("\r\nalias:\r\nfoo               'bar'\r\n\r\x1b[2K/> \x1b[1D", buf);
+    ARRAY_CMP("\r\nalias:\r\n"
+              "foo               'bar'\r\n"
+              "_                 'alias'\r\n"
+              "\r\x1b[2K/> \x1b[1D", buf);
 
     REQUEST("alias foo");
     INIT_BUF();
     REQUEST("alias");
-    ARRAY_CMP("\r\nalias:\r\n\r\x1b[2K/> \x1b[1D", buf);
+    ARRAY_CMP("\r\nalias:\r\n"
+              "_                 'alias'\r\n"
+              "\r\x1b[2K/> \x1b[1D", buf);
 }
-*/
 TEST(cli, cmd_alias_3)
 {
     cmd_alias_add("p", "echo");
