@@ -1,3 +1,14 @@
+echo "Start to build"
+
+properties ([
+    buildDiscarder(
+        logRotator(
+            artifactNumToKeepStr: '10',
+            numToKeepStr: '100'
+        )
+    )
+])
+
 // List of targets to compile
 def morpheusTargets = [
   //"LPC1768",
@@ -14,7 +25,7 @@ def toolchains = [
   ]
   
 // Initial maps for parallel build steps
-def stepsForParallel = []
+def stepsForParallel = [:]
 try {
 // Jenkins pipeline does not support map.each, we need to use oldschool for loop
 for (int i = 0; i < morpheusTargets.size(); i++) {
