@@ -86,18 +86,30 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
 
 //Create yotta build steps for parallel execution
 def yottaBuildStep(target, compilerLabel) {
-  return { stage ("yotta") {
-    node ("${compilerLabel}") {
-      //String buildName = "${nodeType} ${toolchain} test"
-      //setBuildStatus('PENDING', "${buildName}", 'build starts')
-      deleteDir()
-      dir("mbed-client-cli") {
-        checkout scm
-        try{
-          execute("yotta --version")
-          execute("yotta target $target")
-          execute("yotta --plain build mbed-client-cli")
-          if (target == "x86-linux-native") {
+  return {
+    node ("${compilerLabel}") {  
+      String buildName = "mbed-os3-${target}"
+      stage ("yotta build") {  
+          //setBuildStatus('PENDING', "${buildName}", 'build starts')
+          deleteDir()
+          dir("mbed-client-cli") {
+            checkout scm
+            try{
+              execute("yotta --version")
+              execute("yotta target $target")
+              execute("yotta --plain build mbed-client-cli")
+            } catch (err) {
+              echo "Caught exception: ${err}"
+              if (target == "x86-linux-native") {
+                postBuild()
+              }
+              //setBuildStatus('FAILURE', "${buildName}", "test failed")
+              throw err
+            }
+          }
+      }
+      if (target == "x86-linux-native") {  
+        stage("yotta test") {
             execute("yotta test mbed_client_cli_test")
             //execute("gcov ./build/x86-linux-native/test/CMakeFiles/mbed_client_trace_test.dir/Test.cpp.o")
             execute("lcov --base-directory . --directory . --capture --output-file coverage.info")
@@ -105,18 +117,10 @@ def yottaBuildStep(target, compilerLabel) {
             execute("gcovr -x -o junit.xml")
             execute("cppcheck --enable=all --std=c99 --inline-suppr --template=\"{file},{line},{severity},{id},{message}\" -I mbed-trace/ source 2> cppcheck.txt")
             postBuild()
-          }
-        }catch (err) {
-          echo "Caught exception: ${err}"
-          if (target == "x86-linux-native") {
-            postBuild()
-          }
-          //setBuildStatus('FAILURE', "${buildName}", "test failed")
-          throw err
         }
       }
     }
-  }}
+  }
 }
 
 def postBuild() {
