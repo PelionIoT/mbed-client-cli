@@ -8,8 +8,8 @@ def morpheusTargets = [
   
 // Map morpheus toolchains to compiler labels on Jenkins
 def toolchains = [
-  ARM: "armcc",   // open issue: https://github.com/ARMmbed/mbed-os/issues/125
-  // IAR: "iar_arm", // open issue: https://github.com/ARMmbed/mbed-os/issues/357
+  ARM: "armcc",
+  // IAR: "iar_arm",
   GCC_ARM: "arm-none-eabi-gcc"
   ]
   
