@@ -86,7 +86,7 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
 
 //Create yotta build steps for parallel execution
 def yottaBuildStep(target, compilerLabel) {
-  return {
+  return { stage ("yotta") {
     node ("${compilerLabel}") {
       //String buildName = "${nodeType} ${toolchain} test"
       //setBuildStatus('PENDING', "${buildName}", 'build starts')
@@ -116,7 +116,7 @@ def yottaBuildStep(target, compilerLabel) {
         }
       }
     }
-  }
+  }}
 }
 
 def postBuild() {
