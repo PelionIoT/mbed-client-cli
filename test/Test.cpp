@@ -757,7 +757,7 @@ TEST(cli, cmd_out_func_set)
 {
     outf_called = 0;
     cmd_out_func(&outf);
-    cmd_vprintf(NULL, NULL);
+    cmd_vprintf(NULL, NULL); // cppcheck-suppress *
     CHECK_EQUAL(outf_called, 1);
 }
 
