@@ -87,9 +87,9 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
 //Create yotta build steps for parallel execution
 def yottaBuildStep(target, compilerLabel) {
   return {
+    String buildName = "mbed-os3-${target}"  
     node ("${compilerLabel}") {  
-      String buildName = "mbed-os3-${target}"
-      stage ("yotta build") {  
+      stage ("build:${buildName}") {  
           //setBuildStatus('PENDING', "${buildName}", 'build starts')
           deleteDir()
           dir("mbed-client-cli") {
@@ -109,7 +109,7 @@ def yottaBuildStep(target, compilerLabel) {
           }
       }
       if (target == "x86-linux-native") {  
-        stage("yotta test") {
+        stage("test:${buildName}") {
             execute("yotta test mbed_client_cli_test")
             //execute("gcov ./build/x86-linux-native/test/CMakeFiles/mbed_client_trace_test.dir/Test.cpp.o")
             execute("lcov --base-directory . --directory . --capture --output-file coverage.info")
