@@ -119,7 +119,7 @@ def yottaBuildStep(target, compilerLabel) {
       }
       if (target == "x86-linux-native") {  
         stage("test:${buildName}") {
-          setBuildStatus('PENDING', "test ${buildName}", 'build starts')
+          setBuildStatus('PENDING', "test ${buildName}", 'test starts')
           dir("mbed-client-cli") {
             try {
               execute("yotta test mbed_client_cli_test")
@@ -128,10 +128,10 @@ def yottaBuildStep(target, compilerLabel) {
               execute("gcovr -x -o junit.xml")
               execute("cppcheck --enable=all --std=c99 --inline-suppr --template=\"{file},{line},{severity},{id},{message}\" source 2> cppcheck.txt")
               postBuild()
-              setBuildStatus('SUCCESS', "test ${buildName}", "build done")
+              setBuildStatus('SUCCESS', "test ${buildName}", "test done")
             } catch(err) {
               echo "Caught exception: ${err}"
-              setBuildStatus('FAILURE', "test ${buildName}", "build failed")
+              setBuildStatus('FAILURE', "test ${buildName}", "test failed")
               throw err
             }
           }
