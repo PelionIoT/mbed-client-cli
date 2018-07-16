@@ -96,7 +96,7 @@ def yottaBuildStep(target, compilerLabel) {
     String buildName = "mbed-os3-${target}"  
     node ("${compilerLabel}") {  
       stage ("build:${buildName}") {  
-          setBuildStatus('PENDING', "build:${buildName}", 'build starts')
+          setBuildStatus('PENDING', "build ${buildName}", 'build starts')
           deleteDir()
           dir("mbed-client-cli") {
             checkout scm
@@ -104,20 +104,20 @@ def yottaBuildStep(target, compilerLabel) {
               execute("yotta --version")
               execute("yotta target $target")
               execute("yotta --plain build mbed-client-cli")
-              setBuildStatus('SUCCESS', "build:${buildName}", "build done")
+              setBuildStatus('SUCCESS', "build ${buildName}", "build done")
             } catch (err) {
               echo "Caught exception: ${err}"
               if (target == "x86-linux-native") {
                 postBuild()
               }
-              setBuildStatus('FAILURE', "build:${buildName}", "build failed")
+              setBuildStatus('FAILURE', "build ${buildName}", "build failed")
               throw err
             }
           }
       }
       if (target == "x86-linux-native") {  
         stage("test:${buildName}") {
-          setBuildStatus('PENDING', "test:${buildName}", 'test starts')
+          setBuildStatus('PENDING', "test ${buildName}", 'build starts')
           dir("mbed-client-cli") {
             try {
               execute("yotta test mbed_client_cli_test")
@@ -126,10 +126,10 @@ def yottaBuildStep(target, compilerLabel) {
               execute("gcovr -x -o junit.xml")
               execute("cppcheck --enable=all --std=c99 --inline-suppr --template=\"{file},{line},{severity},{id},{message}\" source 2> cppcheck.txt")
               postBuild()
-              setBuildStatus('SUCCESS', "test:${buildName}", "test done")
+              setBuildStatus('SUCCESS', "test ${buildName}", "build done")
             } catch(err) {
               echo "Caught exception: ${err}"
-              setBuildStatus('FAILURE', "test:${buildName}", "test failed")
+              setBuildStatus('FAILURE', "test ${buildName}", "build failed")
               throw err
             }
           }
