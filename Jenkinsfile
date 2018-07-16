@@ -115,6 +115,9 @@ def yottaBuildStep(target, compilerLabel) {
               }
               setBuildStatus('FAILURE', "build ${buildName}", "build failed")
               throw err
+          } finally {
+            // clean up
+            step([$class: 'WsCleanup'])
           }
         } // stage
         if (target == "x86-linux-native") {  
@@ -132,6 +135,9 @@ def yottaBuildStep(target, compilerLabel) {
               echo "Caught exception: ${err}"
               setBuildStatus('FAILURE', "test ${buildName}", "test failed")
               throw err
+            } finally {
+              // clean up
+              step([$class: 'WsCleanup'])
             }
           } // stage
           /*  
