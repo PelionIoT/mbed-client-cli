@@ -16,6 +16,13 @@ def morpheusTargets = [
   //"NRF51DK",
   //"K64F"
 ]
+// Map morpheus toolchains to compiler labels on Jenkins
+def toolchains = [
+  ARM: "armcc",
+  // IAR: "iar_arm",
+  GCC_ARM: "arm-none-eabi-gcc"
+]
+// yotta target includes toolchain
 def yottaTargets = [
   "frdm-k64f-gcc": "gcc",
   "frdm-k64f-armcc": "armcc",
@@ -23,13 +30,6 @@ def yottaTargets = [
   "stm32f429i-disco-gcc": "gcc",
   "x86-linux-native": "linux"
 ]
-  
-// Map morpheus toolchains to compiler labels on Jenkins
-def toolchains = [
-  ARM: "armcc",
-  // IAR: "iar_arm",
-  GCC_ARM: "arm-none-eabi-gcc"
-  ]
   
 // Initial maps for parallel build steps
 def stepsForParallel = [:]
@@ -78,7 +78,13 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
       dir("mbed-client-cli") {
         checkout scm
         execute("mbed | grep \"^version\"")
-        execute("mbed compile -m ${target} -t ${toolchain} --library")
+        // does not work ?
+        // execute("mbed compile -m ${target} -t ${toolchain} --library")
+        dir("example/mbed-os-5") {
+          // coming here: https://github.com/ARMmbed/mbed-client-cli/pull/71
+          execute("mbed deploy")
+          execute("mbed compile -t ${toolchain} -m ${target}")
+        }
       }
     }
   }
@@ -90,7 +96,7 @@ def yottaBuildStep(target, compilerLabel) {
     String buildName = "mbed-os3-${target}"  
     node ("${compilerLabel}") {  
       stage ("build:${buildName}") {  
-          //setBuildStatus('PENDING', "${buildName}", 'build starts')
+          setBuildStatus('PENDING', "build:${buildName}", 'build starts')
           deleteDir()
           dir("mbed-client-cli") {
             checkout scm
@@ -98,26 +104,42 @@ def yottaBuildStep(target, compilerLabel) {
               execute("yotta --version")
               execute("yotta target $target")
               execute("yotta --plain build mbed-client-cli")
+              setBuildStatus('SUCCESS', "build:${buildName}", "build done")
             } catch (err) {
               echo "Caught exception: ${err}"
               if (target == "x86-linux-native") {
                 postBuild()
               }
-              //setBuildStatus('FAILURE', "${buildName}", "test failed")
+              setBuildStatus('FAILURE', "build:${buildName}", "build failed")
               throw err
             }
           }
       }
       if (target == "x86-linux-native") {  
         stage("test:${buildName}") {
-          dir("mbed-client-cli") {  
-            execute("yotta test mbed_client_cli_test")
-            execute("lcov --base-directory . --directory . --capture --output-file coverage.info")
-            execute("genhtml -o ./test_coverage coverage.info")
-            execute("gcovr -x -o junit.xml")
-            execute("cppcheck --enable=all --std=c99 --inline-suppr --template=\"{file},{line},{severity},{id},{message}\" -I mbed-trace/ source 2> cppcheck.txt")
-            postBuild()
+          setBuildStatus('PENDING', "test:${buildName}", 'test starts')
+          dir("mbed-client-cli") {
+            try {
+              execute("yotta test mbed_client_cli_test")
+              execute("lcov --base-directory . --directory . --capture --output-file coverage.info")
+              execute("genhtml -o ./test_coverage coverage.info")
+              execute("gcovr -x -o junit.xml")
+              execute("cppcheck --enable=all --std=c99 --inline-suppr --template=\"{file},{line},{severity},{id},{message}\" source 2> cppcheck.txt")
+              postBuild()
+              setBuildStatus('SUCCESS', "test:${buildName}", "test done")
+            } catch(err) {
+              echo "Caught exception: ${err}"
+              setBuildStatus('FAILURE', "test:${buildName}", "test failed")
+              throw err
+            }
           }
+          /*  
+          dir("example/linux") {
+            // coming here: https://github.com/ARMmbed/mbed-client-cli/pull/73
+            execute("make")
+            execute("./cli << exit\n")
+          }
+          */
         }
       }
     }
