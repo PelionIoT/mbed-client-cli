@@ -110,13 +110,14 @@ def yottaBuildStep(target, compilerLabel) {
       }
       if (target == "x86-linux-native") {  
         stage("test:${buildName}") {
+          dir("mbed-client-cli") {  
             execute("yotta test mbed_client_cli_test")
-            //execute("gcov ./build/x86-linux-native/test/CMakeFiles/mbed_client_trace_test.dir/Test.cpp.o")
             execute("lcov --base-directory . --directory . --capture --output-file coverage.info")
             execute("genhtml -o ./test_coverage coverage.info")
             execute("gcovr -x -o junit.xml")
             execute("cppcheck --enable=all --std=c99 --inline-suppr --template=\"{file},{line},{severity},{id},{message}\" -I mbed-trace/ source 2> cppcheck.txt")
             postBuild()
+          }
         }
       }
     }
