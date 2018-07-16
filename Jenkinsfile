@@ -49,7 +49,6 @@ for (int i = 0; i < yottaTargets.size(); i++) {
     def compilerLabel = yottaTargets.get(target)
     def stepName = "mbed-os3-${target}"
     stepsForParallel[stepName] = yottaBuildStep(target, compilerLabel)
-  }
 }
 
 
