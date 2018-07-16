@@ -167,9 +167,10 @@ def postBuild() {
           step([$class: 'WarningsPublisher',
                 parserConfigurations: [[
                   parserName: 'GNU Make + GNU C Compiler (gcc)',
-                  pattern: '*.c;*.h'
+                  pattern: '*.c *.h'
                 ]],
                 unstableTotalAll: '0',
+                useDeltaValues: true,
                 usePreviousBuildAsReference: true
           ])
         }
