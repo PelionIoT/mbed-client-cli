@@ -14,7 +14,7 @@ def morpheusTargets = [
   //"LPC1768",
   //"NUCLEO_F401RE",
   //"NRF51DK",
-  //"K64F"
+  "K64F"
 ]
 // Map morpheus toolchains to compiler labels on Jenkins
 def toolchains = [
@@ -76,15 +76,30 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
     node ("${compilerLabel}") {
       deleteDir()
       dir("mbed-client-cli") {
+        String buildName = "mbed-os5-${target}-${toolchain}" 
         def scmVars = checkout scm
         env.GIT_COMMIT_HASH = scmVars.GIT_COMMIT
-        execute("mbed | grep \"^version\"")
-        // does not work ?
-        // execute("mbed compile -m ${target} -t ${toolchain} --library")
-        dir("example/mbed-os-5") {
-          // coming here: https://github.com/ARMmbed/mbed-client-cli/pull/71
+        setBuildStatus('PENDING', "build ${buildName}", 'build starts')
+        try{
+          execute("mbed | grep \"^version\"")
+          // does not work ?
+          execute("echo https://github.com/armmbed/mbed-os > mbed-os.lib")
           execute("mbed deploy")
-          execute("mbed compile -t ${toolchain} -m ${target}")
+          execute("mbed compile -m ${target} -t ${toolchain} --library")
+          /*dir("example/mbed-os-5") {
+            // coming here: https://github.com/ARMmbed/mbed-client-cli/pull/71
+            execute("mbed deploy")
+            execute("mbed compile -t ${toolchain} -m ${target}")
+          }*/
+          setBuildStatus('SUCCESS', "build ${buildName}", "build done")
+        } catch (err) {
+          echo "Caught exception: ${err}"
+          setBuildStatus('FAILURE', "build ${buildName}", "build failed")
+          throw err
+        } finally {
+          // clean up
+          step([$class: 'WsCleanup'])
+          }
         }
       }
     }
