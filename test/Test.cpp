@@ -25,7 +25,6 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-
 #include "mbed-cpputest/CppUTest/TestHarness.h"
 #include "mbed-cpputest/CppUTest/SimpleString.h"
 #include "mbed-cpputest/CppUTest/CommandLineTestRunner.h"
