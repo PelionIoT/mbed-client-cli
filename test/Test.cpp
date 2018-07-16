@@ -757,7 +757,8 @@ TEST(cli, cmd_out_func_set)
 {
     outf_called = 0;
     cmd_out_func(&outf);
-    cmd_vprintf(NULL, NULL); // cppcheck-suppress *
+    // cppcheck-suppress formatExtraArgs
+    cmd_vprintf(NULL, NULL);
     CHECK_EQUAL(outf_called, 1);
 }
 
