@@ -162,6 +162,17 @@ def postBuild() {
                 coberturaReportFile: 'junit.xml'
             ])
         }
+        // Publish compiler warnings
+        catchError {
+          step([$class: 'WarningsPublisher',
+                parserConfigurations: [[
+                  parserName: 'GNU Make + GNU C Compiler (gcc)',
+                  pattern: '*.c;*.h'
+                ]],
+                unstableTotalAll: '0',
+                usePreviousBuildAsReference: true
+          ])
+        }
 
         // Publish HTML reports
         publishHTML(target: [
