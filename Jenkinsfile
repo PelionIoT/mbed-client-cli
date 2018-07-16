@@ -95,13 +95,14 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
 def yottaBuildStep(target, compilerLabel) {
   return {
     String buildName = "mbed-os3-${target}"  
-    node ("${compilerLabel}") {  
-      stage ("build:${buildName}") {  
+    node ("${compilerLabel}") {
+      deleteDir()
+      dir("mbed-client-cli") {
+        def scmVars = checkout scm
+        env.GIT_COMMIT_HASH = scmVars.GIT_COMMIT
+      
+        stage ("build:${buildName}") {  
           setBuildStatus('PENDING', "build ${buildName}", 'build starts')
-          deleteDir()
-          dir("mbed-client-cli") {
-            def scmVars = checkout scm
-            env.GIT_COMMIT_HASH = scmVars.GIT_COMMIT
             try{
               execute("yotta --version")
               execute("yotta target $target")
@@ -116,11 +117,10 @@ def yottaBuildStep(target, compilerLabel) {
               throw err
             }
           }
-      }
-      if (target == "x86-linux-native") {  
-        stage("test:${buildName}") {
-          setBuildStatus('PENDING', "test ${buildName}", 'test starts')
-          dir("mbed-client-cli") {
+        }
+        if (target == "x86-linux-native") {  
+          stage("test:${buildName}") {
+            setBuildStatus('PENDING', "test ${buildName}", 'test starts')
             try {
               execute("yotta test mbed_client_cli_test")
               execute("lcov --base-directory . --directory . --capture --output-file coverage.info")
