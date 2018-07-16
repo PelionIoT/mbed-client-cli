@@ -103,21 +103,20 @@ def yottaBuildStep(target, compilerLabel) {
       
         stage ("build:${buildName}") {  
           setBuildStatus('PENDING', "build ${buildName}", 'build starts')
-            try{
+          try{
               execute("yotta --version")
               execute("yotta target $target")
               execute("yotta --plain build mbed-client-cli")
               setBuildStatus('SUCCESS', "build ${buildName}", "build done")
-            } catch (err) {
+          } catch (err) {
               echo "Caught exception: ${err}"
               if (target == "x86-linux-native") {
                 postBuild()
               }
               setBuildStatus('FAILURE', "build ${buildName}", "build failed")
               throw err
-            }
           }
-        }
+        } // stage
         if (target == "x86-linux-native") {  
           stage("test:${buildName}") {
             setBuildStatus('PENDING', "test ${buildName}", 'test starts')
@@ -134,7 +133,7 @@ def yottaBuildStep(target, compilerLabel) {
               setBuildStatus('FAILURE', "test ${buildName}", "test failed")
               throw err
             }
-          }
+          } // stage
           /*  
           dir("example/linux") {
             // coming here: https://github.com/ARMmbed/mbed-client-cli/pull/73
@@ -142,8 +141,8 @@ def yottaBuildStep(target, compilerLabel) {
             execute("./cli << exit\n")
           }
           */
-        }
-      }
+        } // if linux
+      } // dir
     }
   }
 }
