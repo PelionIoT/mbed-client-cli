@@ -24,11 +24,12 @@ for (int i = 0; i < morpheusTargets.size(); i++) {
     def compilerLabel = toolchains.get(toolchain)
     def stepName = "mbed-os5-${target} ${toolchain}"
     stepsForParallel[stepName] = morpheusBuildStep(target, compilerLabel, toolchain)
-    def ytStepName = "mbed-os3-${target} ${toolchain}"
-    stepsForParallel[ytStepName] = yottaBuildStep(target, compilerLabel, toolchain)
+    //def ytStepName = "mbed-os3-${target} ${toolchain}"
+    //stepsForParallel[ytStepName] = yottaBuildStep(target, compilerLabel, toolchain)
   }
 }
-stepsForParallel["x86-linux-native"] = yottaTestStep("x86-linux-native", "arm-none-eabi-gcc")
+//stepsForParallel["x86-linux-native"] = yottaTestStep("x86-linux-native", "arm-none-eabi-gcc")
+
 } catch (err) {
     echo "Caught exception: ${err}"
     throw err
@@ -38,8 +39,11 @@ stepsForParallel["x86-linux-native"] = yottaTestStep("x86-linux-native", "arm-no
  * https://issues.jenkins-ci.org/browse/JENKINS-26107 will solve this by adding labeled blocks
  */
 // Actually run the steps in parallel - parallel takes a map as an argument, hence the above.
-stage "build testapps"
-parallel stepsForParallel
+timestamps {
+    timeout(time: 10, unit: "MINUTES") {
+        parallel parallelSteps
+    }
+}
 
 def execute(cmd) {
     if(isUnix()) {
@@ -62,6 +66,7 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
     }
   }
 }
+/*
 //Create yotta build steps for parallel execution
 def yottaBuildStep(target, compilerLabel, toolchain) {
   return {
@@ -95,7 +100,7 @@ def yottaTestStep(target, compilerLabel) {
     }
   }
 }
-/*
+
 def postBuild() {
     stage ("postBuild") {
         // Archive artifacts
