@@ -76,7 +76,8 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
     node ("${compilerLabel}") {
       deleteDir()
       dir("mbed-client-cli") {
-        checkout scm
+        def scmVars = checkout scm
+        env.GIT_COMMIT_HASH = scmVars.GIT_COMMIT
         execute("mbed | grep \"^version\"")
         // does not work ?
         // execute("mbed compile -m ${target} -t ${toolchain} --library")
@@ -99,7 +100,8 @@ def yottaBuildStep(target, compilerLabel) {
           setBuildStatus('PENDING', "build ${buildName}", 'build starts')
           deleteDir()
           dir("mbed-client-cli") {
-            checkout scm
+            def scmVars = checkout scm
+            env.GIT_COMMIT_HASH = scmVars.GIT_COMMIT
             try{
               execute("yotta --version")
               execute("yotta target $target")
