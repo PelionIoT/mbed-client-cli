@@ -33,13 +33,13 @@ for (int i = 0; i < morpheusTargets.size(); i++) {
     def target = morpheusTargets.get(i)
     def toolchain = toolchains.keySet().asList().get(j)
     def compilerLabel = toolchains.get(toolchain)
-    def stepName = "mbed-os5-${target} ${toolchain}"
-    stepsForParallel[stepName] = morpheusBuildStep(target, compilerLabel, toolchain)
-    //def ytStepName = "mbed-os3-${target} ${toolchain}"
-    //stepsForParallel[ytStepName] = yottaBuildStep(target, compilerLabel, toolchain)
+    //def stepName = "mbed-os5-${target} ${toolchain}"
+    //stepsForParallel[stepName] = morpheusBuildStep(target, compilerLabel, toolchain)
+    def ytStepName = "mbed-os3-${target} ${toolchain}"
+    stepsForParallel[ytStepName] = yottaBuildStep(target, compilerLabel, toolchain)
   }
 }
-//stepsForParallel["x86-linux-native"] = yottaTestStep("x86-linux-native", "arm-none-eabi-gcc")
+stepsForParallel["x86-linux-native"] = yottaTestStep("x86-linux-native", "arm-none-eabi-gcc")
 
 } catch (err) {
     echo "Caught exception: ${err}"
@@ -77,11 +77,13 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
     }
   }
 }
-/*
+
 //Create yotta build steps for parallel execution
 def yottaBuildStep(target, compilerLabel, toolchain) {
   return {
     node ("${compilerLabel}") {
+      //String buildName = "${nodeType} ${toolchain} test"
+      //setBuildStatus('PENDING', "${buildName}", 'build starts')
       deleteDir()
       dir("mbed-client-cli") {
         checkout scm
@@ -98,15 +100,23 @@ def yottaTestStep(target, compilerLabel) {
     node ("${compilerLabel}") {
       deleteDir()
       dir("mbed-client-cli") {
-        checkout scm
-        execute("yotta --version")
-        execute("yotta target $target")
-        execute("yotta test mbed_client_cli_test")
-        //execute("gcov ./build/x86-linux-native/test/CMakeFiles/mbed_client_trace_test.dir/Test.cpp.o")
-        execute("lcov --base-directory . --directory . --capture --output-file coverage.info")
-        execute("genhtml -o ./test_coverage coverage.info")
-        execute("gcovr -x -o junit.xml")
-        execute("cppcheck --enable=all --std=c99 --inline-suppr --xml --xml-version=2 -I mbed-client-trace/ source 2> cppcheck.xml")
+          try{
+            checkout scm
+            execute("yotta --version")
+            execute("yotta target $target")
+            execute("yotta test mbed_client_cli_test")
+            //execute("gcov ./build/x86-linux-native/test/CMakeFiles/mbed_client_trace_test.dir/Test.cpp.o")
+            execute("lcov --base-directory . --directory . --capture --output-file coverage.info")
+            execute("genhtml -o ./test_coverage coverage.info")
+            execute("gcovr -x -o junit.xml")
+            execute("cppcheck --enable=all --std=c99 --inline-suppr --xml --xml-version=2 -I mbed-client-trace/ source 2> cppcheck.xml")
+            postBuild()
+          } catch (err) {
+            echo "Caught exception: ${err}"
+            postBuild()
+            //setBuildStatus('FAILURE', "${buildName}", "test failed")
+            throw err
+        }
       }
     }
   }
@@ -139,4 +149,36 @@ def postBuild() {
         ])
     }
 }
-*/
+
+def setBuildStatus(String state, String context, String message) {
+    step([
+        $class: "GitHubCommitStatusSetter",
+        reposSource: [
+            $class: "ManuallyEnteredRepositorySource",
+            url: "https://github.com/ARMmbed/mbed-client-cli.git"
+        ],
+        contextSource: [
+            $class: "ManuallyEnteredCommitContextSource",
+            context: context
+        ],
+        errorHandlers: [[
+            $class: "ChangingBuildStatusErrorHandler",
+            result: "UNSTABLE"
+        ]],
+        commitShaSource: [
+            $class: "ManuallyEnteredShaSource",
+            sha: env.GIT_COMMIT_HASH
+        ],
+        statusResultSource: [
+            $class: 'ConditionalStatusResultSource',
+            results: [
+                [
+                    $class: 'AnyBuildResult',
+                    message: message,
+                    state: state
+                ]
+            ]
+        ]
+    ])
+}
+
