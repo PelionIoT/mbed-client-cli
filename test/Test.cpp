@@ -276,6 +276,14 @@ TEST(cli, cmd_has_option)
     char *argv[] =  { "cmd", "-p", "p2", "3", "p4", "p5" };
     CHECK_EQUAL(cmd_has_option(6, argv, "-p"), true);
 }
+TEST(cli, echo_state)
+{
+  CHECK_EQUAL(cmd_echo_state(), true);
+  cmd_echo_off();
+  CHECK_EQUAL(cmd_echo_state(), false);
+  cmd_echo_on();
+  CHECK_EQUAL(cmd_echo_state(), true);
+}
 TEST(cli, help)
 {
     REQUEST("help");
