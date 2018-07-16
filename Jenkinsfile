@@ -28,7 +28,7 @@ for (int i = 0; i < morpheusTargets.size(); i++) {
     stepsForParallel[stepName] = yottaBuildStep(target, compilerLabel, toolchain)
   }
 }
-stepsForParallel["x86-linux-native"] = yottaTestStep("x86-linux-native")
+stepsForParallel["x86-linux-native"] = yottaTestStep("x86-linux-native", "arm-none-eabi-gcc")
 
 /* Jenkins does not allow stages inside parallel execution, 
  * https://issues.jenkins-ci.org/browse/JENKINS-26107 will solve this by adding labeled blocks
@@ -72,7 +72,7 @@ def yottaBuildStep(target, compilerLabel, toolchain) {
   }
 }
 
-def yottaTestStep(target) {
+def yottaTestStep(target, compilerLabel) {
   return {
     node ("${compilerLabel}") {
       deleteDir()
