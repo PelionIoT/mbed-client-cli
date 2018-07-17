@@ -169,7 +169,8 @@ def postBuild(buildName, isTest) {
         // Archive artifacts
         step([$class: 'ArtifactArchiver',
             artifacts: "cppcheck.txt,**/libmbed-client-cli.a,**/mbed-client-cli.ar",
-            fingerprint: true
+            fingerprint: true,
+            allowEmptyArchive: true
         ])
         
 
