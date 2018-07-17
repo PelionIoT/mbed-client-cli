@@ -116,6 +116,7 @@ def yottaBuildStep(target, compilerLabel) {
       dir("mbed-client-cli") {
         def scmVars = checkout scm
         env.GIT_COMMIT_HASH = scmVars.GIT_COMMIT
+        def isTest = target == "x86-linux-native" // tests are valid only in linux target
         stage ("build:${buildName}") {  
           setBuildStatus('PENDING', "build ${buildName}", 'build starts')
           try{
@@ -129,7 +130,7 @@ def yottaBuildStep(target, compilerLabel) {
               currentBuild.result = 'FAILURE'
           }
         } // stage
-        if (target == "x86-linux-native") {  
+        if (isTest) {  
           stage("test:${buildName}") {
             setBuildStatus('PENDING', "test ${buildName}", 'test starts')
             try {
@@ -153,7 +154,6 @@ def yottaBuildStep(target, compilerLabel) {
           }
           */
         } // if linux
-        def isTest = target == "x86-linux-native"
         postBuild(buildName, isTest)
         step([$class: 'WsCleanup'])
       } // dir
@@ -163,6 +163,7 @@ def yottaBuildStep(target, compilerLabel) {
 
 def postBuild(buildName, isTest) {
     stage ("postBuild") {
+        // move files to target+toolchain specific folder
         execute("mkdir -p output/${buildName}")
         execute("find . -name 'libmbed-client-cli.a' -exec mv {} 'output/${buildName}' \\;")
         execute("find . -name 'mbed-client-cli.ar' -exec mv {} 'output/${buildName}' \\;")
@@ -172,15 +173,12 @@ def postBuild(buildName, isTest) {
             fingerprint: true,
             allowEmptyArchive: true
         ])
-        
-
-        // Publish cobertura
         if (isTest) {
+            // Publish cobertura
             step([
                 $class: 'CoberturaPublisher',
                 coberturaReportFile: 'junit.xml'
             ])
-        
             // Publish compiler warnings
             step([$class: 'WarningsPublisher',
                     parserConfigurations: [[
@@ -202,7 +200,7 @@ def postBuild(buildName, isTest) {
         }
     }
 }
-
+// helper function to set build status to github PR
 def setBuildStatus(String state, String context, String message) {
     step([
         $class: "GitHubCommitStatusSetter",
