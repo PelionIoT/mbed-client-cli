@@ -15,7 +15,16 @@
  * limitations under the License.
  */
 #include <stdio.h>
+
+// to achieve more identical behaviour with mbed device you can active ncurses
+//#define EXAMPLE_USE_NCURSES 1
+
+#ifndef EXAMPLE_USE_NCURSES
+#define EXAMPLE_USE_NCURSES 0
+#endif
+#if EXAMPLE_USE_NCURSES == 1
 #include <ncurses.h>
+#endif
 #include "mbed-trace/mbed_trace.h"
 #include "ns_cmdline.h"
 
@@ -34,7 +43,6 @@ static int cmd_dummy(int argc, char *argv[]) {
 }
 volatile bool running = true;
 static int cmd_exit(int argc, char *argv[]) {
-  cmd_printf("Exiting cli.");
   running = false;
   return CMDLINE_RETCODE_SUCCESS;
 }
@@ -42,10 +50,11 @@ static int cmd_exit(int argc, char *argv[]) {
 
 int main(void)
 {
+#if EXAMPLE_USE_NCURSES == 1
     initscr();    // Start curses mode
     raw();        // Line buffering disabled
     noecho();     // Don't echo() while we do getch
-
+#endif
     // Initialize trace library
     mbed_trace_init();
     cmd_init( 0 ); // initialize cmdline with print function
@@ -54,8 +63,14 @@ int main(void)
       "dummy command",
       "This is dummy command, which does not do anything except\n"
       "print text when o -option is given."); // add one dummy command
+
+    tr_info("write 'help' and press ENTER");
     while(running) {
+#if EXAMPLE_USE_NCURSES == 1
         int c = getch();
+#else
+        int c = getchar();
+#endif
         switch(c) {
           case(CTRL('c')):
             running = false;
@@ -66,6 +81,8 @@ int main(void)
             cmd_char_input(c);
         }
     }
+#if EXAMPLE_USE_NCURSES == 1
     endwin();
+#endif
     return 0;
 }

@@ -1335,11 +1335,11 @@ void cmd_output(void)
 }
 void cmd_echo_off(void)
 {
-    cmd.echo = false;
+    cmd_echo(false);
 }
 void cmd_echo_on(void)
 {
-    cmd.echo = true;
+    cmd_echo(true);
 }
 // alias
 #ifndef TEST
