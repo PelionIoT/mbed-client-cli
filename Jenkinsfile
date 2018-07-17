@@ -57,7 +57,7 @@ for (int i = 0; i < yottaTargets.size(); i++) {
  */
 // Actually run the steps in parallel - parallel takes a map as an argument, hence the above.
 timestamps {
-    timeout(time: 10, unit: "MINUTES") {
+    timeout(time: 15, unit: "MINUTES") {
         parallel stepsForParallel
     }
 }
