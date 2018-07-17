@@ -80,25 +80,26 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
         def scmVars = checkout scm
         env.GIT_COMMIT_HASH = scmVars.GIT_COMMIT
         setBuildStatus('PENDING', "build ${buildName}", 'build starts')
-        try{
-          execute("mbed | grep \"^version\"")
-          // does not work ?
-          execute("echo https://github.com/armmbed/mbed-os > mbed-os.lib")
-          execute("mbed deploy")
-          execute("mbed compile -m ${target} -t ${toolchain} --library")
-          /*dir("example/mbed-os-5") {
-            // coming here: https://github.com/ARMmbed/mbed-client-cli/pull/71
+        stage ("build:${buildName}") {  
+          try{
+            execute("mbed --version")
+            execute("echo https://github.com/armmbed/mbed-os > mbed-os.lib")
             execute("mbed deploy")
-            execute("mbed compile -t ${toolchain} -m ${target}")
-          }*/
-          setBuildStatus('SUCCESS', "build ${buildName}", "build done")
-        } catch (err) {
-          echo "Caught exception: ${err}"
-          setBuildStatus('FAILURE', "build ${buildName}", "build failed")
-          throw err
-        } finally {
-          // clean up
-          step([$class: 'WsCleanup'])
+            execute("mbed compile -m ${target} -t ${toolchain} --library")
+            /*dir("example/mbed-os-5") {
+              // coming here: https://github.com/ARMmbed/mbed-client-cli/pull/71
+              execute("mbed deploy")
+              execute("mbed compile -t ${toolchain} -m ${target}")
+            }*/
+            setBuildStatus('SUCCESS', "build ${buildName}", "build done")
+          } catch (err) {
+            echo "Caught exception: ${err}"
+            setBuildStatus('FAILURE', "build ${buildName}", "build failed")
+            throw err
+          } finally {
+            // clean up
+            step([$class: 'WsCleanup'])
+          }
         }
       }
     }
@@ -173,8 +174,7 @@ def postBuild() {
     stage ("postBuild") {
         // Archive artifacts
         catchError {
-            // nothing to archive
-            archiveArtifacts artifacts: "cppcheck.txt"
+            archiveArtifacts artifacts: "cppcheck.txt **/libmbed-client-cli.a"
         }
 
         // Publish cobertura
@@ -189,7 +189,7 @@ def postBuild() {
           step([$class: 'WarningsPublisher',
                 parserConfigurations: [[
                   parserName: 'GNU Make + GNU C Compiler (gcc)',
-                  pattern: '**/*.c **/*.h'
+                  pattern: 'mbed-client-cli/*.c source/*.h  test/*.cpp'
                 ]],
                 unstableTotalAll: '0',
                 useDeltaValues: true,
