@@ -159,8 +159,8 @@ def yottaBuildStep(target, compilerLabel) {
           */
         } // if linux
         execute("mkdir -p output/mbed-os3-${buildName}")
-        execute("ls')
-        execute("find . -name 'libmbed-client-cli.a')
+        execute("ls")
+        execute("find . -name 'libmbed-client-cli.a'")
         execute("find . -name 'libmbed-client-cli.a' -exec mv {} 'output/mbed-os3-${buildName}' \\;")
         postBuild()
         step([$class: 'WsCleanup'])
