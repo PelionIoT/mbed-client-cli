@@ -86,6 +86,8 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
             execute("echo https://github.com/armmbed/mbed-os > mbed-os.lib")
             execute("mbed deploy")
             execute("mbed compile -m ${target} -t ${toolchain} --library")
+            execute("mkdir -p output/${buildName}")
+            execute("find . -name 'libmbed-client-cli.a' -exec mv {} "output/${buildName}" \;")
             /*dir("example/mbed-os-5") {
               // coming here: https://github.com/ARMmbed/mbed-client-cli/pull/71
               execute("mbed deploy")
@@ -97,6 +99,7 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
             setBuildStatus('FAILURE', "build ${buildName}", "build failed")
             throw err
           } finally {
+            postBuild()
             // clean up
             step([$class: 'WsCleanup'])
           }
@@ -125,16 +128,8 @@ def yottaBuildStep(target, compilerLabel) {
               setBuildStatus('SUCCESS', "build ${buildName}", "build done")
           } catch (err) {
               echo "Caught exception: ${err}"
-              if (target == "x86-linux-native") {
-                postBuild()
-              }
               setBuildStatus('FAILURE', "build ${buildName}", "build failed")
-              throw err
-          } finally {
-            if (target != "x86-linux-native") {
-              // clean up
-              step([$class: 'WsCleanup'])
-            }
+              currentBuild.result = 'FAILURE'
           }
         } // stage
         if (target == "x86-linux-native") {  
@@ -146,17 +141,17 @@ def yottaBuildStep(target, compilerLabel) {
               execute("genhtml -o ./test_coverage coverage.info")
               execute("gcovr -x -o junit.xml")
               execute("cppcheck --enable=all --std=c99 --inline-suppr --template=\"{file},{line},{severity},{id},{message}\" source 2> cppcheck.txt")
-              postBuild()
               setBuildStatus('SUCCESS', "test ${buildName}", "test done")
             } catch(err) {
               echo "Caught exception: ${err}"
               setBuildStatus('FAILURE', "test ${buildName}", "test failed")
-              throw err
-            } finally {
-              // clean up
-              step([$class: 'WsCleanup'])
+              currentBuild.result = 'FAILURE'
             }
           } // stage
+          execute("mkdir -p output/${buildName}")
+          execute("find . -name 'libmbed-client-cli.a' -exec mv {} "output/${buildName}" \;")
+          postBuild()
+          step([$class: 'WsCleanup'])
           /*  
           dir("example/linux") {
             // coming here: https://github.com/ARMmbed/mbed-client-cli/pull/73
