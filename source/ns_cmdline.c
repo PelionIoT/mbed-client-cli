@@ -725,7 +725,7 @@ void cmd_add(const char *name, cmd_run_cb *callback, const char *info, const cha
     }
     cmd_ptr->name_ptr = name;
     cmd_ptr->info_ptr = info;
-#if CMDLINE_INCLUDE_MAN == 1
+#if MBED_CMDLINE_INCLUDE_MAN == 1
     cmd_ptr->man_ptr = man;
 #else
     cmd_ptr->man_ptr = 0;
