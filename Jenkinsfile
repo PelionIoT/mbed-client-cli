@@ -94,7 +94,7 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
           } finally {
             postBuild(buildName, false)
             // clean up
-            step([$class: 'WsCleanup'])
+            //step([$class: 'WsCleanup'])
           }
         }
         stage("build:example:${buildName}") {
