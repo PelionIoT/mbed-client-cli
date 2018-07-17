@@ -107,10 +107,6 @@
 #else
 #define HISTORY_MAX_COUNT 32
 #endif
-// Store also duplicates to history by default
-#ifndef MBED_CMDLINE_HISTIORY_IGNORE_DUPLICATES
-#define MBED_CMDLINE_HISTIORY_IGNORE_DUPLICATES 1
-#endif
 //include manuals or not (save memory a little when not include)
 #define INCLUDE_MAN
 
@@ -1351,17 +1347,14 @@ static void cmd_line_clear(int from)
 static void cmd_execute(void)
 {
     if (strlen(cmd.input) != 0) {
-        bool ignore_duplicates = (bool)MBED_CMDLINE_HISTIORY_IGNORE_DUPLICATES;
-        if (!ignore_duplicates) {
-          ignore_duplicates = true;
-          cmd_history_t *entry_ptr = cmd_history_find(0);
-          if (entry_ptr) {
-              if (strcmp(entry_ptr->command_ptr, cmd.input) == 0) {
-                  ignore_duplicates = false;
-              }
-          }
+        bool noduplicates = true;
+        cmd_history_t *entry_ptr = cmd_history_find(0);
+        if (entry_ptr) {
+            if (strcmp(entry_ptr->command_ptr, cmd.input) == 0) {
+                noduplicates = false;
+            }
         }
-        if (ignore_duplicates) {
+        if (noduplicates) {
             cmd_history_save(0);  // new is saved to place 0
             cmd_history_save(-1); // new is created to the current one
         }

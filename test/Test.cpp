@@ -447,6 +447,22 @@ TEST(cli, cmd_history)
     ARRAY_CMP(to_be, buf);
     CLEAN();
 }
+TEST(cli, cmd_history_skip_duplicates)
+{
+    //history when there is some
+    REQUEST("echo test");
+    REQUEST("echo test");
+    REQUEST("echo test");
+    INIT_BUF();
+    REQUEST("history");
+    const char* to_be =
+      "\r\nHistory [2/31]:\r\n" \
+      "[0]: echo test\r\n" \
+      "[1]: history\r\n" \
+      CMDLINE_EMPTY;
+    ARRAY_CMP(to_be, buf);
+    CLEAN();
+}
 TEST(cli, cmd_history_empty)
 {
     //history when its empty
