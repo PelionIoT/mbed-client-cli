@@ -87,7 +87,8 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
             execute("mbed deploy")
             execute("mbed compile -m ${target} -t ${toolchain} --library")
             execute("mkdir -p output/${buildName}")
-            execute("find . -name 'libmbed-client-cli.a' -execdir mv {} 'output/${buildName}' \\;")
+            execute("find . -name 'libmbed-client-cli.a')
+            execute("find . -name 'libmbed-client-cli.a' -exec mv {} 'output/${buildName}' \\;")
             /*dir("example/mbed-os-5") {
               // coming here: https://github.com/ARMmbed/mbed-client-cli/pull/71
               execute("mbed deploy")
@@ -148,10 +149,6 @@ def yottaBuildStep(target, compilerLabel) {
               currentBuild.result = 'FAILURE'
             }
           } // stage
-          execute("mkdir -p output/${buildName}")
-          execute("find . -name 'libmbed-client-cli.a' -exec mv {} 'output/${buildName}' \\;")
-          postBuild()
-          step([$class: 'WsCleanup'])
           /*  
           dir("example/linux") {
             // coming here: https://github.com/ARMmbed/mbed-client-cli/pull/73
@@ -160,6 +157,12 @@ def yottaBuildStep(target, compilerLabel) {
           }
           */
         } // if linux
+        execute("mkdir -p output/${buildName}")
+        execute("ls')
+        execute("find . -name 'libmbed-client-cli.a')
+        execute("find . -name 'libmbed-client-cli.a' -exec mv {} 'output/${buildName}' \\;")
+        postBuild()
+        step([$class: 'WsCleanup'])
       } // dir
     }
   }
