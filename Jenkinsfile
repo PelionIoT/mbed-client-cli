@@ -169,7 +169,10 @@ def postBuild() {
     stage ("postBuild") {
         // Archive artifacts
         catchError {
-            archiveArtifacts artifacts: "cppcheck.txt,**/libmbed-client-cli.a"
+            step([$class: 'ArtifactArchiver',
+                artifacts: "cppcheck.txt,**/libmbed-client-cli.a",
+                fingerprint: true
+            ])
         }
 
         // Publish cobertura
