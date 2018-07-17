@@ -440,7 +440,7 @@ TEST(cli, cmd_history)
     INIT_BUF();
     REQUEST("history");
     const char* to_be =
-      "\r\nHistory [1/32]:\r\n" \
+      "\r\nHistory [2/31]:\r\n" \
       "[0]: echo test\r\n" \
       "[1]: history\r\n" \
       CMDLINE_EMPTY;
@@ -453,7 +453,7 @@ TEST(cli, cmd_history_empty)
     INIT_BUF();
     REQUEST("history");
     const char* to_be =
-      "\r\nHistory [0/32]:\r\n" \
+      "\r\nHistory [1/31]:\r\n" \
       "[0]: history\r\n" \
       CMDLINE_EMPTY;
     ARRAY_CMP(to_be, buf);

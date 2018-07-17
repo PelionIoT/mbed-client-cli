@@ -107,7 +107,10 @@
 #else
 #define HISTORY_MAX_COUNT 32
 #endif
-
+// Store also duplicates to history by default
+#ifndef MBED_CMDLINE_HISTIORY_IGNORE_DUPLICATES
+#define MBED_CMDLINE_HISTIORY_IGNORE_DUPLICATES 1
+#endif
 //include manuals or not (save memory a little when not include)
 #define INCLUDE_MAN
 
@@ -1348,14 +1351,17 @@ static void cmd_line_clear(int from)
 static void cmd_execute(void)
 {
     if (strlen(cmd.input) != 0) {
-        bool noduplicate = true;
-        cmd_history_t *entry_ptr = cmd_history_find(0);
-        if (entry_ptr) {
-            if (strcmp(entry_ptr->command_ptr, cmd.input) == 0) {
-                noduplicate = false;
-            }
+        bool ignore_duplicates = (bool)MBED_CMDLINE_HISTIORY_IGNORE_DUPLICATES;
+        if (!ignore_duplicates) {
+          ignore_duplicates = true;
+          cmd_history_t *entry_ptr = cmd_history_find(0);
+          if (entry_ptr) {
+              if (strcmp(entry_ptr->command_ptr, cmd.input) == 0) {
+                  ignore_duplicates = false;
+              }
+          }
         }
-        if (noduplicate) {
+        if (ignore_duplicates) {
             cmd_history_save(0);  // new is saved to place 0
             cmd_history_save(-1); // new is created to the current one
         }
@@ -1707,14 +1713,13 @@ int help_command(int argc, char *argv[])
 int history_command(int argc, char *argv[])
 {
     if (argc == 1) {
-        int history_size = (int)ns_list_count(&cmd.history_list) - 1;
-        cmd_printf("History [%i/%i]:\r\n", history_size-1, cmd.history_max_count);
+        int history_size = (int)ns_list_count(&cmd.history_list);
+        cmd_printf("History [%i/%i]:\r\n", history_size-1, cmd.history_max_count-1);
         int i = 0;
         ns_list_foreach_reverse(cmd_history_t, cur_ptr, &cmd.history_list) {
-            if (history_size == i) {
-              break;
+            if (i != history_size-1) {
+              cmd_printf("[%i]: %s\r\n", i++, cur_ptr->command_ptr);
             }
-            cmd_printf("[%i]: %s\r\n", i++, cur_ptr->command_ptr);
         }
     } else if (argc == 2) {
         if (strcmp(argv[1], "clear") == 0) {
