@@ -174,7 +174,7 @@ def postBuild() {
     stage ("postBuild") {
         // Archive artifacts
         catchError {
-            archiveArtifacts artifacts: "cppcheck.txt **/libmbed-client-cli.a"
+            archiveArtifacts artifacts: "cppcheck.txt,**/libmbed-client-cli.a"
         }
 
         // Publish cobertura
@@ -189,7 +189,7 @@ def postBuild() {
           step([$class: 'WarningsPublisher',
                 parserConfigurations: [[
                   parserName: 'GNU Make + GNU C Compiler (gcc)',
-                  pattern: 'mbed-client-cli/*.c source/*.h  test/*.cpp'
+                  pattern: 'mbed-client-cli/*.c,source/*.h,test/*.cpp'
                 ]],
                 unstableTotalAll: '0',
                 useDeltaValues: true,
