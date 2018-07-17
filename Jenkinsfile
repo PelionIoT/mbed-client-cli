@@ -103,7 +103,7 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
             setBuildStatus('PENDING', "build ${exampleName}", 'build starts')
             try {
               execute("mbed deploy")
-              execute("mbed compile -t ${toolchain} -m ${target} --app-config mbed_app.json")
+              execute("mbed compile -t ${toolchain} -m ${target}")
               setBuildStatus('SUCCESS', "build ${exampleName}", "build done")
             } catch(err) {
               echo "Caught exception: ${err}"
