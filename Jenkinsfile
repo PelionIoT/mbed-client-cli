@@ -87,9 +87,8 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
             execute("mbed deploy")
             execute("mbed compile -m ${target} -t ${toolchain} --library")
             execute("mkdir -p output/${buildName}")
-            execute("ls")
-            execute("find . -name 'libmbed-client-cli.a'")
             execute("find . -name 'libmbed-client-cli.a' -exec mv {} 'output/${buildName}' \\;")
+            execute("find . -name 'mbed-client-cli.ar' -exec mv {} 'output/${buildName}' \\;")
             /*dir("example/mbed-os-5") {
               // coming here: https://github.com/ARMmbed/mbed-client-cli/pull/71
               execute("mbed deploy")
@@ -159,9 +158,8 @@ def yottaBuildStep(target, compilerLabel) {
           */
         } // if linux
         execute("mkdir -p output/mbed-os3-${buildName}")
-        execute("ls")
-        execute("find . -name 'libmbed-client-cli.a'")
         execute("find . -name 'libmbed-client-cli.a' -exec mv {} 'output/mbed-os3-${buildName}' \\;")
+        execute("find . -name 'mbed-client-cli.ar' -exec mv {} 'output/mbed-os3-${buildName}' \\;")
         postBuild()
         step([$class: 'WsCleanup'])
       } // dir
@@ -174,7 +172,7 @@ def postBuild() {
         // Archive artifacts
         catchError {
             step([$class: 'ArtifactArchiver',
-                artifacts: "cppcheck.txt,**/libmbed-client-cli.a",
+                artifacts: "cppcheck.txt,**/libmbed-client-cli.a,**/mbed-client-cli.ar",
                 fingerprint: true
             ])
         }
