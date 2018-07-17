@@ -59,7 +59,7 @@
 #define tr_debug(...) printf( __VA_ARGS__);printf("\r\n")
 #endif
 
-//#define MBED_CLIENT_CLI_TRACE_ENABLE
+// #define MBED_CLIENT_CLI_TRACE_ENABLE
 // MBED_CLIENT_CLI_TRACE_ENABLE is to enable the traces for debugging,
 // By default all debug traces are disabled.
 #ifndef MBED_CLIENT_CLI_TRACE_ENABLE
@@ -1043,6 +1043,7 @@ void cmd_escape_read(int16_t u_data)
     }
     else if (u_data == 'R') {
         // response for Get cursor position (<esc>[6n)
+        // <esc>[<lines>;<cols>R
         char *ptr;
         int lines = strtol(cmd.escape+1, &ptr, 10);
         if(ptr == NULL) {
@@ -1313,9 +1314,10 @@ static void cmd_move_cursor_to_next_space(void)
 }
 static void cmd_clear_last_word()
 {
-    if(cmd.cursor) cmd.cursor--;
-    else return;
-    const char* last_space = strrevchr(cmd.input + cmd.cursor, cmd.input, ' ');
+    if(!cmd.cursor) return;
+    char *ptr = cmd.input + cmd.cursor - 1;
+    while(*ptr == ' ' && ptr >= cmd.input) ptr--;
+    const char* last_space = strrevchr(ptr, cmd.input, ' ');
     if (last_space) {
         memmove((void*)last_space, &cmd.input[cmd.cursor], strlen(cmd.input + cmd.cursor) + 1);
         cmd.cursor = last_space - cmd.input;
@@ -1323,7 +1325,6 @@ static void cmd_clear_last_word()
       memmove((void*)cmd.input, &cmd.input[cmd.cursor], strlen(cmd.input + cmd.cursor) + 1);
       cmd.cursor = 0;
     }
-
 }
 void cmd_output(void)
 {

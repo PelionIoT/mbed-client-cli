@@ -78,29 +78,35 @@ void input(const char *str)
     }
 }
 
-#define REQUEST(x)          input(x);INIT_BUF();cmd_char_input('\r');
-#define RESPONSE(x)         "\r\n" x "\r\n\r\x1B[2K/> \x1B[1D"
-#define CMDLINE(x)          "\r\x1b[2K/>" x "\x1b[1D"
+#define ESCAPE(x) "\x1b" x
 
+#define DEFAULT_PROMPT      "/>"
 #define FORWARD             "C"
 #define BACKWARD            "D"
-#define CMDLINE_CUR(x, cursor, dir)  "\r\x1b[2K/>" x "\x1b[" cursor "" dir
+#define REQUEST(x)          input(x);INIT_BUF();cmd_char_input('\r');
+#define PROMPT(input, prompt)    "\r" ESCAPE("[2K") prompt input ESCAPE("[1D")
+#define RAW_RESPONSE_WITH_PROMPT(x, prompt) "\r\n" x PROMPT(" ", prompt)
+#define RESPONSE_WITH_PROMPT(x, prompt) RAW_RESPONSE_WITH_PROMPT(x "\r\n", prompt)
+#define RESPONSE(x)         RESPONSE_WITH_PROMPT(x, DEFAULT_PROMPT)
+
+#define CMDLINE(x)          "\r" ESCAPE("[2K") "/>" x ESCAPE("[1D")
+#define CMDLINE_CUR(x, cursor, dir)  "\r" ESCAPE("[2K") DEFAULT_PROMPT x ESCAPE("[" cursor dir)
 #define CLEAN()             cmd_char_input('\r');INIT_BUF();
 
 //vt100 keycodes
-#define HOME()      input("\x1b[1~")
-#define INSERT()    input("\x1b[2~")
-#define DELETE()    input("\x1b[3~")
+#define HOME()      input(ESCAPE("[1~"))
+#define INSERT()    input(ESCAPE("[2~"))
+#define DELETE()    input(ESCAPE("[3~"))
 #define BACKSPACE() input("\x7f")
-#define LEFT()      input("\x1b[D")
+#define LEFT()      input(ESCAPE("[D"))
 #define LEFT_N(n)   for(int i=0;i<n;i++) LEFT();
-#define RIGHT()     input("\x1b[C")
+#define RIGHT()     input(ESCAPE("[C"))
 #define RIGHT_N(n)  for(int i=0;i<n;i++) RIGHT()
-#define UP()        input("\x1b[A")
-#define DOWN()      input("\x1b[B")
+#define UP()        input(ESCAPE("[A"))
+#define DOWN()      input(ESCAPE("[B"))
 #define ESC()       input("\x03")
-#define PAGE_DOWN() input("\x1b[6~")
-#define PAGE_UP()   input("\x1b[5~")
+#define PAGE_DOWN() input(ESCAPE("[6~"))
+#define PAGE_UP()   input(ESCAPE("[5~"))
 
 int previous_retcode = 0;
 #define CHECK_RETCODE(retcode) CHECK_EQUAL(previous_retcode, retcode)
@@ -295,7 +301,14 @@ TEST(cli, help)
     CHECK(strlen(buf) > 20 );
     CHECK_RETCODE(0);
 }
-TEST(cli, hello)
+TEST(cli, retcodes)
+{
+    TEST_RETCODE_WITH_COMMAND("true", CMDLINE_RETCODE_SUCCESS);
+    TEST_RETCODE_WITH_COMMAND("false", CMDLINE_RETCODE_FAIL);
+    TEST_RETCODE_WITH_COMMAND("abc", CMDLINE_RETCODE_COMMAND_NOT_FOUND);
+    TEST_RETCODE_WITH_COMMAND("set --abc", CMDLINE_RETCODE_INVALID_PARAMETERS);
+}
+TEST(cli, cmd_echo)
 {
     REQUEST("echo Hi!");
     ARRAY_CMP(RESPONSE("Hi! ") , buf);
@@ -520,6 +533,52 @@ TEST(cli, cmd_insert)
     ARRAY_CMP(CMDLINE_CUR("echo hello world ", "12", BACKWARD), buf);
     CLEAN();
 }
+TEST(cli, ctrl_w)
+{
+  input("\r\n");
+  input("echo ping pong");
+  INIT_BUF();
+  input("\x17");
+  ARRAY_CMP(CMDLINE_CUR("echo ping  ", "1", BACKWARD), buf);
+
+  INIT_BUF();
+  input("\x17");
+  ARRAY_CMP(CMDLINE_CUR("echo  ", "1", BACKWARD), buf);
+  INIT_BUF();
+  input("\x17");
+  ARRAY_CMP(CMDLINE_CUR(" ", "1", BACKWARD), buf);
+  CLEAN();
+}
+
+TEST(cli, ctrl_w_1)
+{
+  input("echo ping pong");
+  LEFT();
+  INIT_BUF();
+  input("\x17");
+  ARRAY_CMP(CMDLINE_CUR("echo ping g ", "2", BACKWARD), buf);
+  INIT_BUF();
+  input("\x17");
+  ARRAY_CMP(CMDLINE_CUR("echo g ", "2", BACKWARD), buf);
+  INIT_BUF();
+  input("\x17");
+  ARRAY_CMP(CMDLINE_CUR("g ", "2", BACKWARD), buf);
+  CLEAN();
+}
+TEST(cli, cmd_request_screen_size)
+{
+  cmd_request_screen_size();
+  input(ESCAPE("[6;7R"));
+  INIT_BUF();
+  REQUEST("set");
+  ARRAY_CMP("\r\nvariables:\r\n"
+            "PS1='/>'\r\n"
+            "?=0\r\n"
+            "LINES=6\r\n"
+            "COLUMNS=7\r\n"
+            "\r" ESCAPE("[2K") "/> " ESCAPE("[1D"), buf);
+}
+
 TEST(cli, cmd_tab_1)
 {
     INIT_BUF();
@@ -631,21 +690,10 @@ TEST(cli, cmd_tab_4)
     input("\t");
     ARRAY_CMP(CMDLINE_CUR("echo ", "1", BACKWARD) , buf);
 
-    input("\r");
-    INIT_BUF();
+    cmd_variable_add("dut1", NULL);
+    CLEAN();
 }
 // // alias test
-// extern void replace_alias(const char *str, const char *old_str, const char *new_str);
-// TEST(cli, cmd_alias_1)
-// {
-//     char str[] = "hello a men";
-//     replace_alias(str, "a", "b");
-//     ARRAY_CMP("hello a men", str);
-//
-//     replace_alias(str, "hello", "echo");
-//     ARRAY_CMP("echo a men", str);
-//     INIT_BUF();
-// }
 TEST(cli, cmd_alias_2)
 {
     REQUEST("alias foo bar");
@@ -704,6 +752,7 @@ TEST(cli, cmd_var_1)
               "?=0\r\n"
               "foo='bar test'\r\n"
               "\r\x1b[2K/> \x1b[1D", buf);
+    REQUEST("unset foo");
 }
 TEST(cli, cmd_unset)
 {
@@ -734,15 +783,39 @@ TEST(cli, cmd_var_2)
 }
 TEST(cli, cmd__)
 {
-  REQUEST("echo foo");
-  ARRAY_CMP(RESPONSE("foo ") , buf);
-  REQUEST("_");
-  ARRAY_CMP(RESPONSE("foo ") , buf);
+    REQUEST("echo foo");
+    ARRAY_CMP(RESPONSE("foo ") , buf);
+    REQUEST("_");
+    ARRAY_CMP(RESPONSE("foo ") , buf);
+}
+TEST(cli, var_prev_cmd)
+{
+    REQUEST("true");
+    REQUEST("set");
+    ARRAY_CMP("\r\nvariables:\r\n"
+              "PS1='/>'\r\n"
+              "?=0\r\n"
+              "\r\x1b[2K/> \x1b[1D", buf);
+    REQUEST("false");
+    REQUEST("set");
+    ARRAY_CMP("\r\nvariables:\r\n"
+              "PS1='/>'\r\n"
+              "?=-1\r\n"
+              "\r\x1b[2K/> \x1b[1D", buf);
+}
+TEST(cli, var_ps1)
+{
+    REQUEST("set PS1=abc");
+    ARRAY_CMP(RAW_RESPONSE_WITH_PROMPT("", "abc") , buf);
+    REQUEST("set")
+    ARRAY_CMP("\r\nvariables:\r\n"
+              "PS1='abc'\r\n"
+              "?=0\r\n"
+              "\r" ESCAPE("[2K") "abc " ESCAPE("[1D"), buf);
 }
 // operators
 TEST(cli, operator_semicolon)
 {
-    //REQUEST("set foo \"hello world\";echo $foo");
     REQUEST("echo hello world")
     ARRAY_CMP(RESPONSE("hello world ") , buf);
     CHECK_RETCODE(CMDLINE_RETCODE_SUCCESS);
@@ -764,6 +837,11 @@ TEST(cli, operators_or)
   TEST_RETCODE_WITH_COMMAND("false || true", CMDLINE_RETCODE_SUCCESS);
   TEST_RETCODE_WITH_COMMAND("false || false", CMDLINE_RETCODE_FAIL);
 }
+TEST(cli, ampersand)
+{
+    REQUEST("echo hello world&");
+    ARRAY_CMP(RESPONSE("hello world ") , buf);
+}
 TEST(cli, maxlength)
 {
     int i;
@@ -776,11 +854,6 @@ TEST(cli, maxlength)
     test_data[599] = 0;
     REQUEST(ptr);
     //ARRAY_CMP( RESPONSE((test_data+5)), buf);
-}
-TEST(cli, ampersand)
-{
-    REQUEST("echo hello world&");
-    ARRAY_CMP(RESPONSE("hello world ") , buf);
 }
 
 #define REDIR_DATA "echo Hi!"
@@ -811,6 +884,22 @@ TEST(cli, passthrough_set)
     ARRAY_CMP(RESPONSE("Hi! ") , buf);
 }
 
+int cmd_long_called = 0;
+int cmd_long(int argc, char* argv[])
+{
+  cmd_long_called ++;
+  return CMDLINE_RETCODE_EXCUTING_CONTINUE;
+}
+TEST(cli, cmd_continue)
+{
+  cmd_add("long", cmd_long, 0, 0);
+  previous_retcode = 111;
+  TEST_RETCODE_WITH_COMMAND("long", previous_retcode);
+  cmd_ready(0);
+  CHECK_RETCODE(CMDLINE_RETCODE_SUCCESS);
+  CHECK_EQUAL(cmd_long_called, 1);
+}
+
 TEST(cli, cmd_out_func_set_null)
 {
     cmd_out_func(NULL);
@@ -831,6 +920,18 @@ TEST(cli, cmd_out_func_set)
 
 TEST(cli, cmd_ctrl_func_set_null)
 {
+    cmd_ctrl_func(NULL);
+}
+
+int sohf_cb_called = 0;
+void sohf_cb(uint8_t c) {
+  sohf_cb_called++;
+}
+TEST(cli, cmd_ctrl_func_set)
+{
+    cmd_ctrl_func(sohf_cb);
+    REQUEST("\x04");
+    CHECK_EQUAL(sohf_cb_called, 1);
     cmd_ctrl_func(NULL);
 }
 
