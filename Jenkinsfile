@@ -99,7 +99,6 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
         } finally {
           // clean up
           step([$class: 'WsCleanup'])
-          }
         }
       }
     }
