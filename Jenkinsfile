@@ -1,12 +1,12 @@
 echo "Start to build"
 
 properties ([
-    buildDiscarder(
-        logRotator(
-            artifactNumToKeepStr: '10',
-            numToKeepStr: '100'
-        )
+  buildDiscarder(
+    logRotator(
+      artifactNumToKeepStr: '10',
+      numToKeepStr: '100'
     )
+  )
 ])
 
 // List of targets to compile
@@ -45,10 +45,10 @@ for (int i = 0; i < morpheusTargets.size(); i++) {
 }
 // map yotta steps
 for (int i = 0; i < yottaTargets.size(); i++) {
-    def target = yottaTargets.keySet().asList().get(i)
-    def compilerLabel = yottaTargets.get(target)
-    def stepName = "mbed-os3-${target}"
-    stepsForParallel[stepName] = yottaBuildStep(target, compilerLabel)
+  def target = yottaTargets.keySet().asList().get(i)
+  def compilerLabel = yottaTargets.get(target)
+  def stepName = "mbed-os3-${target}"
+  stepsForParallel[stepName] = yottaBuildStep(target, compilerLabel)
 }
 
 
@@ -57,17 +57,17 @@ for (int i = 0; i < yottaTargets.size(); i++) {
  */
 // Actually run the steps in parallel - parallel takes a map as an argument, hence the above.
 timestamps {
-    timeout(time: 15, unit: "MINUTES") {
-        parallel stepsForParallel
-    }
+  timeout(time: 15, unit: "MINUTES") {
+    parallel stepsForParallel
+  }
 }
 
 def execute(cmd) {
-    if(isUnix()) {
-       sh "${cmd}"
-    } else {
-       bat "${cmd}"
-    }
+  if(isUnix()) {
+   sh "${cmd}"
+  } else {
+   bat "${cmd}"
+  }
 }
 
 //Create morpheus build steps for parallel execution
@@ -83,7 +83,7 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
         stage ("build:${buildName}") {
           try{
             execute("mbed --version")
-            execute("echo https://github.com/armmbed/mbed-os > mbed-os.lib")
+            execute("echo https://github.com/armmbed/mbed-os/#62f8b922b420626514fd4690107aff4188469833 > mbed-os.lib")
             execute("mbed deploy")
             execute("mbed compile -m ${target} -t ${toolchain} --library")
             setBuildStatus('SUCCESS', "build ${buildName}", "build done")
@@ -130,14 +130,14 @@ def yottaBuildStep(target, compilerLabel) {
         stage ("build:${buildName}") {
           setBuildStatus('PENDING', "build ${buildName}", 'build starts')
           try{
-              execute("yotta --version")
-              execute("yotta target $target")
-              execute("yotta --plain build mbed-client-cli")
-              setBuildStatus('SUCCESS', "build ${buildName}", "build done")
+            execute("yotta --version")
+            execute("yotta target $target")
+            execute("yotta --plain build mbed-client-cli")
+            setBuildStatus('SUCCESS', "build ${buildName}", "build done")
           } catch (err) {
-              echo "Caught exception: ${err}"
-              setBuildStatus('FAILURE', "build ${buildName}", "build failed")
-              currentBuild.result = 'FAILURE'
+            echo "Caught exception: ${err}"
+            setBuildStatus('FAILURE', "build ${buildName}", "build failed")
+            currentBuild.result = 'FAILURE'
           }
         } // stage
         if (isTest) {
@@ -172,42 +172,42 @@ def yottaBuildStep(target, compilerLabel) {
 }
 
 def postBuild(buildName, isTest) {
-    stage ("postBuild") {
-        // move files to target+toolchain specific folder
-        execute("mkdir -p output/${buildName}")
-        execute("find . -name 'libmbed-client-cli.a' -exec mv {} 'output/${buildName}' \\;")
-        execute("find . -name 'mbed-client-cli.ar' -exec mv {} 'output/${buildName}' \\;")
-        // Archive artifacts
-        step([$class: 'ArtifactArchiver',
-            artifacts: "cppcheck.txt,**/libmbed-client-cli.a,**/mbed-client-cli.ar",
-            fingerprint: true,
-            allowEmptyArchive: true
+    // move files to target+toolchain specific folder
+    execute("mkdir -p output/${buildName}")
+    execute("find . -name 'libmbed-client-cli.a' -exec mv {} 'output/${buildName}' \\;")
+    execute("find . -name 'mbed-client-cli.ar' -exec mv {} 'output/${buildName}' \\;")
+    // Archive artifacts
+    step([
+      $class: 'ArtifactArchiver',
+      artifacts: "cppcheck.txt,**/libmbed-client-cli.a,**/mbed-client-cli.ar",
+      fingerprint: true,
+      allowEmptyArchive: true
+    ])
+    if (isTest) {
+        // Publish cobertura
+        step([
+            $class: 'CoberturaPublisher',
+            coberturaReportFile: 'junit.xml'
         ])
-        if (isTest) {
-            // Publish cobertura
-            step([
-                $class: 'CoberturaPublisher',
-                coberturaReportFile: 'junit.xml'
-            ])
-            // Publish compiler warnings
-            step([$class: 'WarningsPublisher',
-                    parserConfigurations: [[
-                      parserName: 'GNU Make + GNU C Compiler (gcc)',
-                      pattern: 'mbed-client-cli/*.c,source/*.h,test/*.cpp'
-                    ]],
-                    unstableTotalAll: '0',
-                    useDeltaValues: true,
-                    usePreviousBuildAsReference: true
-            ])
-            // Publish HTML reports
-            publishHTML(target: [
-              alwayLinkToLastBuild: false,
-              keepAll: true,
-              reportDir: "test_coverage",
-              reportFiles: "index.html",
-              reportName: "Build HTML Report"
-            ])
-        }
+        // Publish compiler warnings
+        step([
+          $class: 'WarningsPublisher',
+          parserConfigurations: [[
+            parserName: 'GNU Make + GNU C Compiler (gcc)',
+            pattern: 'mbed-client-cli/*.c,source/*.h,test/*.cpp'
+          ]],
+          unstableTotalAll: '0',
+          useDeltaValues: true,
+          usePreviousBuildAsReference: true
+        ])
+        // Publish HTML reports
+        publishHTML(target: [
+          alwayLinkToLastBuild: false,
+          keepAll: true,
+          reportDir: "test_coverage",
+          reportFiles: "index.html",
+          reportName: "Build HTML Report"
+        ])
     }
 }
 // helper function to set build status to github PR
