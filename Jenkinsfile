@@ -83,7 +83,7 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
         stage ("build:${buildName}") {  
           try{
             execute("mbed --version")
-            execute("echo https://github.com/armmbed/mbed-os > mbed-os.lib")
+            execute("echo https://github.com/armmbed/mbed-os/#62f8b922b420626514fd4690107aff4188469833 > mbed-os.lib")
             execute("mbed deploy")
             execute("mbed compile -m ${target} -t ${toolchain} --library")
             /*dir("example/mbed-os-5") {
@@ -146,16 +146,18 @@ def yottaBuildStep(target, compilerLabel) {
               currentBuild.result = 'FAILURE'
             }
           } // stage
-          dir("example/linux") {
-            def exampleName = "example-linux"
-            setBuildStatus('PENDING', "build ${exampleName}", 'build starts')
-            try {
-              execute("make")
-              setBuildStatus('SUCCESS', "build ${exampleName}", "build done")
-            } catch(err) {
-              echo "Caught exception: ${err}"
-              setBuildStatus('FAILURE', "build ${exampleName}", "build failed")
-              currentBuild.result = 'FAILURE'
+          stage("example:${buildName}") {
+            dir("example/linux") {
+              def exampleName = "example-linux"
+              setBuildStatus('PENDING', "build ${exampleName}", 'build starts')
+              try {
+                execute("make")
+                setBuildStatus('SUCCESS', "build ${exampleName}", "build done")
+              } catch(err) {
+                echo "Caught exception: ${err}"
+                setBuildStatus('FAILURE', "build ${exampleName}", "build failed")
+                currentBuild.result = 'FAILURE'
+              }
             }
           }
         } // if linux
