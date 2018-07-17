@@ -59,7 +59,7 @@
 #define tr_debug(...) printf( __VA_ARGS__);printf("\r\n")
 #endif
 
-#define MBED_CLIENT_CLI_TRACE_ENABLE
+//#define MBED_CLIENT_CLI_TRACE_ENABLE
 // MBED_CLIENT_CLI_TRACE_ENABLE is to enable the traces for debugging,
 // By default all debug traces are disabled.
 #ifndef MBED_CLIENT_CLI_TRACE_ENABLE
@@ -1797,7 +1797,6 @@ int unset_command(int argc, char *argv[])
 }
 int set_command(int argc, char *argv[])
 {
-    cmd_request_screen_size();
     if (argc == 1) {
         // print all alias
         cmd_printf("variables:\r\n");
