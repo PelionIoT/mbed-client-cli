@@ -98,17 +98,18 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
           }
         }
         stage("build:example:${buildName}") {
-        dir("example/mbed-os-5") {
-          def exampleName = "example-${buildName}"
-          setBuildStatus('PENDING', "build ${exampleName}", 'build starts')
-          try {
-            execute("mbed deploy")
-            execute("mbed compile -t ${toolchain} -m ${target}")
-            setBuildStatus('SUCCESS', "build ${exampleName}", "build done")
-          } catch(err) {
-            echo "Caught exception: ${err}"
-            setBuildStatus('FAILURE', "build ${exampleName}", "build failed")
-            currentBuild.result = 'FAILURE'
+          dir("example/mbed-os-5") {
+            def exampleName = "example-${buildName}"
+            setBuildStatus('PENDING', "build ${exampleName}", 'build starts')
+            try {
+              execute("mbed deploy")
+              execute("mbed compile -t ${toolchain} -m ${target}")
+              setBuildStatus('SUCCESS', "build ${exampleName}", "build done")
+            } catch(err) {
+              echo "Caught exception: ${err}"
+              setBuildStatus('FAILURE', "build ${exampleName}", "build failed")
+              currentBuild.result = 'FAILURE'
+            }
           }
         }
       }
@@ -155,7 +156,7 @@ def yottaBuildStep(target, compilerLabel) {
               currentBuild.result = 'FAILURE'
             }
           } // stage
-          /*  
+          /*
           dir("example/linux") {
             // coming here: https://github.com/ARMmbed/mbed-client-cli/pull/73
             execute("make")
@@ -241,4 +242,3 @@ def setBuildStatus(String state, String context, String message) {
         ]
     ])
 }
-
