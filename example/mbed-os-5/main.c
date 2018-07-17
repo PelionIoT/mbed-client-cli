@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 #include <stdio.h>
-#include <string>
+#include <string.h>
 
 #include "mbed.h"
 #include "mbed-trace/mbed_trace.h"
 #include "mbed-client-cli/ns_cmdline.h"
 
-#define TRACE_GROUP                 "main"
+#define TRACE_GROUP   "main"
 
 static Mutex SerialOutMutex;
 void serial_out_mutex_wait()

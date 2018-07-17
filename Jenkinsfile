@@ -30,7 +30,7 @@ def yottaTargets = [
   "stm32f429i-disco-gcc": "gcc",
   "x86-linux-native": "linux"
 ]
-  
+
 // Initial maps for parallel build steps
 def stepsForParallel = [:]
 // Jenkins pipeline does not support map.each, we need to use oldschool for loop
@@ -52,7 +52,7 @@ for (int i = 0; i < yottaTargets.size(); i++) {
 }
 
 
-/* Jenkins does not allow stages inside parallel execution, 
+/* Jenkins does not allow stages inside parallel execution,
  * https://issues.jenkins-ci.org/browse/JENKINS-26107 will solve this by adding labeled blocks
  */
 // Actually run the steps in parallel - parallel takes a map as an argument, hence the above.
@@ -76,21 +76,16 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
     node ("${compilerLabel}") {
       deleteDir()
       dir("mbed-client-cli") {
-        String buildName = "mbed-os5-${target}-${toolchain}" 
+        String buildName = "mbed-os5-${target}-${toolchain}"
         def scmVars = checkout scm
         env.GIT_COMMIT_HASH = scmVars.GIT_COMMIT
         setBuildStatus('PENDING', "build ${buildName}", 'build starts')
-        stage ("build:${buildName}") {  
+        stage ("build:${buildName}") {
           try{
             execute("mbed --version")
             execute("echo https://github.com/armmbed/mbed-os > mbed-os.lib")
             execute("mbed deploy")
             execute("mbed compile -m ${target} -t ${toolchain} --library")
-            /*dir("example/mbed-os-5") {
-              // coming here: https://github.com/ARMmbed/mbed-client-cli/pull/71
-              execute("mbed deploy")
-              execute("mbed compile -t ${toolchain} -m ${target}")
-            }*/
             setBuildStatus('SUCCESS', "build ${buildName}", "build done")
           } catch (err) {
             echo "Caught exception: ${err}"
@@ -102,6 +97,20 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
             step([$class: 'WsCleanup'])
           }
         }
+        stage("build:example:${buildName}") {
+        dir("example/mbed-os-5") {
+          def exampleName = "example-${buildName}"
+          setBuildStatus('PENDING', "build ${exampleName}", 'build starts')
+          try {
+            execute("mbed deploy")
+            execute("mbed compile -t ${toolchain} -m ${target}")
+            setBuildStatus('SUCCESS', "build ${exampleName}", "build done")
+          } catch(err) {
+            echo "Caught exception: ${err}"
+            setBuildStatus('FAILURE', "build ${exampleName}", "build failed")
+            currentBuild.result = 'FAILURE'
+          }
+        }
       }
     }
   }
@@ -110,14 +119,14 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
 //Create yotta build steps for parallel execution
 def yottaBuildStep(target, compilerLabel) {
   return {
-    String buildName = "mbed-os3-${target}"  
+    String buildName = "mbed-os3-${target}"
     node ("${compilerLabel}") {
       deleteDir()
       dir("mbed-client-cli") {
         def scmVars = checkout scm
         env.GIT_COMMIT_HASH = scmVars.GIT_COMMIT
         def isTest = target == "x86-linux-native" // tests are valid only in linux target
-        stage ("build:${buildName}") {  
+        stage ("build:${buildName}") {
           setBuildStatus('PENDING', "build ${buildName}", 'build starts')
           try{
               execute("yotta --version")
@@ -130,7 +139,7 @@ def yottaBuildStep(target, compilerLabel) {
               currentBuild.result = 'FAILURE'
           }
         } // stage
-        if (isTest) {  
+        if (isTest) {
           stage("test:${buildName}") {
             setBuildStatus('PENDING', "test ${buildName}", 'test starts')
             try {
