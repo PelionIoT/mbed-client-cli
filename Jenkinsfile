@@ -149,7 +149,7 @@ def yottaBuildStep(target, compilerLabel) {
             }
           } // stage
           execute("mkdir -p output/${buildName}")
-          execute("find . -name 'libmbed-client-cli.a' -exec mv {} 'output/${buildName}' \;")
+          execute("find . -name 'libmbed-client-cli.a' -exec mv {} 'output/${buildName}';")
           postBuild()
           step([$class: 'WsCleanup'])
           /*  
