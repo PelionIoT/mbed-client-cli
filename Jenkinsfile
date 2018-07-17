@@ -146,13 +146,20 @@ def yottaBuildStep(target, compilerLabel) {
               currentBuild.result = 'FAILURE'
             }
           } // stage
-          /*
-          dir("example/linux") {
-            // coming here: https://github.com/ARMmbed/mbed-client-cli/pull/73
-            execute("make")
-            execute("./cli << exit\n")
-          }
-          */
+          stage("example:${buildName}") {
+            dir("example/linux") {
+              def exampleName = "example-linux"
+              setBuildStatus('PENDING', "build ${exampleName}", 'build starts')
+              try {
+                execute("make")
+                setBuildStatus('SUCCESS', "build ${exampleName}", "build done")
+              } catch(err) {
+                echo "Caught exception: ${err}"
+                setBuildStatus('FAILURE', "build ${exampleName}", "build failed")
+                currentBuild.result = 'FAILURE'
+              }
+            }
+          } // stage
         } // if linux
         postBuild(buildName, isTest)
         step([$class: 'WsCleanup'])
