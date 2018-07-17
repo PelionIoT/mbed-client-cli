@@ -43,7 +43,6 @@ static int cmd_dummy(int argc, char *argv[]) {
 }
 volatile bool running = true;
 static int cmd_exit(int argc, char *argv[]) {
-  cmd_printf("Exiting cli.");
   running = false;
   return CMDLINE_RETCODE_SUCCESS;
 }
