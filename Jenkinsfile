@@ -86,9 +86,6 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
             execute("echo https://github.com/armmbed/mbed-os > mbed-os.lib")
             execute("mbed deploy")
             execute("mbed compile -m ${target} -t ${toolchain} --library")
-            execute("mkdir -p output/${buildName}")
-            execute("find . -name 'libmbed-client-cli.a' -exec mv {} 'output/${buildName}' \\;")
-            execute("find . -name 'mbed-client-cli.ar' -exec mv {} 'output/${buildName}' \\;")
             /*dir("example/mbed-os-5") {
               // coming here: https://github.com/ARMmbed/mbed-client-cli/pull/71
               execute("mbed deploy")
@@ -100,7 +97,7 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
             setBuildStatus('FAILURE', "build ${buildName}", "build failed")
             throw err
           } finally {
-            postBuild()
+            postBuild(buildName)
             // clean up
             step([$class: 'WsCleanup'])
           }
@@ -119,7 +116,6 @@ def yottaBuildStep(target, compilerLabel) {
       dir("mbed-client-cli") {
         def scmVars = checkout scm
         env.GIT_COMMIT_HASH = scmVars.GIT_COMMIT
-      
         stage ("build:${buildName}") {  
           setBuildStatus('PENDING', "build ${buildName}", 'build starts')
           try{
@@ -157,18 +153,18 @@ def yottaBuildStep(target, compilerLabel) {
           }
           */
         } // if linux
-        execute("mkdir -p output/mbed-os3-${buildName}")
-        execute("find . -name 'libmbed-client-cli.a' -exec mv {} 'output/mbed-os3-${buildName}' \\;")
-        execute("find . -name 'mbed-client-cli.ar' -exec mv {} 'output/mbed-os3-${buildName}' \\;")
-        postBuild()
+        postBuild(buildName)
         step([$class: 'WsCleanup'])
       } // dir
     }
   }
 }
 
-def postBuild() {
+def postBuild(buildName) {
     stage ("postBuild") {
+        execute("mkdir -p output/${buildName}")
+        execute("find . -name 'libmbed-client-cli.a' -exec mv {} 'output/${buildName}' \\;")
+        execute("find . -name 'mbed-client-cli.ar' -exec mv {} 'output/${buildName}' \\;")
         // Archive artifacts
         catchError {
             step([$class: 'ArtifactArchiver',
