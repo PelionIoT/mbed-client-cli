@@ -1366,6 +1366,21 @@ static void cmd_replace_alias(char *input)
     }
 }
 //variable
+void replace_string(char *str, const char *old_str, const char *new_str)
+{
+    char *ptr = str;
+    int old_len = strlen(old_str),
+        new_len = strlen(new_str);
+    if (old_len > 0) {
+        while ((ptr = strstr(ptr, old_str)) != 0) {
+            if (ptr > str) {
+                memmove(ptr + new_len, ptr + old_len, strlen(ptr + old_len) + 1);
+                memcpy(ptr, new_str, new_len);
+            }
+            ptr++;
+        }
+    }
+}
 void replace_variable(char *str, const char *old_str, const char *new_str)
 {
     char *ptr = str;
@@ -1381,7 +1396,7 @@ void replace_variable(char *str, const char *old_str, const char *new_str)
         }
     }
 }
-void cmd_replace_variables(char *input)
+static void cmd_replace_variables(char *input)
 {
     ns_list_foreach(cmd_variable_t, cur_ptr, &cmd.variable_list) {
         if (cur_ptr->type == VALUE_TYPE_STR) {
@@ -1711,6 +1726,9 @@ void cmd_variable_add(char *variable, char *value)
     if (variable_ptr == NULL) {
         return;
     }
+
+    //replace_string(value, "\\n", "\n");
+    //replace_string(value, "\\r", "\r");
 
     // add new or modify
     int new_len = strlen(value) + 1;
