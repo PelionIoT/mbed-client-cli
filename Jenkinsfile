@@ -97,7 +97,7 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
             setBuildStatus('FAILURE', "build ${buildName}", "build failed")
             throw err
           } finally {
-            postBuild(buildName)
+            postBuild(buildName, false)
             // clean up
             step([$class: 'WsCleanup'])
           }
@@ -153,55 +153,52 @@ def yottaBuildStep(target, compilerLabel) {
           }
           */
         } // if linux
-        postBuild(buildName)
+        def isTest = target == "x86-linux-native"
+        postBuild(buildName, isTest)
         step([$class: 'WsCleanup'])
       } // dir
     }
   }
 }
 
-def postBuild(buildName) {
+def postBuild(buildName, isTest) {
     stage ("postBuild") {
         execute("mkdir -p output/${buildName}")
         execute("find . -name 'libmbed-client-cli.a' -exec mv {} 'output/${buildName}' \\;")
         execute("find . -name 'mbed-client-cli.ar' -exec mv {} 'output/${buildName}' \\;")
         // Archive artifacts
-        catchError {
-            step([$class: 'ArtifactArchiver',
-                artifacts: "cppcheck.txt,**/libmbed-client-cli.a,**/mbed-client-cli.ar",
-                fingerprint: true
-            ])
-        }
+        step([$class: 'ArtifactArchiver',
+            artifacts: "cppcheck.txt,**/libmbed-client-cli.a,**/mbed-client-cli.ar",
+            fingerprint: true
+        ])
+        
 
         // Publish cobertura
-        catchError {
+        if (isTest) {
             step([
                 $class: 'CoberturaPublisher',
                 coberturaReportFile: 'junit.xml'
             ])
+        
+            // Publish compiler warnings
+            step([$class: 'WarningsPublisher',
+                    parserConfigurations: [[
+                      parserName: 'GNU Make + GNU C Compiler (gcc)',
+                      pattern: 'mbed-client-cli/*.c,source/*.h,test/*.cpp'
+                    ]],
+                    unstableTotalAll: '0',
+                    useDeltaValues: true,
+                    usePreviousBuildAsReference: true
+            ])
+            // Publish HTML reports
+            publishHTML(target: [
+              alwayLinkToLastBuild: false,
+              keepAll: true,
+              reportDir: "test_coverage",
+              reportFiles: "index.html",
+              reportName: "Build HTML Report"
+            ])
         }
-        // Publish compiler warnings
-        catchError {
-          step([$class: 'WarningsPublisher',
-                parserConfigurations: [[
-                  parserName: 'GNU Make + GNU C Compiler (gcc)',
-                  pattern: 'mbed-client-cli/*.c,source/*.h,test/*.cpp'
-                ]],
-                unstableTotalAll: '0',
-                useDeltaValues: true,
-                usePreviousBuildAsReference: true
-          ])
-        }
-
-        // Publish HTML reports
-        publishHTML(target: [
-          allowMissing: true,
-          alwayLinkToLastBuild: false,
-          keepAll: true,
-          reportDir: "test_coverage",
-          reportFiles: "index.html",
-          reportName: "Build HTML Report"
-        ])
     }
 }
 
