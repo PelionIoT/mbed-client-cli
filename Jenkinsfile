@@ -103,12 +103,15 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
             setBuildStatus('PENDING', "build ${exampleName}", 'build starts')
             try {
               execute("mbed deploy")
-              execute("mbed compile -t ${toolchain} -m ${target}")
+              execute("mbed compile -t ${toolchain} -m ${target} --app-config mbed_app.json")
               setBuildStatus('SUCCESS', "build ${exampleName}", "build done")
             } catch(err) {
               echo "Caught exception: ${err}"
               setBuildStatus('FAILURE', "build ${exampleName}", "build failed")
               currentBuild.result = 'FAILURE'
+            } finally {
+              // clean up
+              step([$class: 'WsCleanup'])
             }
           }
         }
