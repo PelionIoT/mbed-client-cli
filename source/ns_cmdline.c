@@ -20,7 +20,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#if defined(_WIN32) || defined(__unix__) || defined(__unix) || defined(unix) || defined(YOTTA_CFG)
+#if defined(_WIN32) || defined(__unix__) || defined(__unix) || defined(unix) || defined(YOTTA_CFG) || defined(__APPLE__)
 #include <stdlib.h> //malloc
 #ifndef MEM_ALLOC
 #define MEM_ALLOC malloc
@@ -1202,11 +1202,11 @@ void cmd_output(void)
 }
 void cmd_echo_off(void)
 {
-    cmd.echo = false;
+    cmd_echo(false);
 }
 void cmd_echo_on(void)
 {
-    cmd.echo = true;
+    cmd_echo(true);
 }
 // alias
 #ifndef TEST
