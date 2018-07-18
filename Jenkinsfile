@@ -91,8 +91,6 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
             echo "Caught exception: ${err}"
             setBuildStatus('FAILURE', "build ${buildName}", "build failed")
             throw err
-          } finally {
-            postBuild(buildName, false)
           }
         }
         stage("build:example:${buildName}") {
@@ -109,6 +107,7 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
               currentBuild.result = 'FAILURE'
             } finally {
               // clean up
+              postBuild(buildName, false)
               step([$class: 'WsCleanup'])
             }
           }
@@ -187,7 +186,7 @@ def postBuild(buildName, isTest) {
     // Archive artifacts
     step([
       $class: 'ArtifactArchiver',
-      artifacts: "cppcheck.txt,**/libmbed-client-cli.a,**/mbed-client-cli.ar",
+      artifacts: "cppcheck.txt,**/libmbed-client-cli.a,**/mbed-client-cli.ar,BUILD/**/*.bin",
       fingerprint: true,
       allowEmptyArchive: true
     ])
