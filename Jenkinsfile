@@ -183,10 +183,11 @@ def postBuild(buildName, isTest) {
     execute("mkdir -p output/${buildName}")
     execute("find . -name 'libmbed-client-cli.a' -exec mv {} 'output/${buildName}' \\;")
     execute("find . -name 'mbed-client-cli.ar' -exec mv {} 'output/${buildName}' \\;")
+    execute("find . -name 'mbed-os-5.bin' -exec mv {} 'output/${buildName}/mbed-os-5-example.bin' \\;")
     // Archive artifacts
     step([
       $class: 'ArtifactArchiver',
-      artifacts: "cppcheck.txt,**/libmbed-client-cli.a,**/mbed-client-cli.ar,BUILD/**/*.bin",
+      artifacts: "cppcheck.txt,output/**",
       fingerprint: true,
       allowEmptyArchive: true
     ])
