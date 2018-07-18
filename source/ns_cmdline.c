@@ -750,6 +750,7 @@ void cmd_delete(const char *name)
 
 static int cmd_parse_argv(char *string_ptr, char **argv)
 {
+    // @TODO handle escaped characters like echo \"
     int argc = 0;
     char *str_ptr, *end_quote_ptr = NULL;
 
@@ -771,12 +772,14 @@ static int cmd_parse_argv(char *string_ptr, char **argv)
         } else {
             str_ptr = strstr(str_ptr, " ");
         }
+
+        // one argument parsed
         argc++;
         if (str_ptr == NULL) {
             break;
         }
         if (argc > MAX_ARGUMENTS) {
-            tr_warn("Maximum arguments (%d) rached", MAX_ARGUMENTS);
+            tr_warn("Maximum arguments (%d) reached", MAX_ARGUMENTS);
             break;
         }
         *str_ptr++ = 0;
@@ -1343,9 +1346,6 @@ void cmd_echo_on(void)
     cmd_echo(true);
 }
 // alias
-#ifndef TEST
-static
-#endif
 int replace_alias(char *str, const char *old_str, const char *new_str)
 {
     int old_len = strlen(old_str),
@@ -1366,13 +1366,17 @@ static void cmd_replace_alias(char *input)
     }
 }
 //variable
-void replace_string(char *str, const char *old_str, const char *new_str)
+void replace_string(char *str, int str_len, const char *old_str, int old_len, const char *new_str, int new_len)
 {
     char *ptr = str;
-    int old_len = strlen(old_str),
-        new_len = strlen(new_str);
+    char *end = str + str_len;
     if (old_len > 0) {
+        tr_deep("\r\nfind: '%s'\r\n", old_str);
         while ((ptr = strstr(ptr, old_str)) != 0) {
+            if(ptr + new_len > end) {
+              tr_warn("Buffer was not enough for replacing");
+              break;
+            }
             if (ptr > str) {
                 memmove(ptr + new_len, ptr + old_len, strlen(ptr + old_len) + 1);
                 memcpy(ptr, new_str, new_len);
@@ -1381,27 +1385,33 @@ void replace_string(char *str, const char *old_str, const char *new_str)
         }
     }
 }
-void replace_variable(char *str, const char *old_str, const char *new_str)
+static void replace_variable(char *str, cmd_variable_t* variable_ptr)
 {
-    char *ptr = str;
-    int old_len = strlen(old_str),
-        new_len = strlen(new_str);
-    if (old_len > 0) {
-        while ((ptr = strstr(ptr, old_str)) != 0) {
-            if (ptr > str && *(ptr - 1) == '$') {
-                memmove(ptr + new_len - 1, ptr + old_len, strlen(ptr + old_len) + 1);
-                memcpy(ptr - 1, new_str, new_len);
-            }
-            ptr++;
-        }
+    const char* name = variable_ptr->name_ptr;
+    int name_len = strlen(variable_ptr->name_ptr);
+    char* value;
+    int value_len;
+    if (variable_ptr->type == VALUE_TYPE_STR) {
+      value = variable_ptr->value.ptr;
+      value_len = strlen(value);
+    } else {
+      value = MEM_ALLOC(6);
+      int written = snprintf(value, 6, "%d", variable_ptr->value.i);
+      value_len = written;
+    }
+    char* tmp = MEM_ALLOC(name_len+1);
+    tmp[0] = '$';
+    strcpy(tmp+1, name);
+    replace_string(str, MAX_LINE, tmp, name_len+1, value, value_len);
+    MEM_FREE(tmp);
+    if (variable_ptr->type == VALUE_TYPE_INT) {
+      MEM_FREE(value);
     }
 }
 static void cmd_replace_variables(char *input)
 {
     ns_list_foreach(cmd_variable_t, cur_ptr, &cmd.variable_list) {
-        if (cur_ptr->type == VALUE_TYPE_STR) {
-            replace_variable(input, cur_ptr->name_ptr, cur_ptr->value.ptr);
-        }
+        replace_variable(input, cur_ptr);
     }
 }
 //history
@@ -1726,9 +1736,9 @@ void cmd_variable_add(char *variable, char *value)
     if (variable_ptr == NULL) {
         return;
     }
-
-    //replace_string(value, "\\n", "\n");
-    //replace_string(value, "\\r", "\r");
+    int value_len = strlen(value);
+    replace_string(value, value_len, "\\n", 2, "\n", 1);
+    replace_string(value, value_len, "\\r", 2, "\r", 1);
 
     // add new or modify
     int new_len = strlen(value) + 1;
