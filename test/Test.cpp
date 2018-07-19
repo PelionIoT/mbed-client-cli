@@ -676,6 +676,16 @@ TEST(cli, cmd_delete)
     REQUEST("role");
     CHECK_RETCODE(CMDLINE_RETCODE_COMMAND_NOT_FOUND);
 }
+TEST(cli, cmd_escape)
+{
+  INIT_BUF();
+  REQUEST("echo \\\"");
+  ARRAY_CMP(RESPONSE("\\\" "), buf);
+
+  INIT_BUF();
+  REQUEST("echo \"\\\\\"\"");
+  ARRAY_CMP(RESPONSE("\\\" "), buf);
+}
 TEST(cli, cmd_tab_3)
 {
     INIT_BUF();
@@ -736,7 +746,7 @@ TEST(cli, cmd_tab_4)
     cmd_variable_add("dut1", NULL);
     CLEAN();
 }
-// // alias test
+// alias test
 TEST(cli, cmd_alias_2)
 {
     REQUEST("alias foo bar");
