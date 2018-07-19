@@ -57,7 +57,7 @@ for (int i = 0; i < yottaTargets.size(); i++) {
  */
 // Actually run the steps in parallel - parallel takes a map as an argument, hence the above.
 timestamps {
-  timeout(time: 15, unit: "MINUTES") {
+  timeout(time: 30, unit: "MINUTES") {
     parallel stepsForParallel
   }
 }
@@ -86,20 +86,30 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
             execute("echo https://github.com/armmbed/mbed-os/#62f8b922b420626514fd4690107aff4188469833 > mbed-os.lib")
             execute("mbed deploy")
             execute("mbed compile -m ${target} -t ${toolchain} --library")
-            /*dir("example/mbed-os-5") {
-              // coming here: https://github.com/ARMmbed/mbed-client-cli/pull/71
-              execute("mbed deploy")
-              execute("mbed compile -t ${toolchain} -m ${target}")
-            }*/
             setBuildStatus('SUCCESS', "build ${buildName}", "build done")
           } catch (err) {
             echo "Caught exception: ${err}"
             setBuildStatus('FAILURE', "build ${buildName}", "build failed")
             throw err
-          } finally {
-            postBuild(buildName, false)
-            // clean up
-            step([$class: 'WsCleanup'])
+          }
+        }
+        stage("build:example:${buildName}") {
+          dir("example/mbed-os-5") {
+            def exampleName = "example-${buildName}"
+            setBuildStatus('PENDING', "build ${exampleName}", 'build starts')
+            try {
+              execute("mbed deploy")
+              execute("mbed compile -t ${toolchain} -m ${target}")
+              setBuildStatus('SUCCESS', "build ${exampleName}", "build done")
+            } catch(err) {
+              echo "Caught exception: ${err}"
+              setBuildStatus('FAILURE', "build ${exampleName}", "build failed")
+              currentBuild.result = 'FAILURE'
+            } finally {
+              // clean up
+              postBuild(buildName, false)
+              step([$class: 'WsCleanup'])
+            }
           }
         }
       }
@@ -173,10 +183,11 @@ def postBuild(buildName, isTest) {
     execute("mkdir -p output/${buildName}")
     execute("find . -name 'libmbed-client-cli.a' -exec mv {} 'output/${buildName}' \\;")
     execute("find . -name 'mbed-client-cli.ar' -exec mv {} 'output/${buildName}' \\;")
+    execute("find . -name 'mbed-os-5.bin' -exec mv {} 'output/${buildName}/mbed-os-5-example.bin' \\;")
     // Archive artifacts
     step([
       $class: 'ArtifactArchiver',
-      artifacts: "cppcheck.txt,**/libmbed-client-cli.a,**/mbed-client-cli.ar",
+      artifacts: "cppcheck.txt,output/**",
       fingerprint: true,
       allowEmptyArchive: true
     ])

@@ -90,6 +90,7 @@ void input(const char *str)
 #define RESPONSE(x)         RESPONSE_WITH_PROMPT(x, DEFAULT_PROMPT)
 
 #define CMDLINE(x)          "\r" ESCAPE("[2K") "/>" x ESCAPE("[1D")
+#define CMDLINE_EMPTY       CMDLINE(" ")
 #define CMDLINE_CUR(x, cursor, dir)  "\r" ESCAPE("[2K") DEFAULT_PROMPT x ESCAPE("[" cursor dir)
 #define CLEAN()             cmd_char_input('\r');INIT_BUF();
 
@@ -443,6 +444,48 @@ TEST(cli, cmd_arrows_up_down)
     ARRAY_CMP(CMDLINE(" "), buf);
     CLEAN();
 }
+TEST(cli, cmd_history)
+{
+    //history when there is some
+    REQUEST("echo test");
+    INIT_BUF();
+    REQUEST("history");
+    const char* to_be =
+      "\r\nHistory [2/31]:\r\n" \
+      "[0]: echo test\r\n" \
+      "[1]: history\r\n" \
+      CMDLINE_EMPTY;
+    ARRAY_CMP(to_be, buf);
+    CLEAN();
+}
+TEST(cli, cmd_history_skip_duplicates)
+{
+    //history when there is some
+    REQUEST("echo test");
+    REQUEST("echo test");
+    REQUEST("echo test");
+    INIT_BUF();
+    REQUEST("history");
+    const char* to_be =
+      "\r\nHistory [2/31]:\r\n" \
+      "[0]: echo test\r\n" \
+      "[1]: history\r\n" \
+      CMDLINE_EMPTY;
+    ARRAY_CMP(to_be, buf);
+    CLEAN();
+}
+TEST(cli, cmd_history_empty)
+{
+    //history when its empty
+    INIT_BUF();
+    REQUEST("history");
+    const char* to_be =
+      "\r\nHistory [1/31]:\r\n" \
+      "[0]: history\r\n" \
+      CMDLINE_EMPTY;
+    ARRAY_CMP(to_be, buf);
+    CLEAN();
+}
 TEST(cli, cmd_pageup_page_down)
 {
     //goto history beginning/end
@@ -716,11 +759,11 @@ TEST(cli, cmd_alias_3)
     cmd_alias_add("p", "echo");
     REQUEST("p toimii");
     CHECK_RETCODE(0);
-    ARRAY_CMP("\r\ntoimii \r\n\r\x1b[2K/> \x1b[1D", buf);
+    ARRAY_CMP("\r\ntoimii \r\n" CMDLINE_EMPTY, buf);
 
     cmd_alias_add("printtti", "echo");
     REQUEST("printtti toimii");
-    ARRAY_CMP("\r\ntoimii \r\n\r\x1b[2K/> \x1b[1D", buf);
+    ARRAY_CMP("\r\ntoimii \r\n" CMDLINE_EMPTY, buf);
 }
 TEST(cli, cmd_alias_4)
 {
@@ -751,7 +794,7 @@ TEST(cli, cmd_var_1)
               "PS1='/>'\r\n"
               "?=0\r\n"
               "foo='bar test'\r\n"
-              "\r\x1b[2K/> \x1b[1D", buf);
+              CMDLINE_EMPTY, buf);
     REQUEST("unset foo");
 }
 TEST(cli, cmd_unset)
@@ -763,7 +806,7 @@ TEST(cli, cmd_unset)
     ARRAY_CMP("\r\nvariables:\r\n"
               "PS1='/>'\r\n"
               "?=0\r\n"
-              "\r\x1b[2K/> \x1b[1D", buf);
+              CMDLINE_EMPTY, buf);
 }
 TEST(cli, cmd_var_2)
 {
@@ -821,7 +864,7 @@ TEST(cli, operator_semicolon)
     CHECK_RETCODE(CMDLINE_RETCODE_SUCCESS);
 
     REQUEST("setd faa \"hello world\";echo $faa");
-    ARRAY_CMP("\r\nCommand 'setd' not found.\r\n$faa \r\n\r\x1B[2K/> \x1B[1D" , buf);
+    ARRAY_CMP("\r\nCommand 'setd' not found.\r\n$faa \r\n" CMDLINE_EMPTY , buf);
 }
 TEST(cli, operators_and)
 {
