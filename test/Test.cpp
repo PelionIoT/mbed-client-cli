@@ -619,7 +619,7 @@ TEST(cli, cmd_request_screen_size)
             "?=0\r\n"
             "LINES=6\r\n"
             "COLUMNS=7\r\n"
-            "\r" ESCAPE("[2K") "/> " ESCAPE("[1D"), buf);
+            CMDLINE_EMPTY, buf);
 }
 
 TEST(cli, cmd_tab_1)
@@ -755,14 +755,14 @@ TEST(cli, cmd_alias_2)
     ARRAY_CMP("\r\nalias:\r\n"
               "foo               'bar'\r\n"
               "_                 'alias foo bar'\r\n"
-              "\r\x1b[2K/> \x1b[1D", buf);
+              CMDLINE_EMPTY, buf);
 
     REQUEST("alias foo");
     INIT_BUF();
     REQUEST("alias");
     ARRAY_CMP("\r\nalias:\r\n"
               "_                 'alias foo'\r\n"
-              "\r\x1b[2K/> \x1b[1D", buf);
+              CMDLINE_EMPTY, buf);
 }
 TEST(cli, cmd_alias_3)
 {
@@ -854,7 +854,7 @@ TEST(cli, var_prev_cmd)
     ARRAY_CMP("\r\nvariables:\r\n"
               "PS1='/>'\r\n"
               "?=-1\r\n"
-              "\r\x1b[2K/> \x1b[1D", buf);
+              "\r" CMDLINE_EMPTY, buf);
 }
 TEST(cli, var_ps1)
 {
