@@ -848,7 +848,7 @@ TEST(cli, var_prev_cmd)
     ARRAY_CMP("\r\nvariables:\r\n"
               "PS1='/>'\r\n"
               "?=0\r\n"
-              "\r\x1b[2K/> \x1b[1D", buf);
+              CMDLINE_EMPTY, buf);
     REQUEST("false");
     REQUEST("set");
     ARRAY_CMP("\r\nvariables:\r\n"
