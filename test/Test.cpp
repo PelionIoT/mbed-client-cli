@@ -854,7 +854,7 @@ TEST(cli, var_prev_cmd)
     ARRAY_CMP("\r\nvariables:\r\n"
               "PS1='/>'\r\n"
               "?=-1\r\n"
-              "\r" CMDLINE_EMPTY, buf);
+              CMDLINE_EMPTY, buf);
 }
 TEST(cli, var_ps1)
 {
