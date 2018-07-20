@@ -53,11 +53,12 @@ Following defines can be used to configure defaults:
 
 |define|type|default value|description|
 |------|----|-------------|-----------|
-|`MBED_CMDLINE_BOOT_MESSAGE`|C string|``|default boot message|
+|`MBED_CMDLINE_BOOT_MESSAGE`|C string|`ARM Ltd\r\n`|default boot message|
 |`MBED_CMDLINE_MAX_LINE_LENGTH`|int|2000|maximum command line length|
 |`MBED_CMDLINE_ARGUMENTS_MAX_COUNT`|int|30|maximum count of command arguments|
 |`MBED_CMDLINE_HISTORY_MAX_COUNT`|int|32|maximum history size|
 |`MBED_CMDLINE_INCLUDE_MAN`|bool|true|switching off ignore all man pages - to save used flash memory size|
+|`MBED_CLIENT_CLI_TRACE_ENABLE`|bool|false|To switch on cli internal traces|
 
 ### Pre defines return codes
 
@@ -78,7 +79,7 @@ These codes are reserved and used in test tools.
 ## Tracing
 
 Command Line Library has trace messages, which are disabled by default.
-"MBED_CLIENT_CLI_TRACE_ENABLE" flag if defined, enables all the trace prints for debugging.
+`MBED_CLIENT_CLI_TRACE_ENABLE` flag if defined, enables all the trace prints for debugging.
 
 ## Usage example
 
