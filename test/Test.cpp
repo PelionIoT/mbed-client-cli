@@ -78,7 +78,7 @@ void input(const char *str)
     }
 }
 
-#define REQUEST(x)          input(x);INIT_BUF();cmd_char_input('\r');
+#define REQUEST(x)          input(x);INIT_BUF();cmd_char_input('\n');
 #define CMDLINE_BEGIN       "\r\x1b[2K/>"
 #define CMDLINE_ENDS        "\x1b[1D"
 #define CMDLINE(x)          CMDLINE_BEGIN x CMDLINE_ENDS
