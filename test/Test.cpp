@@ -78,7 +78,7 @@ void input(const char *str)
     }
 }
 
-#define REQUEST(x)          input(x);INIT_BUF();cmd_char_input('\r');
+#define REQUEST(x)          input(x);INIT_BUF();cmd_char_input('\n');
 #define CMDLINE_BEGIN       "\r\x1b[2K/>"
 #define CMDLINE_ENDS        "\x1b[1D"
 #define CMDLINE(x)          CMDLINE_BEGIN x CMDLINE_ENDS
@@ -358,14 +358,14 @@ TEST(cli, cmd_echo10)
 }
 TEST(cli, cmd_echo11)
 {
-    REQUEST("echo off\r");
+    REQUEST("echo off\n");
     INIT_BUF();
     input("echo test");
     ARRAY_CMP("" , buf);
-    input("\r");
+    input("\n");
     ARRAY_CMP("test \r\n" , buf);
     INIT_BUF();
-    REQUEST("echo on\r");
+    REQUEST("echo on\n");
     INIT_BUF();
     input("e");
     ARRAY_CMP(CMDLINE("e ") , buf);
@@ -573,12 +573,12 @@ TEST(cli, cmd_tab_1)
     input("\t");
     ARRAY_CMP(CMDLINE_CUR("echo ", "1", BACKWARD) , buf);
 
-    input("\rech");
+    input("\nech");
     INIT_BUF();
     input("\t");
     ARRAY_CMP(CMDLINE_CUR("echo ", "1", BACKWARD) , buf);
 
-    input("\r");
+    input("\n");
 }
 TEST(cli, cmd_tab_2)
 {
@@ -609,7 +609,7 @@ TEST(cli, cmd_tab_2)
     input("\x1b[Z");
     ARRAY_CMP(CMDLINE_CUR("role ", "1", BACKWARD) , buf);
 
-    input("\r");
+    input("\n");
 }
 TEST(cli, cmd_delete)
 {
@@ -671,12 +671,12 @@ TEST(cli, cmd_tab_4)
     input("\t");
     ARRAY_CMP(CMDLINE_CUR("echo $dut1 ", "1", BACKWARD) , buf);
 
-    input("\re");
+    input("\ne");
     INIT_BUF();
     input("\t");
     ARRAY_CMP(CMDLINE_CUR("echo ", "1", BACKWARD) , buf);
 
-    input("\r");
+    input("\n");
     INIT_BUF();
 }
 // // alias test
