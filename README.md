@@ -12,7 +12,7 @@ Library provides features such:
 * Adding command aliases to the interpreter.
 * Searching command arguments.
 * implements several VT100/VT220 features, e.g.
-  * move cursor left/right (or skipping word by pressing alt+up/right)
+  * move cursor left/right (or skipping word by pressing alt+left/right)
   * delete characters
   * CTRL+W to remove previous word
   * browse command history by pressing up/down

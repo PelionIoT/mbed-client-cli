@@ -265,6 +265,13 @@ static void             goto_end_of_history(void);
 static void             goto_beginning_of_history(void);
 static void             cmd_set_input(const char *str, int cur);
 static char            *next_command(char *string_ptr, operator_t *mode);
+/**
+ * Request screen size from host
+ * Response are stored to variables:
+ * COLUMNS and LINES - as integer values.
+ * Note: Require terminal that handle request codes, like screen.
+ */
+static void cmd_request_screen_size(void);
 /** Run single command through cmd intepreter
  * \param string_ptr    command string with parameters
  * \ret  command return code (CMDLINE_RETCODE_*)
@@ -352,7 +359,7 @@ void cmd_init(cmd_print_t *outf)
     cmd_init_screen();
     return;
 }
-void cmd_request_screen_size(void) {
+static void cmd_request_screen_size(void) {
   cmd_printf(REQUEST_SCREEN_SIZE);
 }
 
@@ -371,7 +378,7 @@ const char* cmd_get_retfmt(void) {
                     "some special parameters:\r\n"\
                     "<bool>                 On/Off echo input characters\r\n"
 #define MAN_ALIAS   "alias <theAlias> <command (parameters)>\r\n"
-#define MAN_UNSET     "unset <var_name>\r\n"
+#define MAN_UNSET   "unset <var_name>\r\n"
 #define MAN_SET     "set <var_name> <value>\r\n"\
                     "some special parameters\r\n"\
                     "--vt100 <bool>         On/Off vt100 controls\r\n"\
