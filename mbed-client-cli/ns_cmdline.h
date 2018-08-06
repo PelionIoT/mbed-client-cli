@@ -329,6 +329,15 @@ void cmd_variable_add(char *variable, char *value);
 
  */
 void cmd_variable_add_int(char *variable, int value);
+/**
+ * Request screen size from host
+ * Response are stored to variables:
+ * COLUMNS and LINES - as integer values.
+ * Note: Require terminal that handle request codes, like screen.
+ */
+void cmd_request_screen_size(void);
+
+
 /** find command parameter index by key.
  * e.g.
  * \code
