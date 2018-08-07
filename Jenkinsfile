@@ -162,6 +162,7 @@ def yottaBuildStep(target, compilerLabel) {
               setBuildStatus('PENDING', "build ${exampleName}", 'build starts')
               try {
                 execute("make")
+                execute("./memtest.sh")
                 setBuildStatus('SUCCESS', "build ${exampleName}", "build done")
               } catch(err) {
                 echo "Caught exception: ${err}"
