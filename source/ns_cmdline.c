@@ -533,7 +533,6 @@ static cmd_exe_t *cmd_next_ptr(int retcode)
     if (cmd.cmd_buffer_ptr == NULL) {
         return cmd_pop();
     }
-    retcode = retcode;
     switch (cmd.cmd_buffer_ptr->operator) {
         case (OPERATOR_AND):
             if (retcode != CMDLINE_RETCODE_SUCCESS) {
@@ -659,8 +658,8 @@ bool cmd_echo_state(void)
 static cmd_command_t *cmd_find_n(char *name, int nameLength, int n)
 {
     cmd_command_t *cmd_ptr = NULL;
-    int i = 0;
     if (name != NULL && nameLength != 0) {
+        int i = 0;
         ns_list_foreach(cmd_command_t, cur_ptr, &cmd.command_list) {
             if (strncmp(name, cur_ptr->name_ptr, nameLength) == 0) {
                 if (i == n) {
@@ -1024,7 +1023,6 @@ static void cmd_arrow_down(void)
 }
 void cmd_escape_read(int16_t u_data)
 {
-    int16_t old_entry;
     tr_debug("cmd_escape_read: %02x '%c' escape_index: %d: %s",
       u_data,
       (isprint(u_data) ? u_data : '?'),
@@ -1397,14 +1395,11 @@ static void replace_variable(char *str, cmd_variable_t* variable_ptr)
     const char* name = variable_ptr->name_ptr;
     int name_len = strlen(variable_ptr->name_ptr);
     char* value;
-    int value_len;
     if (variable_ptr->type == VALUE_TYPE_STR) {
       value = variable_ptr->value.ptr;
-      value_len = strlen(value);
     } else {
       value = MEM_ALLOC(6);
       int written = snprintf(value, 6, "%d", variable_ptr->value.i);
-      value_len = written;
     }
     char* tmp = MEM_ALLOC(name_len+2);
     tmp[0] = '$';
