@@ -1406,7 +1406,7 @@ static void replace_variable(char *str, cmd_variable_t* variable_ptr)
       int written = snprintf(value, 6, "%d", variable_ptr->value.i);
       value_len = written;
     }
-    char* tmp = MEM_ALLOC(name_len+1);
+    char* tmp = MEM_ALLOC(name_len+2);
     tmp[0] = '$';
     strcpy(tmp+1, name);
     replace_string(str, MAX_LINE, tmp, value);

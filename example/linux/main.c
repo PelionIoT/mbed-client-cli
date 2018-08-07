@@ -84,5 +84,6 @@ int main(void)
 #if EXAMPLE_USE_NCURSES == 1
     endwin();
 #endif
+    cmd_free();
     return 0;
 }
