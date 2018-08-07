@@ -63,8 +63,7 @@ int main(void)
       "dummy command",
       "This is dummy command, which does not do anything except\n"
       "print text when o -option is given."); // add one dummy command
-
-    tr_info("write 'help' and press ENTER");
+    cmd_init_screen();
     while(true) {
         int c = getchar();
         if (c != EOF) {
