@@ -162,11 +162,24 @@ def yottaBuildStep(target, compilerLabel) {
               setBuildStatus('PENDING', "build ${exampleName}", 'build starts')
               try {
                 execute("make")
-                execute("./memtest.sh")
                 setBuildStatus('SUCCESS', "build ${exampleName}", "build done")
               } catch(err) {
                 echo "Caught exception: ${err}"
                 setBuildStatus('FAILURE', "build ${exampleName}", "build failed")
+                currentBuild.result = 'FAILURE'
+              }
+            }
+          } // stage
+          stage("leak-check:${buildName}") {
+            dir("example/linux") {
+              def stageName = "leak-check"
+              setBuildStatus('PENDING', "test ${stageName}", 'test starts')
+              try {
+                execute("./memtest.sh")
+                setBuildStatus('SUCCESS', "test ${stageName}", "test done")
+              } catch(err) {
+                echo "Caught exception: ${err}"
+                setBuildStatus('FAILURE', "test ${stageName}", "test failed")
                 currentBuild.result = 'FAILURE'
               }
             }
