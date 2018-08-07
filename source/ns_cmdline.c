@@ -1883,8 +1883,7 @@ int echo_command(int argc, char *argv[])
 int clear_command(int argc, char *argv[])
 {
     (void)argc;
-    (void	)argv;
-
+    (void)argv;
     cmd_echo(true);
     cmd_init_screen();
     return 0;
@@ -1912,9 +1911,13 @@ int help_command(int argc, char *argv[])
     return 0;
 }
 int true_command(int argc, char *argv[]) {
+    (void)argc;
+    (void)argv;
     return CMDLINE_RETCODE_SUCCESS;
 }
 int false_command(int argc, char *argv[]) {
+    (void)argc;
+    (void)argv;
     return CMDLINE_RETCODE_FAIL;
 }
 int history_command(int argc, char *argv[])
@@ -2106,10 +2109,10 @@ char *cmd_parameter_last(int argc, char *argv[])
 static const char* strrevchr(const char* from, const char* to, const char c)
 {
   if(from <= to) return 0;
-  while(from > to & *from == 0) {
+  while((from > to) && (*from == 0)) {
     from--;
   }
-  while(from > to & *from == c) {
+  while((from > to) && (*from == c)) {
     from--;
   }
   while(from > to)

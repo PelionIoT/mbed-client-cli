@@ -1,1 +1,1 @@
-valgrind --leak-check=yes --error-exitcode=1 ./cli <<< `echo -e "exit\n"`
+echo -e "exit\n" | valgrind --leak-check=yes --error-exitcode=1 ./cli
