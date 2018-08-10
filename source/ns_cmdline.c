@@ -288,9 +288,9 @@ void cmd_init(cmd_print_t *outf)
     cmd.tab_lookup_n = 0;
     cmd.cmd_buffer_ptr = 0;
     cmd.idle = true;
+    cmd_set_retfmt("\r\nretcode: %i\r\n");
     cmd.ready_cb = cmd_next;
     cmd.passthrough_fnc = NULL;
-    cmd_set_retfmt("retcode: %i\r\n");
     cmd_line_clear(0);            // clear line
     cmd_history_save(0);          // the current line is the 0 item
     //cmd_free();
@@ -309,7 +309,7 @@ void cmd_init(cmd_print_t *outf)
                     "some special parameters\r\n"\
                     "--vt100 <bool>         On/Off vt100 controls\r\n"\
                     "--retcode <bool>       On/Off retcode print after execution\r\n"\
-                    "--retfmt <format>      Return print format. Default: \"retcode: %i\\n\"\r\n"
+                    "--retfmt <format>      Return print format. Default: \"\\r\\nretcode: %i\\r\\n\"\r\n"
 
 #define MAN_CLEAR   "Clears the display"
 #define MAN_HISTORY "Show commands history\r\n"\
@@ -1678,8 +1678,7 @@ int echo_command(int argc, char *argv[])
 int clear_command(int argc, char *argv[])
 {
     (void)argc;
-    (void	)argv;
-
+    (void)argv;
     cmd_echo(true);
     cmd_init_screen();
     return 0;
