@@ -2115,11 +2115,10 @@ static const char* strrevchr(const char* from, const char* to, const char c)
   while((from > to) && ((*from == 0) || (*from == c))) {
     from--;
   }
-  from++;
   while(from > to)
   {
     if(*from == c) {
-      return from;
+      return from+1;
     }
     from--;
   }
