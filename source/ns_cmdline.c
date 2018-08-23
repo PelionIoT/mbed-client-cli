@@ -1060,8 +1060,8 @@ void cmd_char_input(int16_t u_data)
     tr_debug("input char:      %02x '%c', cursor: %i, input: \"%s\"", u_data, (isprint(u_data) ? u_data : ' '), cmd.cursor,  cmd.input);
 
     /*Normal character input*/
-    if (u_data == '\n') {
-        if (cmd.cursor > 0 && cmd.input[cmd.cursor-1] == '\r') {
+    if (u_data == '\r' || u_data == '\n') {
+        if (cmd.cursor > 0 && u_data == '\n' && cmd.input[cmd.cursor-1] == '\r') {
             cmd.input[cmd.cursor-1] = 0;
         }
         cmd_reset_tab();
