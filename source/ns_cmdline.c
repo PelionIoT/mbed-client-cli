@@ -2101,19 +2101,25 @@ char *cmd_parameter_last(int argc, char *argv[])
     }
     return NULL;
 }
+/**
+ * find last occurence of char c but ignore null and block of c.
+ * used only internally to find out previous word
+ * e.g.
+ * const char str[] = "aaaab aabbb\0\0";
+ * const char* tmp = strrevchr(str+strlen(str), str, 'b');
+ * printf(tmp); // prints "bbb"
+ */
 static const char* strrevchr(const char* from, const char* to, const char c)
 {
   if(from <= to) return 0;
-  while((from > to) && (*from == 0)) {
+  while((from > to) && ((*from == 0) || (*from == c))) {
     from--;
   }
-  while((from > to) && (*from == c)) {
-    from--;
-  }
+  from++;
   while(from > to)
   {
     if(*from == c) {
-      return from + 1;
+      return from;
     }
     from--;
   }
