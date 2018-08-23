@@ -1183,9 +1183,6 @@ void cmd_char_input(int16_t u_data)
 
     /*Normal character input*/
     if (u_data == '\r' || u_data == '\n') {
-        if (cmd.cursor > 0 && u_data == '\n' && cmd.input[cmd.cursor-1] == '\r') {
-            cmd.input[cmd.cursor-1] = 0;
-        }
         cmd_reset_tab();
         if (strlen(cmd.input) == 0) {
             if (cmd.echo) {
