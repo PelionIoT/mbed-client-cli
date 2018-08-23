@@ -288,7 +288,7 @@ int history_command(int argc, char *argv[]);
 
 /** Internal helper functions
  */
-static const char* strrevchr(const char* from, const char* to, const char c);
+static const char* find_last_space(const char* from, const char* to);
 static int replace_string(
   char *str, int str_len,
   const char *old_str, const char *new_str);
@@ -1319,7 +1319,7 @@ static void cmd_move_cursor_to_last_space(void)
 {
   if(cmd.cursor) cmd.cursor--;
   else return;
-  const char* last_space = strrevchr(cmd.input + cmd.cursor, cmd.input, ' ');
+  const char* last_space = find_last_space(cmd.input + cmd.cursor, cmd.input);
   if( last_space )
   {
     cmd.cursor = last_space - cmd.input;
@@ -1344,7 +1344,7 @@ static void cmd_clear_last_word()
     if(!cmd.cursor) return;
     char *ptr = cmd.input + cmd.cursor - 1;
     while(*ptr == ' ' && ptr >= cmd.input) ptr--;
-    const char* last_space = strrevchr(ptr, cmd.input, ' ');
+    const char* last_space = find_last_space(ptr, cmd.input);
     if (last_space) {
         memmove((void*)last_space, &cmd.input[cmd.cursor], strlen(cmd.input + cmd.cursor) + 1);
         cmd.cursor = last_space - cmd.input;
@@ -2102,22 +2102,21 @@ char *cmd_parameter_last(int argc, char *argv[])
     return NULL;
 }
 /**
- * find last occurence of char c but ignore null and block of c.
+ * find last space but ignore nulls and first spaces.
  * used only internally to find out previous word
  * e.g.
- * const char str[] = "aaaab aabbb\0\0";
- * const char* tmp = strrevchr(str+strlen(str), str, 'b');
+ * const char str[] = "aaaab aa bbb\0\0";
+ * const char* tmp = last_space(str+strlen(str), str);
  * printf(tmp); // prints "bbb"
  */
-static const char* strrevchr(const char* from, const char* to, const char c)
+static const char* find_last_space(const char* from, const char* to)
 {
-  if(from <= to) return 0;
-  while((from > to) && ((*from == 0) || (*from == c))) {
+  if (from <= to) return 0;
+  while((from > to) && ((*from == 0) || (*from == ' '))) {
     from--;
   }
-  while(from > to)
-  {
-    if(*from == c) {
+  while (from > to) {
+    if (*from == ' ') {
       return from+1;
     }
     from--;
