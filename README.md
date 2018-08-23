@@ -1,16 +1,33 @@
 # mbed-client-cli
 
-This is the Command Line Library for a CLI application. This library provides methods for:
+This is the Command Line Library for a CLI application. It uses only ansi C features so it is portable and works in mbed-os-3, mbed-os-5, linux and windows.
+
+## Features
+
+Library provides features such:
 
 * Adding commands to the interpreter.
 * Deleting commands from the interpreter.
 * Executing commands.
 * Adding command aliases to the interpreter.
 * Searching command arguments.
+* implements several VT100/VT220 features, e.g.
+  * move cursor left/right (or skipping word by pressing alt+left/right)
+  * delete characters
+  * CTRL+W to remove previous word
+  * browse command history by pressing up/down
+* implements basic commands, e.g.
+  * echo
+  * help
+  * (un)set
+  * alias
+  * history
+  * true/false
+  * clear
 
 ## API
 
-Command Line Library API is described in the snipplet below:
+Command Line Library basic API's is described in the snipplet below:
 
 ```c++
 // if thread safety for CLI terminal output is needed
@@ -28,13 +45,47 @@ cmd_add( <command>, (int func)(int argc, char *argv[]), <help>, <man>);
 cmd_exe( <command> );
 ```
 
+Full API is described [here](mbed-client-cli/ns_cmdline.h)
+
+### Confiration
+
+Following defines can be used to configure defaults:
+
+|define|type|default value|description|
+|------|----|-------------|-----------|
+|`MBED_CMDLINE_BOOT_MESSAGE`|C string|`ARM Ltd\r\n`|default boot message|
+|`MBED_CMDLINE_MAX_LINE_LENGTH`|int|2000|maximum command line length|
+|`MBED_CMDLINE_ARGUMENTS_MAX_COUNT`|int|30|maximum count of command arguments|
+|`MBED_CMDLINE_HISTORY_MAX_COUNT`|int|32|maximum history size|
+|`MBED_CMDLINE_INCLUDE_MAN`|bool|true|switching off ignore all man pages - to save used flash memory size|
+|`MBED_CLIENT_CLI_TRACE_ENABLE`|bool|false|To switch on cli internal traces|
+
+### Pre defines return codes
+
+each command should return some of pre-defines return codes.
+These codes are reserved and used in test tools.
+
+|define|description|
+|------|-----------|
+|`CMDLINE_RETCODE_COMMAND_BUSY`|Command Busy|
+|`CMDLINE_RETCODE_EXCUTING_CONTINUE`|Execution continue in background|
+|`CMDLINE_RETCODE_SUCCESS`|Execution Success|
+|`CMDLINE_RETCODE_FAIL`|Execution Fail|
+|`CMDLINE_RETCODE_INVALID_PARAMETERS`|Command parameters was incorrect|
+|`CMDLINE_RETCODE_COMMAND_NOT_IMPLEMENTED`|Command not implemented|
+|`CMDLINE_RETCODE_COMMAND_CB_MISSING`|Command callback function missing|
+|`CMDLINE_RETCODE_COMMAND_NOT_FOUND`|Command not found|
+
 ## Tracing
 
 Command Line Library has trace messages, which are disabled by default.
-"MBED_CLIENT_CLI_TRACE_ENABLE" flag if defined, enables all the trace prints for debugging.
+`MBED_CLIENT_CLI_TRACE_ENABLE` flag if defined, enables all the trace prints for debugging.
 
 ## Usage example
 
+See full examples [here](example).
+
+###
 Adding new commands to the Command Line Library and executing the commands:
 
 ```c++
@@ -78,34 +129,12 @@ void main(void) {
 The CLI library is not thread safe, but the CLI terminal output can be locked against other
 output streams, for example if both traces and CLI output are using serial out.
 
-```c++
-static Mutex MyMutex;
-
-// mutex wait cb, acquires the mutex, waiting if necessary
-static void mutex_wait(void)
-{
-    MyMutex.lock();
-}
-
-// mutex release cb, releases the mutex
-static void my_mutex_release(void)
-{
-    MyMutex.unlock();
-}
-
-void main(void) {
-   cmd_mutex_wait_func( my_mutex_wait ); // configure mutex wait function before initializing
-   cmd_mutex_release_func( my_mutex_release ); // configure mutex release function before initializing
-   cmd_init( &myprint );              // initialize cmdline with print function
-   cmd_set_ready_cb( cmd_ready_cb );  // configure ready cb.
-   //CLI terminal output now locks against MyMutex
-}
-```
+Thread safety example for mbed-os-5 is available [here](example/mbed-os-5/main.cpp).
 
 
 ## Unit tests
 
-To run unit tests:
+Unit tests is written using [yotta](https://yottabuild.org). To run unit tests:
 
 * In Linux
 

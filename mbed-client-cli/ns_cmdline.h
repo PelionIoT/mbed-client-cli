@@ -317,6 +317,26 @@ void cmd_alias_add(const char *alias, const char *value);
  * \param value     Value for variable. Values can contains white spaces and '"' or '"' characters.
  */
 void cmd_variable_add(char *variable, char *value);
+/**
+ * Add integer variable to interpreter.
+ * Variables are replaced with values before executing a command.
+ * \code
+   cmd_variable_add_int("world", 2);
+   cmd_exe("echo $world"); // this is now same as 'echo 2' .
+ * \endcode
+ * \param variable  Variable name, which will be replaced in interpreter.
+ * \param value     Value for variable
+
+ */
+void cmd_variable_add_int(char *variable, int value);
+/**
+ * Request screen size from host
+ * Response are stored to variables:
+ * COLUMNS and LINES - as integer values.
+ * Note: Require terminal that handle request codes, like screen.
+ */
+void cmd_request_screen_size(void);
+
 
 /** find command parameter index by key.
  * e.g.

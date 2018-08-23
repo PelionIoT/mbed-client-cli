@@ -64,7 +64,7 @@ int main(void)
       "This is dummy command, which does not do anything except\n"
       "print text when o -option is given."); // add one dummy command
 
-    tr_info("write 'help' and press ENTER");
+    cmd_init_screen();
     while(running) {
 #if EXAMPLE_USE_NCURSES == 1
         int c = getch();
@@ -84,5 +84,6 @@ int main(void)
 #if EXAMPLE_USE_NCURSES == 1
     endwin();
 #endif
+    cmd_free();
     return 0;
 }

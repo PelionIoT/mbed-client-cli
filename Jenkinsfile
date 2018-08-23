@@ -170,6 +170,20 @@ def yottaBuildStep(target, compilerLabel) {
               }
             }
           } // stage
+          stage("leak-check:${buildName}") {
+            dir("example/linux") {
+              def stageName = "leak-check"
+              setBuildStatus('PENDING', "test ${stageName}", 'test starts')
+              try {
+                execute("./memtest.sh")
+                setBuildStatus('SUCCESS', "test ${stageName}", "test done")
+              } catch(err) {
+                echo "Caught exception: ${err}"
+                setBuildStatus('FAILURE', "test ${stageName}", "test failed")
+                currentBuild.result = 'FAILURE'
+              }
+            }
+          } // stage
         } // if linux
         postBuild(buildName, isTest)
         step([$class: 'WsCleanup'])
