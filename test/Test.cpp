@@ -320,6 +320,18 @@ TEST(cli, cmd_echo)
     ARRAY_CMP(RESPONSE("Hi! ") , buf);
     CHECK_RETCODE(0);
 }
+TEST(cli, cmd_echo_with_cr)
+{
+    input("echo crlf");INIT_BUF();input("\r\n");
+    ARRAY_CMP(RESPONSE("crlf ") , buf);
+    CHECK_RETCODE(0);
+}
+TEST(cli, cmd_echo_cr_only)
+{
+    input("echo cr");INIT_BUF();input("\r");
+    ARRAY_CMP(RESPONSE("cr ") , buf);
+    CHECK_RETCODE(0);
+}
 TEST(cli, cmd_echo1)
 {
     REQUEST(" echo Hi!");

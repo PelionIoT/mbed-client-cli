@@ -210,6 +210,7 @@ typedef struct cmd_class_s {
     int  tab_lookup;                  // originally lookup characters count
     int  tab_lookup_cmd_n;            // index in command list
     int  tab_lookup_n;                //
+    char prev_ch;                     // previous char
     bool echo;                        // echo inputs
     cmd_ready_cb_f *ready_cb;           // ready cb function
     cmd_list_t  cmd_buffer;
@@ -333,6 +334,7 @@ void cmd_init(cmd_print_t *outf)
     cmd.escaping = false;
     cmd.insert = true;
     cmd.cursor = 0;
+    cmd.prev_ch = 0;
     cmd.vt100_on = true;
     cmd.history_max_count = HISTORY_MAX_COUNT;
     cmd.tab_lookup = 0;
@@ -1172,6 +1174,11 @@ void cmd_char_input(int16_t u_data)
         cmd_escape_read(u_data);
         return;
     }
+    if (cmd.prev_ch == '\r' && u_data == '\n') {
+        // ignore \n if previous character was \r ->
+        // that triggers execute so \n does not need to anymore
+        return;
+    }
     tr_debug("input char:      %02x '%c', cursor: %i, input: \"%s\"", u_data, (isprint(u_data) ? u_data : ' '), cmd.cursor,  cmd.input);
 
     /*Normal character input*/
@@ -1264,6 +1271,7 @@ void cmd_char_input(int16_t u_data)
             cmd_output();
         }
     }
+    cmd.prev_ch = u_data;
 }
 static int check_variable_keylookup_size(char **key, int *keysize)
 {
