@@ -982,7 +982,40 @@ TEST(cli, passthrough_set)
     REQUEST(REDIR_DATA);
     ARRAY_CMP(RESPONSE("Hi! ") , buf);
 }
-
+TEST(cli, passthrough_lf)
+{
+    passthrough_ptr = passthrough_buffer;
+    memset(&passthrough_buffer, 0, PASSTHROUGH_BUF_LENGTH);
+    input("\n");
+    INIT_BUF();
+    cmd_input_passthrough_func(passthrough_cb);
+    input(REDIR_DATA);
+    CHECK_EQUAL(strlen(buf), 0);
+    ARRAY_CMP(REDIR_DATA, passthrough_buffer);
+}
+TEST(cli, passthrough_cr)
+{
+    passthrough_ptr = passthrough_buffer;
+    memset(&passthrough_buffer, 0, PASSTHROUGH_BUF_LENGTH);
+    input("\r");
+    INIT_BUF();
+    cmd_input_passthrough_func(passthrough_cb);
+    input(REDIR_DATA);
+    CHECK(strlen(buf) == 0);
+    ARRAY_CMP(REDIR_DATA, passthrough_buffer);
+}
+TEST(cli, passthrough_crlf)
+{
+    passthrough_ptr = passthrough_buffer;
+    memset(&passthrough_buffer, 0, PASSTHROUGH_BUF_LENGTH);
+    input("\r");
+    INIT_BUF();
+    cmd_input_passthrough_func(passthrough_cb);
+    input("\n");
+    input(REDIR_DATA);
+    CHECK(strlen(buf) == 0);
+    ARRAY_CMP(REDIR_DATA, passthrough_buffer);
+}
 int cmd_long_called = 0;
 int cmd_long(int argc, char* argv[])
 {

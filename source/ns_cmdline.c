@@ -210,9 +210,9 @@ typedef struct cmd_class_s {
     int  tab_lookup;                  // originally lookup characters count
     int  tab_lookup_cmd_n;            // index in command list
     int  tab_lookup_n;                //
-    char prev_ch;                     // previous char
+    bool prev_cr;                     // indicate if cr was last char
     bool echo;                        // echo inputs
-    cmd_ready_cb_f *ready_cb;           // ready cb function
+    cmd_ready_cb_f *ready_cb;         // ready cb function
     cmd_list_t  cmd_buffer;
     cmd_exe_t  *cmd_buffer_ptr;
     cmd_command_t  *cmd_ptr;
@@ -334,7 +334,7 @@ void cmd_init(cmd_print_t *outf)
     cmd.escaping = false;
     cmd.insert = true;
     cmd.cursor = 0;
-    cmd.prev_ch = 0;
+    cmd.prev_cr = false;
     cmd.vt100_on = true;
     cmd.history_max_count = HISTORY_MAX_COUNT;
     cmd.tab_lookup = 0;
@@ -1163,26 +1163,28 @@ static void cmd_reset_tab(void)
 }
 void cmd_char_input(int16_t u_data)
 {
+    if (cmd.prev_cr && u_data == '\n') {
+        // ignore \n if previous character was \r ->
+        // that triggers execute so \n does not need to anymore
+        cmd.prev_cr = false; // unset to ensure we doesn't go here anymore
+        return;
+    }
     /*Handle passthrough*/
     if (cmd.passthrough_fnc != NULL) {
         cmd.passthrough_fnc(u_data);
         return;
     }
-
     /*handle ecape command*/
     if (cmd.escaping == true) {
         cmd_escape_read(u_data);
         return;
     }
-    if (cmd.prev_ch == '\r' && u_data == '\n') {
-        // ignore \n if previous character was \r ->
-        // that triggers execute so \n does not need to anymore
-        return;
-    }
+
     tr_debug("input char:      %02x '%c', cursor: %i, input: \"%s\"", u_data, (isprint(u_data) ? u_data : ' '), cmd.cursor,  cmd.input);
 
     /*Normal character input*/
     if (u_data == '\r' || u_data == '\n') {
+        cmd.prev_cr = u_data == '\r';
         cmd_reset_tab();
         if (strlen(cmd.input) == 0) {
             if (cmd.echo) {
@@ -1268,7 +1270,6 @@ void cmd_char_input(int16_t u_data)
             cmd_output();
         }
     }
-    cmd.prev_ch = u_data;
 }
 static int check_variable_keylookup_size(char **key, int *keysize)
 {
