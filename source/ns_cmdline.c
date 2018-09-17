@@ -1401,20 +1401,22 @@ static void replace_variable(char *str, cmd_variable_t* variable_ptr)
     const char* name = variable_ptr->name_ptr;
     int name_len = strlen(variable_ptr->name_ptr);
     char* value;
+    char valueLocal[11];
     if (variable_ptr->type == VALUE_TYPE_STR) {
       value = variable_ptr->value.ptr;
     } else {
-      value = MEM_ALLOC(6);
-      int written = snprintf(value, 6, "%d", variable_ptr->value.i);
+      value = valueLocal;
+      int written = snprintf(value, 11, "%d", variable_ptr->value.i);
     }
     char* tmp = MEM_ALLOC(name_len+2);
+    if (tmp == NULL) {
+        tr_error("mem alloc failed in replace_variable");
+        return;
+    }
     tmp[0] = '$';
     strcpy(tmp+1, name);
     replace_string(str, MAX_LINE, tmp, value);
     MEM_FREE(tmp);
-    if (variable_ptr->type == VALUE_TYPE_INT) {
-      MEM_FREE(value);
-    }
 }
 static void cmd_replace_variables(char *input)
 {
