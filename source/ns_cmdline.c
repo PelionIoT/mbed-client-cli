@@ -159,12 +159,12 @@ typedef struct cmd_alias_s {
 } cmd_alias_t;
 
 union Data {
-  char *ptr;
-  int i;
+    char *ptr;
+    int i;
 };
 typedef enum value_type_s {
-  VALUE_TYPE_STR,
-  VALUE_TYPE_INT
+    VALUE_TYPE_STR,
+    VALUE_TYPE_INT
 } value_type_t;
 
 typedef struct cmd_variable_s {
@@ -228,11 +228,11 @@ typedef struct cmd_class_s {
 } cmd_class_t;
 
 cmd_class_t cmd = {
-  .init = false,
-  .cmd_ptr = NULL,
-  .mutex_wait_fnc = NULL,
-  .mutex_release_fnc = NULL,
-  .passthrough_fnc = NULL
+    .init = false,
+    .cmd_ptr = NULL,
+    .mutex_wait_fnc = NULL,
+    .mutex_release_fnc = NULL,
+    .passthrough_fnc = NULL
 };
 
 /* Function prototypes
@@ -355,16 +355,16 @@ void cmd_init(cmd_print_t *outf)
     return;
 }
 void cmd_request_screen_size(void) {
-  cmd_printf(REQUEST_SCREEN_SIZE);
+    cmd_printf(REQUEST_SCREEN_SIZE);
 }
 
 const char* cmdline_get_prompt(void) {
-  cmd_variable_t* var_ptr = variable_find(VAR_PROMPT);
-  return var_ptr && var_ptr->type == VALUE_TYPE_STR ? var_ptr->value.ptr : "";
+    cmd_variable_t* var_ptr = variable_find(VAR_PROMPT);
+    return var_ptr && var_ptr->type == VALUE_TYPE_STR ? var_ptr->value.ptr : "";
 }
 const char* cmd_get_retfmt(void) {
-  cmd_variable_t* var_ptr = variable_find(VAR_RETFMT);
-  return var_ptr && var_ptr->type == VALUE_TYPE_STR ? var_ptr->value.ptr : 0;
+    cmd_variable_t* var_ptr = variable_find(VAR_RETFMT);
+    return var_ptr && var_ptr->type == VALUE_TYPE_STR ? var_ptr->value.ptr : 0;
 }
 
 #if MBED_CMDLINE_INCLUDE_MAN == 1
@@ -1299,7 +1299,6 @@ bool cmd_tab_lookup(void)
     if (len == 0) {
         return false;
     }
-
     char *variable_keypart;
     int lookupSize;
     int varpos = check_variable_keylookup_size(&variable_keypart, &lookupSize);
@@ -1318,32 +1317,30 @@ bool cmd_tab_lookup(void)
             return true;
         }
     }
-
     return false;
 }
 static void cmd_move_cursor_to_last_space(void)
 {
-  if(cmd.cursor) cmd.cursor--;
-  else return;
-  const char* last_space = find_last_space(cmd.input + cmd.cursor, cmd.input);
-  if( last_space )
-  {
-    cmd.cursor = last_space - cmd.input;
-  }
-  else {
-    cmd.cursor = 0;
-  }
+    if(cmd.cursor) cmd.cursor--;
+    else return;
+    const char* last_space = find_last_space(cmd.input + cmd.cursor, cmd.input);
+    if( last_space ) {
+        cmd.cursor = last_space - cmd.input;
+    }
+    else {
+        cmd.cursor = 0;
+    }
 }
 static void cmd_move_cursor_to_next_space(void)
 {
-  while(cmd.input[cmd.cursor] == ' ') cmd.cursor++;
-  const char* next_space = strchr(cmd.input + cmd.cursor, ' ');
-  if( next_space ) {
-    cmd.cursor = next_space - cmd.input;
-  }
-  else {
-    cmd.cursor = (int)strlen(cmd.input);
-  }
+    while(cmd.input[cmd.cursor] == ' ') cmd.cursor++;
+    const char* next_space = strchr(cmd.input + cmd.cursor, ' ');
+    if( next_space ) {
+        cmd.cursor = next_space - cmd.input;
+    }
+    else {
+        cmd.cursor = (int)strlen(cmd.input);
+    }
 }
 static void cmd_clear_last_word()
 {
@@ -1401,20 +1398,22 @@ static void replace_variable(char *str, cmd_variable_t* variable_ptr)
     const char* name = variable_ptr->name_ptr;
     int name_len = strlen(variable_ptr->name_ptr);
     char* value;
+    char valueLocal[11];
     if (variable_ptr->type == VALUE_TYPE_STR) {
-      value = variable_ptr->value.ptr;
+        value = variable_ptr->value.ptr;
     } else {
-      value = MEM_ALLOC(6);
-      int written = snprintf(value, 6, "%d", variable_ptr->value.i);
+        value = valueLocal;
+        snprintf(value, 11, "%d", variable_ptr->value.i);
     }
     char* tmp = MEM_ALLOC(name_len+2);
+    if (tmp == NULL) {
+        tr_error("mem alloc failed in replace_variable");
+        return;
+    }
     tmp[0] = '$';
     strcpy(tmp+1, name);
     replace_string(str, MAX_LINE, tmp, value);
     MEM_FREE(tmp);
-    if (variable_ptr->type == VALUE_TYPE_INT) {
-      MEM_FREE(value);
-    }
 }
 static void cmd_replace_variables(char *input)
 {
