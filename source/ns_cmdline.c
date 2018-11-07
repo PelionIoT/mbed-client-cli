@@ -289,10 +289,10 @@ int history_command(int argc, char *argv[]);
 
 /** Internal helper functions
  */
-static const char* find_last_space(const char* from, const char* to);
+static const char *find_last_space(const char *from, const char *to);
 static int replace_string(
-  char *str, int str_len,
-  const char *old_str, const char *new_str);
+    char *str, int str_len,
+    const char *old_str, const char *new_str);
 
 void default_cmd_response_out(const char *fmt, va_list ap)
 {
@@ -354,16 +354,19 @@ void cmd_init(cmd_print_t *outf)
     cmd_init_screen();
     return;
 }
-void cmd_request_screen_size(void) {
+void cmd_request_screen_size(void)
+{
     cmd_printf(REQUEST_SCREEN_SIZE);
 }
 
-const char* cmdline_get_prompt(void) {
-    cmd_variable_t* var_ptr = variable_find(VAR_PROMPT);
+const char *cmdline_get_prompt(void)
+{
+    cmd_variable_t *var_ptr = variable_find(VAR_PROMPT);
     return var_ptr && var_ptr->type == VALUE_TYPE_STR ? var_ptr->value.ptr : "";
 }
-const char* cmd_get_retfmt(void) {
-    cmd_variable_t* var_ptr = variable_find(VAR_RETFMT);
+const char *cmd_get_retfmt(void)
+{
+    cmd_variable_t *var_ptr = variable_find(VAR_RETFMT);
     return var_ptr && var_ptr->type == VALUE_TYPE_STR ? var_ptr->value.ptr : 0;
 }
 
@@ -418,7 +421,7 @@ void cmd_free(void)
         cmd_alias_add(cur_ptr->name_ptr, NULL);
     }
     ns_list_foreach_safe(cmd_variable_t, cur_ptr, &cmd.variable_list) {
-        if(cur_ptr->type == VALUE_TYPE_STR) {
+        if (cur_ptr->type == VALUE_TYPE_STR) {
             cmd_variable_add(cur_ptr->value.ptr, NULL);
         }
     }
@@ -453,8 +456,7 @@ void cmd_set_ready_cb(cmd_ready_cb_f *cb)
 }
 void cmd_ready(int retcode)
 {
-    if( cmd.cmd_ptr && cmd.cmd_ptr->busy )
-    {
+    if (cmd.cmd_ptr && cmd.cmd_ptr->busy) {
         //execution finished
         cmd.cmd_ptr->busy = false;
     }
@@ -486,9 +488,8 @@ void cmd_next(int retcode)
         //yep there was some -> lets execute it
         retcode = cmd_run(cmd.cmd_buffer_ptr->cmd_s);
         //check if execution goes to the backend or not
-        if (retcode == CMDLINE_RETCODE_EXCUTING_CONTINUE ) {
-            if( (NULL != cmd.cmd_buffer_ptr) && cmd.cmd_buffer_ptr->operator == OPERATOR_BACKGROUND )
-            {
+        if (retcode == CMDLINE_RETCODE_EXCUTING_CONTINUE) {
+            if ((NULL != cmd.cmd_buffer_ptr) && cmd.cmd_buffer_ptr->operator == OPERATOR_BACKGROUND) {
                 //execution continue in background, but operator say that it's "ready"
                 cmd_ready(CMDLINE_RETCODE_SUCCESS);
             } else {
@@ -500,7 +501,7 @@ void cmd_next(int retcode)
             cmd_ready(retcode);
         }
     } else {
-        const char* retfmt = cmd_get_retfmt();
+        const char *retfmt = cmd_get_retfmt();
         if (retfmt) {
             cmd_printf(retfmt, retcode);
         }
@@ -685,7 +686,7 @@ static const char *cmd_input_lookup(char *name, int namelength, int n)
         n -= cmd.tab_lookup_n;
         cmd_alias_t *alias = alias_find_n(name, namelength, n);
         if (alias) {
-            str = (const char*)alias->name_ptr;
+            str = (const char *)alias->name_ptr;
         }
     }
 
@@ -756,8 +757,8 @@ void cmd_delete(const char *name)
 }
 static void replace_escapes(char *string_ptr)
 {
-    while((string_ptr = strchr(string_ptr, '\\')) != NULL) {
-        memmove(string_ptr, string_ptr+1, strlen(string_ptr+1)+1);
+    while ((string_ptr = strchr(string_ptr, '\\')) != NULL) {
+        memmove(string_ptr, string_ptr + 1, strlen(string_ptr + 1) + 1);
         string_ptr++;
     }
 }
@@ -775,26 +776,28 @@ static int cmd_parse_argv(char *string_ptr, char **argv)
     do {
         argv[argc] = str_ptr;
         // tr_deep("parsing.. argv[%d]: %s\r\n", argc, str_ptr);
-        if(*str_ptr != '\\') {
-          if (*str_ptr == '"') {
-              // check if end quote
-              end_quote_ptr = str_ptr;
-              do{
-                end_quote_ptr = strchr(end_quote_ptr + 1, '\"');
-                if (end_quote_ptr == NULL) break;
-              } while (*(end_quote_ptr-1) == '\\');
-              if (end_quote_ptr != NULL) {
-                  // remove quotes give as one parameter
-                  argv[argc]++;
-                  str_ptr = end_quote_ptr;
-              } else {
+        if (*str_ptr != '\\') {
+            if (*str_ptr == '"') {
+                // check if end quote
+                end_quote_ptr = str_ptr;
+                do {
+                    end_quote_ptr = strchr(end_quote_ptr + 1, '\"');
+                    if (end_quote_ptr == NULL) {
+                        break;
+                    }
+                } while (*(end_quote_ptr - 1) == '\\');
+                if (end_quote_ptr != NULL) {
+                    // remove quotes give as one parameter
+                    argv[argc]++;
+                    str_ptr = end_quote_ptr;
+                } else {
+                    str_ptr = strchr(str_ptr, ' ');
+                }
+            } else {
                 str_ptr = strchr(str_ptr, ' ');
-              }
-          } else {
-            str_ptr = strchr(str_ptr, ' ');
-          }
+            }
         } else {
-          str_ptr = strchr(str_ptr, ' ');
+            str_ptr = strchr(str_ptr, ' ');
         }
         argc++; // one argument parsed
         if (str_ptr == NULL) {
@@ -805,10 +808,10 @@ static int cmd_parse_argv(char *string_ptr, char **argv)
             break;
         }
         *str_ptr++ = 0;
-        replace_escapes(argv[argc-1]);
+        replace_escapes(argv[argc - 1]);
         // tr_deep("parsed argv[%d]: %s\r\n", argc-1, argv[argc-1]);
         while (*str_ptr == ' ') {
-          str_ptr++;  // skip spaces
+            str_ptr++;  // skip spaces
         };
     } while (*str_ptr != 0);
     return argc;
@@ -933,7 +936,7 @@ static int cmd_run(char *string_ptr)
         return CMDLINE_RETCODE_SUCCESS;
     }
 
-    if( cmd.cmd_ptr->busy ) {
+    if (cmd.cmd_ptr->busy) {
         MEM_FREE(command_str);
         return CMDLINE_RETCODE_COMMAND_BUSY;
     }
@@ -973,7 +976,7 @@ static void cmd_arrow_right()
     }
     */
     if ((cmd.escape_index == 1 && cmd.escape[0] == 'O') ||
-        (cmd.escape_index == 4 && strncmp(cmd.escape + 1, "1;5", 3) == 0)) {
+            (cmd.escape_index == 4 && strncmp(cmd.escape + 1, "1;5", 3) == 0)) {
         cmd_move_cursor_to_next_space();
     } else {
         cmd.cursor ++;
@@ -991,7 +994,7 @@ static void cmd_arrow_left()
     }
     */
     if ((cmd.escape_index == 1 && cmd.escape[0] == 'O') ||
-        (cmd.escape_index == 4 && strncmp(cmd.escape + 1, "1;5", 3) == 0)) {
+            (cmd.escape_index == 4 && strncmp(cmd.escape + 1, "1;5", 3) == 0)) {
         cmd_move_cursor_to_last_space();
     } else {
         cmd.cursor --;
@@ -1026,10 +1029,10 @@ static void cmd_arrow_down(void)
 void cmd_escape_read(int16_t u_data)
 {
     tr_debug("cmd_escape_read: %02x '%c' escape_index: %d: %s",
-      u_data,
-      (isprint(u_data) ? u_data : '?'),
-      cmd.escape_index,
-      cmd.escape);
+             u_data,
+             (isprint(u_data) ? u_data : '?'),
+             cmd.escape_index,
+             cmd.escape);
 
     if (u_data == 'D') {
         cmd_arrow_left();
@@ -1049,39 +1052,33 @@ void cmd_escape_read(int16_t u_data)
             }
         }
         cmd_tab_lookup();
-    }
-    else if (u_data == 'b') {
-      cmd_move_cursor_to_last_space();
-    }
-    else if (u_data == 'f') {
-      cmd_move_cursor_to_next_space();
-    }
-    else if (u_data == 'n') {
-      if (cmd.escape[1] == '5') {
-        // Device status report
-        // Response: terminal is OK
-        cmd_printf("%c0n", ESC);
-      }
-      else if(cmd.escape[1] == '6') {
-        // Get cursor position
-        cmd_printf(ESCAPE("%d%d"), 0, cmd.cursor);
-      }
-    }
-    else if (u_data == 'R') {
+    } else if (u_data == 'b') {
+        cmd_move_cursor_to_last_space();
+    } else if (u_data == 'f') {
+        cmd_move_cursor_to_next_space();
+    } else if (u_data == 'n') {
+        if (cmd.escape[1] == '5') {
+            // Device status report
+            // Response: terminal is OK
+            cmd_printf("%c0n", ESC);
+        } else if (cmd.escape[1] == '6') {
+            // Get cursor position
+            cmd_printf(ESCAPE("%d%d"), 0, cmd.cursor);
+        }
+    } else if (u_data == 'R') {
         // response for Get cursor position (<esc>[6n)
         // <esc>[<lines>;<cols>R
         char *ptr;
-        int lines = strtol(cmd.escape+1, &ptr, 10);
-        if(ptr == NULL) {
+        int lines = strtol(cmd.escape + 1, &ptr, 10);
+        if (ptr == NULL) {
             tr_warn("Invalid response: <esc>%s%c", cmd.escape, u_data);
         } else {
-            int cols = strtol(ptr+1, 0, 10);
+            int cols = strtol(ptr + 1, 0, 10);
             tr_debug("Lines: %d, cols: %d", lines, cols);
             cmd_variable_add_int("LINES", lines);
             cmd_variable_add_int("COLUMNS", cols);
         }
-    }
-    else if (u_data == 'H') {
+    } else if (u_data == 'H') {
         // Xterm support
         cmd.cursor =  0;
     } else if (u_data == 'F') {
@@ -1221,12 +1218,12 @@ void cmd_char_input(int16_t u_data)
             cmd_output();
         }
     } else if (u_data == ETB) {
-      //ctrl+w (End of xmit block)
-      tr_debug("ctrl+w - remove last word to cursor");
-      cmd_clear_last_word();
-      if (cmd.echo) {
-          cmd_output();
-      }
+        //ctrl+w (End of xmit block)
+        tr_debug("ctrl+w - remove last word to cursor");
+        cmd_clear_last_word();
+        if (cmd.echo) {
+            cmd_output();
+        }
     } else if (u_data == TAB) {
         bool inc = false;
         if (cmd.tab_lookup > 0) {
@@ -1321,39 +1318,46 @@ bool cmd_tab_lookup(void)
 }
 static void cmd_move_cursor_to_last_space(void)
 {
-    if(cmd.cursor) cmd.cursor--;
-    else return;
-    const char* last_space = find_last_space(cmd.input + cmd.cursor, cmd.input);
-    if( last_space ) {
-        cmd.cursor = last_space - cmd.input;
+    if (cmd.cursor) {
+        cmd.cursor--;
+    } else {
+        return;
     }
-    else {
+    const char *last_space = find_last_space(cmd.input + cmd.cursor, cmd.input);
+    if (last_space) {
+        cmd.cursor = last_space - cmd.input;
+    } else {
         cmd.cursor = 0;
     }
 }
 static void cmd_move_cursor_to_next_space(void)
 {
-    while(cmd.input[cmd.cursor] == ' ') cmd.cursor++;
-    const char* next_space = strchr(cmd.input + cmd.cursor, ' ');
-    if( next_space ) {
-        cmd.cursor = next_space - cmd.input;
+    while (cmd.input[cmd.cursor] == ' ') {
+        cmd.cursor++;
     }
-    else {
+    const char *next_space = strchr(cmd.input + cmd.cursor, ' ');
+    if (next_space) {
+        cmd.cursor = next_space - cmd.input;
+    } else {
         cmd.cursor = (int)strlen(cmd.input);
     }
 }
 static void cmd_clear_last_word()
 {
-    if(!cmd.cursor) return;
+    if (!cmd.cursor) {
+        return;
+    }
     char *ptr = cmd.input + cmd.cursor - 1;
-    while(*ptr == ' ' && ptr >= cmd.input) ptr--;
-    const char* last_space = find_last_space(ptr, cmd.input);
+    while (*ptr == ' ' && ptr >= cmd.input) {
+        ptr--;
+    }
+    const char *last_space = find_last_space(ptr, cmd.input);
     if (last_space) {
-        memmove((void*)last_space, &cmd.input[cmd.cursor], strlen(cmd.input + cmd.cursor) + 1);
+        memmove((void *)last_space, &cmd.input[cmd.cursor], strlen(cmd.input + cmd.cursor) + 1);
         cmd.cursor = last_space - cmd.input;
     } else {
-      memmove((void*)cmd.input, &cmd.input[cmd.cursor], strlen(cmd.input + cmd.cursor) + 1);
-      cmd.cursor = 0;
+        memmove((void *)cmd.input, &cmd.input[cmd.cursor], strlen(cmd.input + cmd.cursor) + 1);
+        cmd.cursor = 0;
     }
 }
 void cmd_output(void)
@@ -1361,7 +1365,7 @@ void cmd_output(void)
     if (cmd.vt100_on && cmd.idle) {
         int curpos = (int)strlen(cmd.input) - cmd.cursor + 1;
         cmd_printf(CR_S CLEAR_ENTIRE_LINE "%s%s " MOVE_CURSOR_LEFT_N_CHAR,
-          cmdline_get_prompt(), cmd.input, curpos);
+                   cmdline_get_prompt(), cmd.input, curpos);
     }
 }
 void cmd_echo_off(void)
@@ -1393,11 +1397,11 @@ static void cmd_replace_alias(char *input)
     }
 }
 //variable
-static void replace_variable(char *str, cmd_variable_t* variable_ptr)
+static void replace_variable(char *str, cmd_variable_t *variable_ptr)
 {
-    const char* name = variable_ptr->name_ptr;
+    const char *name = variable_ptr->name_ptr;
     int name_len = strlen(variable_ptr->name_ptr);
-    char* value;
+    char *value;
     char valueLocal[11];
     if (variable_ptr->type == VALUE_TYPE_STR) {
         value = variable_ptr->value.ptr;
@@ -1405,13 +1409,13 @@ static void replace_variable(char *str, cmd_variable_t* variable_ptr)
         value = valueLocal;
         snprintf(value, 11, "%d", variable_ptr->value.i);
     }
-    char* tmp = MEM_ALLOC(name_len+2);
+    char *tmp = MEM_ALLOC(name_len + 2);
     if (tmp == NULL) {
         tr_error("mem alloc failed in replace_variable");
         return;
     }
     tmp[0] = '$';
-    strcpy(tmp+1, name);
+    strcpy(tmp + 1, name);
     replace_string(str, MAX_LINE, tmp, value);
     MEM_FREE(tmp);
 }
@@ -1680,57 +1684,57 @@ void cmd_alias_add(const char *alias, const char *value)
     }
     return;
 }
-static cmd_variable_t* cmd_variable_add_prepare(char* variable, char* value)
+static cmd_variable_t *cmd_variable_add_prepare(char *variable, char *value)
 {
-  if (variable == NULL || strlen(variable) == 0) {
-      tr_warn("cmd_variable_add invalid parameters");
-      return NULL;
-  }
-  cmd_variable_t* variable_ptr = variable_find(variable);
-  if (variable_ptr == NULL) {
-      if (value == NULL) {
-          return NULL;    //  adding null variable
-      }
-      if (strlen(value) == 0) {
-          return NULL;    // no need to add new empty one
-      }
-      variable_ptr = (cmd_variable_t *)MEM_ALLOC(sizeof(cmd_variable_t));
-      if (variable_ptr == NULL) {
-          tr_error("Mem alloc failed cmd_variable_add");
-          return NULL;
-      }
-      variable_ptr->name_ptr = (char *)MEM_ALLOC(strlen(variable) + 1);
-      if (variable_ptr->name_ptr == NULL) {
-          MEM_FREE(variable_ptr);
-          tr_error("Mem alloc failed cmd_variable_add name_ptr");
-          return NULL;
-      }
+    if (variable == NULL || strlen(variable) == 0) {
+        tr_warn("cmd_variable_add invalid parameters");
+        return NULL;
+    }
+    cmd_variable_t *variable_ptr = variable_find(variable);
+    if (variable_ptr == NULL) {
+        if (value == NULL) {
+            return NULL;    //  adding null variable
+        }
+        if (strlen(value) == 0) {
+            return NULL;    // no need to add new empty one
+        }
+        variable_ptr = (cmd_variable_t *)MEM_ALLOC(sizeof(cmd_variable_t));
+        if (variable_ptr == NULL) {
+            tr_error("Mem alloc failed cmd_variable_add");
+            return NULL;
+        }
+        variable_ptr->name_ptr = (char *)MEM_ALLOC(strlen(variable) + 1);
+        if (variable_ptr->name_ptr == NULL) {
+            MEM_FREE(variable_ptr);
+            tr_error("Mem alloc failed cmd_variable_add name_ptr");
+            return NULL;
+        }
 
-      ns_list_add_to_end(&cmd.variable_list, variable_ptr);
-      strcpy(variable_ptr->name_ptr, variable);
-      variable_ptr->value.ptr = NULL;
-  }
-  if (value == NULL || strlen(value) == 0) {
-      // delete this one
-      tr_debug("Remove variable: %s", variable);
-      ns_list_remove(&cmd.variable_list, variable_ptr);
-      MEM_FREE(variable_ptr->name_ptr);
-      if (variable_ptr->type == VALUE_TYPE_STR) {
-          MEM_FREE(variable_ptr->value.ptr);
-      }
-      MEM_FREE(variable_ptr);
-      return NULL;
-  }
-  return variable_ptr;
+        ns_list_add_to_end(&cmd.variable_list, variable_ptr);
+        strcpy(variable_ptr->name_ptr, variable);
+        variable_ptr->value.ptr = NULL;
+    }
+    if (value == NULL || strlen(value) == 0) {
+        // delete this one
+        tr_debug("Remove variable: %s", variable);
+        ns_list_remove(&cmd.variable_list, variable_ptr);
+        MEM_FREE(variable_ptr->name_ptr);
+        if (variable_ptr->type == VALUE_TYPE_STR) {
+            MEM_FREE(variable_ptr->value.ptr);
+        }
+        MEM_FREE(variable_ptr);
+        return NULL;
+    }
+    return variable_ptr;
 }
 void cmd_variable_add_int(char *variable, int value)
 {
-    cmd_variable_t* variable_ptr = cmd_variable_add_prepare(variable, " ");
+    cmd_variable_t *variable_ptr = cmd_variable_add_prepare(variable, " ");
     if (variable_ptr == NULL) {
         return;
     }
     if (variable_ptr->value.ptr != NULL &&
-        variable_ptr->type == VALUE_TYPE_STR) {
+            variable_ptr->type == VALUE_TYPE_STR) {
         // free memory
         MEM_FREE(variable_ptr->value.ptr);
     }
@@ -1739,7 +1743,7 @@ void cmd_variable_add_int(char *variable, int value)
 }
 void cmd_variable_add(char *variable, char *value)
 {
-    cmd_variable_t* variable_ptr = cmd_variable_add_prepare(variable, value);
+    cmd_variable_t *variable_ptr = cmd_variable_add_prepare(variable, value);
     if (variable_ptr == NULL) {
         return;
     }
@@ -1751,11 +1755,11 @@ void cmd_variable_add(char *variable, char *value)
     int new_len = strlen(value) + 1;
     int old_len = 0;
     if (variable_ptr->value.ptr != NULL &&
-        variable_ptr->type == VALUE_TYPE_STR) {
+            variable_ptr->type == VALUE_TYPE_STR) {
         // free memory if required
         old_len = strlen(variable_ptr->value.ptr) + 1;
         if (old_len != new_len) {
-          MEM_FREE(variable_ptr->value.ptr);
+            MEM_FREE(variable_ptr->value.ptr);
         }
     }
     if (old_len != new_len) {
@@ -1826,12 +1830,12 @@ int set_command(int argc, char *argv[])
         cmd_printf("variables:\r\n");
         cmd_variable_print_all();
     } else if (argc == 2) {
-        char* separator_ptr = strchr(argv[1], '=');
+        char *separator_ptr = strchr(argv[1], '=');
         if (!separator_ptr) {
-          return CMDLINE_RETCODE_INVALID_PARAMETERS;
+            return CMDLINE_RETCODE_INVALID_PARAMETERS;
         }
         *separator_ptr = 0;
-        cmd_variable_add(argv[1], separator_ptr+1);
+        cmd_variable_add(argv[1], separator_ptr + 1);
     } else {
         // set alias
         tr_debug("Setting variable %s = %s", argv[1], argv[2]);
@@ -1868,7 +1872,7 @@ int echo_command(int argc, char *argv[])
             printEcho = true;
         }
     }
-    if( printEcho ) {
+    if (printEcho) {
         cmd_printf("ECHO is %s\r\n", cmd.echo ? "on" : "off");
     } else {
         for (int n = 1; n < argc; n++) {
@@ -1910,12 +1914,14 @@ int help_command(int argc, char *argv[])
     }
     return 0;
 }
-int true_command(int argc, char *argv[]) {
+int true_command(int argc, char *argv[])
+{
     (void)argc;
     (void)argv;
     return CMDLINE_RETCODE_SUCCESS;
 }
-int false_command(int argc, char *argv[]) {
+int false_command(int argc, char *argv[])
+{
     (void)argc;
     (void)argv;
     return CMDLINE_RETCODE_FAIL;
@@ -1924,11 +1930,11 @@ int history_command(int argc, char *argv[])
 {
     if (argc == 1) {
         int history_size = (int)ns_list_count(&cmd.history_list);
-        cmd_printf("History [%i/%i]:\r\n", history_size-1, cmd.history_max_count-1);
+        cmd_printf("History [%i/%i]:\r\n", history_size - 1, cmd.history_max_count - 1);
         int i = 0;
         ns_list_foreach_reverse(cmd_history_t, cur_ptr, &cmd.history_list) {
-            if (i != history_size-1) {
-              cmd_printf("[%i]: %s\r\n", i++, cur_ptr->command_ptr);
+            if (i != history_size - 1) {
+                cmd_printf("[%i]: %s\r\n", i++, cur_ptr->command_ptr);
             }
         }
     } else if (argc == 2) {
@@ -1998,7 +2004,7 @@ bool cmd_parameter_val(int argc, char *argv[], const char *key, char **value)
 bool cmd_parameter_int(int argc, char *argv[], const char *key, int32_t *value)
 {
     int i = cmd_parameter_index(argc, argv, key);
-    char* tailptr;
+    char *tailptr;
     if (i > 0) {
         if (argc > (i + 1)) {
             *value = strtol(argv[i + 1], &tailptr, 10);
@@ -2017,7 +2023,7 @@ bool cmd_parameter_int(int argc, char *argv[], const char *key, int32_t *value)
 bool cmd_parameter_float(int argc, char *argv[], const char *key, float *value)
 {
     int i = cmd_parameter_index(argc, argv, key);
-    char* tailptr;
+    char *tailptr;
     if (i > 0) {
         if (argc > (i + 1)) {
             *value = strtof(argv[i + 1], &tailptr);
@@ -2037,14 +2043,14 @@ bool cmd_parameter_float(int argc, char *argv[], const char *key, float *value)
 static int string_to_bytes(const char *str, uint8_t *buf, int bytes)
 {
     int len = strlen(str);
-    if( len <= (3*bytes - 1)) {
+    if (len <= (3 * bytes - 1)) {
         int i;
-        for(i=0;i<bytes;i++){
-           if( i*3<len ){
-               buf[i] = (uint8_t)strtoul(str+i*3, 0, 16);
-           } else {
-               buf[i] = 0;
-           }
+        for (i = 0; i < bytes; i++) {
+            if (i * 3 < len) {
+                buf[i] = (uint8_t)strtoul(str + i * 3, 0, 16);
+            } else {
+                buf[i] = 0;
+            }
         }
         return 0;
     }
@@ -2070,7 +2076,7 @@ bool cmd_parameter_timestamp(int argc, char *argv[], const char *key, int64_t *v
     int i = cmd_parameter_index(argc, argv, key);
     if (i > 0) {
         if (argc > (i + 1)) {
-            if (strchr(argv[i + 1],',') != 0) {
+            if (strchr(argv[i + 1], ',') != 0) {
                 // Format seconds,tics
                 const char splitValue[] = ", ";
                 char *token;
@@ -2082,13 +2088,13 @@ bool cmd_parameter_timestamp(int argc, char *argv[], const char *key, int64_t *v
                 if (token) {
                     *value |= (0xffff & strtoul(token, 0, 10));
                 }
-            } else if (strchr(argv[i + 1],':') != 0 ) {
+            } else if (strchr(argv[i + 1], ':') != 0) {
                 // Format 00:00:00:00:00:00:00:00
                 uint8_t buf[8];
                 if (string_to_bytes(argv[i + 1], buf, 8) == 0) {
                     *value = read_64_bit(buf);
                 } else {
-                  cmd_printf("timestamp should be 8 bytes long\r\n");
+                    cmd_printf("timestamp should be 8 bytes long\r\n");
                 }
             } else {
                 // Format uint64
@@ -2114,23 +2120,25 @@ char *cmd_parameter_last(int argc, char *argv[])
  * const char* tmp = last_space(str+strlen(str), str);
  * printf(tmp); // prints "bbb"
  */
-static const char* find_last_space(const char* from, const char* to)
+static const char *find_last_space(const char *from, const char *to)
 {
-  if (from <= to) return 0;
-  while((from > to) && ((*from == 0) || (*from == ' '))) {
-    from--;
-  }
-  while (from > to) {
-    if (*from == ' ') {
-      return from+1;
+    if (from <= to) {
+        return 0;
     }
-    from--;
-  }
-  return 0;
+    while ((from > to) && ((*from == 0) || (*from == ' '))) {
+        from--;
+    }
+    while (from > to) {
+        if (*from == ' ') {
+            return from + 1;
+        }
+        from--;
+    }
+    return 0;
 }
 static int replace_string(
-  char *str, int str_len,
-  const char *old_str, const char *new_str)
+    char *str, int str_len,
+    const char *old_str, const char *new_str)
 {
     char *ptr = str;
     char *end = str + str_len;
@@ -2139,9 +2147,9 @@ static int replace_string(
     if (old_len > 0) {
         tr_deep("find: '%s'\r\n", old_str);
         while ((ptr = strstr(ptr, old_str)) != 0) {
-            if(ptr + new_len > end) {
-              tr_warn("Buffer was not enough for replacing\r\n");
-              return 1;
+            if (ptr + new_len > end) {
+                tr_warn("Buffer was not enough for replacing\r\n");
+                return 1;
             }
             tr_warn("old_str found\r\n");
             if (old_len != new_len) {

@@ -173,7 +173,7 @@ uint8_t cmd_history_size(uint8_t max);
  *  \param fmt   console print function (like printf)
  */
 #if defined(__GNUC__) || defined(__CC_ARM)
-void cmd_printf(const char *fmt, ...)  __attribute__ ((__format__(__printf__, 1, 2)));
+void cmd_printf(const char *fmt, ...)  __attribute__((__format__(__printf__, 1, 2)));
 #else
 void cmd_printf(const char *fmt, ...);
 #endif
@@ -183,7 +183,7 @@ void cmd_printf(const char *fmt, ...);
  *  \param ap   list of parameters needed by format string. This must correspond properly with the conversion specifier.
  */
 #if defined(__GNUC__) || defined(__CC_ARM)
-void cmd_vprintf(const char *fmt, va_list ap)  __attribute__ ((__format__(__printf__, 1, 0)));
+void cmd_vprintf(const char *fmt, va_list ap)  __attribute__((__format__(__printf__, 1, 0)));
 #else
 void cmd_vprintf(const char *fmt, va_list ap);
 #endif
