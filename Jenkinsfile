@@ -104,6 +104,7 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
               execute("echo \"https://github.com/ARMmbed/mbed-client-cli#${env.GIT_COMMIT_HASH}\" > mbed-clint-cli.lib")
               execute("mbed new .")
               execute("mbed deploy")
+              execute("rm -rf ./mbed-os/features/frameworks/mbed-client-cli")
               execute("mbed compile -t ${toolchain} -m ${target}")
               setBuildStatus('SUCCESS', "build ${exampleName}", "build done")
             } catch(err) {
