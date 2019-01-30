@@ -14,7 +14,8 @@ def morpheusTargets = [
   //"LPC1768",
   //"NUCLEO_F401RE",
   //"NRF51DK",
-  "K64F"
+  // "K64F"
+    DISCO_L072CZ_LRWAN1
 ]
 // Map morpheus toolchains to compiler labels on Jenkins
 def toolchains = [
