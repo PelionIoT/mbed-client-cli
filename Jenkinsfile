@@ -106,7 +106,7 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
               execute("mbed deploy")
               execute("rm -rf ./mbed-os/features/frameworks/mbed-client-cli")
               execute("mbed compile -t ${toolchain} -m ${target}")
-              execute("cp cp --parents `find -name example-mbed-os-5.bin` ../mbed-client-cli")
+              execute("cp --parents `find -name example-mbed-os-5.bin` ../mbed-client-cli")
               setBuildStatus('SUCCESS', "build ${exampleName}", "build done")
             } catch(err) {
               echo "Caught exception: ${err}"
