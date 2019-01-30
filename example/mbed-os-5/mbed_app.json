@@ -9,7 +9,11 @@
             "platform.stdio-convert-newlines": true,
             "platform.stdio-buffered-serial": true,
             "target.features_add": ["COMMON_PAL"],
-            "mbed-trace.enable": 1
+            "mbed-trace.enable": 1,
+            "drivers.uart-serial-rxbuf-size": 64
+        },
+        "DISCO_L072CZ_LRWAN1": {
+            "target.macros_add": ["MBED_CMDLINE_MAX_LINE_LENGTH=64"]
         }
     }
 }
