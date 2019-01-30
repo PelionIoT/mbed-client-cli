@@ -204,7 +204,7 @@ def postBuild(buildName, isTest) {
     execute("mkdir -p output/${buildName}")
     execute("find . -name 'libmbed-client-cli.a' -exec mv {} 'output/${buildName}' \\;")
     execute("find . -name 'mbed-client-cli.ar' -exec mv {} 'output/${buildName}' \\;")
-    execute("find . -name 'mbed-os-5.bin' -exec mv {} 'BUILD/**/example-mbed-os-5.bin' \\;")
+    execute("find . -name 'example-mbed-os-5.bin' -exec mv {} 'output/${buildName}' \\;")
 
     // Archive artifacts
     step([
