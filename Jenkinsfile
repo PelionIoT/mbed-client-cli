@@ -18,17 +18,17 @@ def morpheusTargets = [
 ]
 // Map morpheus toolchains to compiler labels on Jenkins
 def toolchains = [
-  ARM: "armcc",
+  //ARM: "armcc",
   // IAR: "iar_arm",
   GCC_ARM: "arm-none-eabi-gcc"
 ]
 // yotta target includes toolchain
 def yottaTargets = [
-  "frdm-k64f-gcc": "gcc",
-  "frdm-k64f-armcc": "armcc",
-  "nrf51dk-gcc": "gcc",
-  "stm32f429i-disco-gcc": "gcc",
-  "x86-linux-native": "linux"
+  //"frdm-k64f-gcc": "gcc",
+  //"frdm-k64f-armcc": "armcc",
+  //"nrf51dk-gcc": "gcc",
+  //"stm32f429i-disco-gcc": "gcc",
+  //"x86-linux-native": "linux"
 ]
 
 // Initial maps for parallel build steps
@@ -106,6 +106,7 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
               execute("mbed deploy")
               execute("rm -rf ./mbed-os/features/frameworks/mbed-client-cli")
               execute("mbed compile -t ${toolchain} -m ${target}")
+              execute("cp cp --parents `find -name \*.bin*` .)
               setBuildStatus('SUCCESS', "build ${exampleName}", "build done")
             } catch(err) {
               echo "Caught exception: ${err}"
