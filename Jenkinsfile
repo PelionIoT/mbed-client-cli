@@ -106,6 +106,7 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
               execute("mbed deploy")
               execute("rm -rf ./mbed-os/features/frameworks/mbed-client-cli")
               execute("mbed compile -t ${toolchain} -m ${target}")
+              execute("cp --parents `find -name example-mbed-os-5.bin` ../mbed-client-cli")
               setBuildStatus('SUCCESS', "build ${exampleName}", "build done")
             } catch(err) {
               echo "Caught exception: ${err}"
@@ -203,7 +204,8 @@ def postBuild(buildName, isTest) {
     execute("mkdir -p output/${buildName}")
     execute("find . -name 'libmbed-client-cli.a' -exec mv {} 'output/${buildName}' \\;")
     execute("find . -name 'mbed-client-cli.ar' -exec mv {} 'output/${buildName}' \\;")
-    execute("find . -name 'mbed-os-5.bin' -exec mv {} 'output/${buildName}/mbed-os-5-example.bin' \\;")
+    execute("find . -name 'example-mbed-os-5.bin' -exec mv {} 'output/${buildName}' \\;")
+
     // Archive artifacts
     step([
       $class: 'ArtifactArchiver',
