@@ -107,6 +107,11 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
               execute("rm -rf ./mbed-os/features/frameworks/mbed-client-cli")
               execute("mbed compile -t ${toolchain} -m ${target}")
               execute("cp --parents `find -name example-mbed-os-5.bin` ../mbed-client-cli")
+              // compile minimum lib
+              execute("mbed compile -t ${toolchain} -m ${target} -DMBED_CMDLINE_MINIMUM_CONFIG=1")
+              execute("mkdir ../mbed-client-cli/minimal")
+              execute("cp --parents `find -name example-mbed-os-5.bin` ../mbed-client-cli/minimal")
+
               setBuildStatus('SUCCESS', "build ${exampleName}", "build done")
             } catch(err) {
               echo "Caught exception: ${err}"
