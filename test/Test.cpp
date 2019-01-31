@@ -309,8 +309,10 @@ TEST(cli, help)
 }
 TEST(cli, retcodes)
 {
+#if MBED_CMDLINE_MINIMUM_CONFIG == 0
     TEST_RETCODE_WITH_COMMAND("true", CMDLINE_RETCODE_SUCCESS);
     TEST_RETCODE_WITH_COMMAND("false", CMDLINE_RETCODE_FAIL);
+#endif
     TEST_RETCODE_WITH_COMMAND("abc", CMDLINE_RETCODE_COMMAND_NOT_FOUND);
     TEST_RETCODE_WITH_COMMAND("set --abc", CMDLINE_RETCODE_INVALID_PARAMETERS);
 }
@@ -417,7 +419,7 @@ TEST(cli, cmd_echo11)
     ARRAY_CMP(CMDLINE("echo ok ") , buf);
     CLEAN();
 }
-
+#if MBED_CMDLINE_MINIMUM_CONFIG == 0
 TEST(cli, cmd_arrows_up)
 {
     REQUEST("echo foo-1");
@@ -551,6 +553,7 @@ TEST(cli, cmd_text_pageup_up)
     ARRAY_CMP(CMDLINE("hello "), buf);
     CLEAN();
 }
+#endif
 TEST(cli, cmd_alt_left_right)
 {
   input("11 22 33");
@@ -654,6 +657,7 @@ TEST(cli, ctrl_w_1)
   ARRAY_CMP(CMDLINE_CUR("g ", "2", BACKWARD), buf);
   CLEAN();
 }
+#if MBED_CMDLINE_MINIMUM_CONFIG == 0
 TEST(cli, cmd_request_screen_size)
 {
   cmd_request_screen_size();
@@ -667,7 +671,7 @@ TEST(cli, cmd_request_screen_size)
             "COLUMNS=7\r\n"
             CMDLINE_EMPTY, buf);
 }
-
+#endif
 TEST(cli, cmd_tab_1)
 {
     INIT_BUF();
@@ -792,6 +796,7 @@ TEST(cli, cmd_tab_4)
     cmd_variable_add("dut1", NULL);
     CLEAN();
 }
+#if MBED_CMDLINE_MINIMUM_CONFIG == 0
 // alias test
 TEST(cli, cmd_alias_2)
 {
@@ -840,7 +845,8 @@ TEST(cli, cmd_series)
     CHECK_RETCODE(0);
     ARRAY_CMP(RESPONSE("dut1 \r\ndut2 \r\ndut3 "), buf);
 }
-
+#endif
+#if MBED_CMDLINE_MINIMUM_CONFIG == 0
 TEST(cli, cmd_var_1)
 {
     REQUEST("set foo \"bar test\"");
@@ -853,6 +859,7 @@ TEST(cli, cmd_var_1)
               CMDLINE_EMPTY, buf);
     REQUEST("unset foo");
 }
+
 TEST(cli, cmd_unset)
 {
     REQUEST("set foo=a");
@@ -864,6 +871,7 @@ TEST(cli, cmd_unset)
               "?=0\r\n"
               CMDLINE_EMPTY, buf);
 }
+
 TEST(cli, cmd_var_2)
 {
     REQUEST("set foo \"hello world\"");
@@ -880,6 +888,7 @@ TEST(cli, cmd_var_2)
     ARRAY_CMP(RESPONSE("hello world! ") , buf);
     REQUEST("unset faa");
 }
+#endif
 TEST(cli, cmd__)
 {
     REQUEST("echo foo");
@@ -889,17 +898,17 @@ TEST(cli, cmd__)
 }
 TEST(cli, var_prev_cmd)
 {
-    REQUEST("true");
+    REQUEST("echo");
     REQUEST("set");
     ARRAY_CMP("\r\nvariables:\r\n"
               "PS1='/>'\r\n"
               "?=0\r\n"
               CMDLINE_EMPTY, buf);
-    REQUEST("false");
+    REQUEST("invalid");
     REQUEST("set");
     ARRAY_CMP("\r\nvariables:\r\n"
               "PS1='/>'\r\n"
-              "?=-1\r\n"
+              "?=-5\r\n"
               CMDLINE_EMPTY, buf);
 }
 TEST(cli, var_ps1)
@@ -922,6 +931,7 @@ TEST(cli, operator_semicolon)
     REQUEST("setd faa \"hello world\";echo $faa");
     ARRAY_CMP("\r\nCommand 'setd' not found.\r\n$faa \r\n" CMDLINE_EMPTY , buf);
 }
+#if MBED_CMDLINE_MINIMUM_CONFIG == 0
 TEST(cli, operators_and)
 {
   TEST_RETCODE_WITH_COMMAND("true && true", CMDLINE_RETCODE_SUCCESS);
@@ -936,6 +946,7 @@ TEST(cli, operators_or)
   TEST_RETCODE_WITH_COMMAND("false || true", CMDLINE_RETCODE_SUCCESS);
   TEST_RETCODE_WITH_COMMAND("false || false", CMDLINE_RETCODE_FAIL);
 }
+#endif
 TEST(cli, ampersand)
 {
     REQUEST("echo hello world&");
@@ -1071,13 +1082,13 @@ TEST(cli, cmd_delete_null)
 {
     cmd_delete(NULL);
 }
-
+#if MBED_CMDLINE_MINIMUM_CONFIG == 0
 TEST(cli, cmd_history_size_set)
 {
     cmd_history_size(0);
     CHECK_EQUAL(cmd_history_size(1), 1);
 }
-
+#endif
 TEST(cli, cmd_add_invalid_params)
 {
     cmd_add(NULL, cmd_dummy, NULL, NULL);
