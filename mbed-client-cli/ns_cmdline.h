@@ -76,15 +76,6 @@ extern "C" {
 #define CMDLINE_RETCODE_COMMAND_CB_MISSING      -4  //!< Command callback function missing
 #define CMDLINE_RETCODE_COMMAND_NOT_FOUND       -5  //!< Command not found
 
-
-// #define MBED_CMDLINE_MINIMUM_CONFIG 0
-
-
-#ifndef MBED_CMDLINE_MINIMUM_CONFIG
-// do not use minimum config by default
-#define MBED_CMDLINE_MINIMUM_CONFIG 0
-#endif
-
 /**
  * typedef for print functions
  */
@@ -126,7 +117,6 @@ void cmd_free(void);
  *  detach external commands, delete all variables and aliases
  */
 void cmd_reset(void);
-#if MBED_CMDLINE_MINIMUM_CONFIG == 0
 /** Configure command history size (default 32)
  *  \param max  maximum history size
  *  max > 0 -> configure new value
@@ -134,7 +124,6 @@ void cmd_reset(void);
  *  \return current history max-size
  */
 uint8_t cmd_history_size(uint8_t max);
-#endif
 /** command line print function
  *  This function should be used when user want to print something to the console
  *  \param fmt   console print function (like printf)
@@ -296,7 +285,6 @@ void cmd_variable_add(char *variable, char *value);
 
  */
 void cmd_variable_add_int(char *variable, int value);
-#if MBED_CMDLINE_MINIMUM_CONFIG == 0
 /**
  * Request screen size from host
  * Response are stored to variables:
@@ -304,7 +292,6 @@ void cmd_variable_add_int(char *variable, int value);
  * Note: Require terminal that handle request codes, like screen.
  */
 void cmd_request_screen_size(void);
-#endif
 
 /** find command parameter index by key.
  * e.g.
