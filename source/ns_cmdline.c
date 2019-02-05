@@ -40,7 +40,19 @@
 
 // force traces for this module
 //#define FEA_TRACE_SUPPORT
-//#define MBED_CMDLINE_USE_MINIMUM_CONFIG 1
+
+// configurations
+/*
+#define MBED_CMDLINE_ENABLE_FEATURE_HISTORY 1
+#define MBED_CMDLINE_ENABLE_FEATURE_ESCAPE_HANDLING 1
+#define MBED_CMDLINE_ENABLE_FEATURE_OPERATORS 1
+#define MBED_CMDLINE_ENABLE_ALL_INTERNAL_COMMANDS 1
+#define MBED_CMDLINE_ENABLE_INTERNAL_VARIABLES 1
+#define MBED_CMDLINE_INCLUDE_MAN 1
+#define MBED_CMDLINE_MAX_LINE_LENGTH 100
+#define MBED_CMDLINE_ARGUMENTS_MAX_COUNT 2
+#define MBED_CMDLINE_HISTORY_MAX_COUNT 1
+*/
 
 
 #ifdef YOTTA_CFG
@@ -115,28 +127,6 @@
 #define VAR_PROMPT "PS1"
 #define VAR_RETFMT "RETFMT"
 
-#ifndef MBED_CMDLINE_USE_MINIMUM_CONFIG
-// do not use minimum config by default
-#define MBED_CMDLINE_USE_MINIMUM_CONFIG 0
-#endif
-
-
-#if MBED_CMDLINE_USE_MINIMUM_CONFIG
-// set default minumum configurations for lib
-#ifndef MBED_CMDLINE_MAX_LINE_LENGTH
-#define MBED_CMDLINE_MAX_LINE_LENGTH 100
-#endif
-#ifndef MBED_CMDLINE_ARGUMENTS_MAX_COUNT
-#define MBED_CMDLINE_ARGUMENTS_MAX_COUNT 10
-#endif
-#ifndef MBED_CMDLINE_INCLUDE_MAN
-#define MBED_CMDLINE_INCLUDE_MAN 0
-#endif
-#ifndef MBED_CMDLINE_HISTORY_MAX_COUNT
-#define MBED_CMDLINE_HISTORY_MAX_COUNT 1
-#endif
-#endif
-
 // Maximum length of input line
 #ifdef MBED_CMDLINE_MAX_LINE_LENGTH
 #define MAX_LINE MBED_CMDLINE_MAX_LINE_LENGTH
@@ -144,10 +134,8 @@
 #define MAX_LINE 200
 #endif
 // Maximum number of arguments in a single command
-#ifdef MBED_CMDLINE_ARGUMENTS_MAX_COUNT
-#define MAX_ARGUMENTS MBED_CMDLINE_ARGUMENTS_MAX_COUNT
-#else
-#define MAX_ARGUMENTS 30
+#ifndef MBED_CMDLINE_ARGUMENTS_MAX_COUNT
+#define MBED_CMDLINE_ARGUMENTS_MAX_COUNT 30
 #endif
 // Maximum number of commands saved in history
 #ifdef MBED_CMDLINE_HISTORY_MAX_COUNT
@@ -155,18 +143,37 @@
 #else
 #define HISTORY_MAX_COUNT 32
 #endif
-//include manuals or not (save memory a little when not include)
+// include manuals or not (save memory a little when not include)
 #ifndef MBED_CMDLINE_INCLUDE_MAN
 #define MBED_CMDLINE_INCLUDE_MAN 1
 #endif
+// allow to browse history using up/down keys (require ESCAPE_HANDLING)
+#ifndef MBED_CMDLINE_ENABLE_FEATURE_HISTORY
+#define MBED_CMDLINE_ENABLE_FEATURE_HISTORY 1
+#endif
+// handle escape characters
+#ifndef MBED_CMDLINE_ENABLE_FEATURE_ESCAPE_HANDLING
+#define MBED_CMDLINE_ENABLE_FEATURE_ESCAPE_HANDLING 1
+#endif
+// enable all internal commands
+#ifndef MBED_CMDLINE_ENABLE_ALL_INTERNAL_COMMANDS
+#define MBED_CMDLINE_ENABLE_ALL_INTERNAL_COMMANDS 1
+#endif
+// enable internal variables
+#ifndef MBED_CMDLINE_ENABLE_INTERNAL_VARIABLES
+#define MBED_CMDLINE_ENABLE_INTERNAL_VARIABLES 1
+#endif
+// enable operators
+#ifndef MBED_CMDLINE_ENABLE_FEATURE_OPERATORS
+#define MBED_CMDLINE_ENABLE_FEATURE_OPERATORS 1
+#endif
 
-#if MBED_CMDLINE_USE_MINIMUM_CONFIG == 0
+
 typedef struct cmd_history_s {
     char *command_ptr;
     ns_list_link_t link;
 } cmd_history_t;
 typedef NS_LIST_HEAD(cmd_history_t, link) history_list_t;
-#endif
 
 typedef struct cmd_command_s {
     const char *name_ptr;
@@ -221,15 +228,13 @@ typedef NS_LIST_HEAD(cmd_exe_t, link) cmd_list_t;
 typedef struct cmd_class_s {
     char input[MAX_LINE];             // input data
     char escape[10];                  // escape data
-#if MBED_CMDLINE_USE_MINIMUM_CONFIG == 0
+#if MBED_CMDLINE_ENABLE_FEATURE_HISTORY
     int16_t history;                  // history position
-#endif
-    int16_t cursor;                   // cursor position
-    int16_t escape_index;             // escape index
-#if MBED_CMDLINE_USE_MINIMUM_CONFIG == 0
     history_list_t history_list;      // input history
     uint8_t history_max_count;        // history max size
 #endif
+    int16_t cursor;                   // cursor position
+    int16_t escape_index;             // escape index
     command_list_t command_list;      // commands list
     alias_list_t alias_list;          // alias list
     variable_list_t variable_list;    // variables list
@@ -277,9 +282,7 @@ static void             cmd_history_save(int16_t index);
 static void             cmd_history_get(uint16_t index);
 static void             cmd_history_clean_overflow(void);
 static void             cmd_history_clean(void);
-#if MBED_CMDLINE_USE_MINIMUM_CONFIG == 0
 static cmd_history_t   *cmd_history_find(int16_t index);
-#endif
 static void             cmd_echo(bool on);
 static bool             cmd_tab_lookup(void);
 static void             cmd_clear_last_word(void);
@@ -353,7 +356,7 @@ void cmd_init(cmd_print_t *outf)
 {
     if (!cmd.init) {
         ns_list_init(&cmd.alias_list);
-#if MBED_CMDLINE_USE_MINIMUM_CONFIG == 0
+#if MBED_CMDLINE_ENABLE_FEATURE_HISTORY
         ns_list_init(&cmd.history_list);
 #endif
         ns_list_init(&cmd.command_list);
@@ -369,7 +372,7 @@ void cmd_init(cmd_print_t *outf)
     cmd.cursor = 0;
     cmd.prev_cr = false;
     cmd.vt100_on = true;
-#if MBED_CMDLINE_USE_MINIMUM_CONFIG == 0
+#if MBED_CMDLINE_ENABLE_FEATURE_HISTORY
     cmd.history_max_count = HISTORY_MAX_COUNT;
 #endif
     cmd.tab_lookup = 0;
@@ -379,11 +382,13 @@ void cmd_init(cmd_print_t *outf)
     cmd.idle = true;
     cmd.ready_cb = cmd_next;
     cmd.passthrough_fnc = NULL;
-#if MBED_CMDLINE_USE_MINIMUM_CONFIG == 0
+#if MBED_CMDLINE_ENABLE_INTERNAL_VARIABLES
     cmd_variable_add(VAR_PROMPT, DEFAULT_PROMPT);
     cmd_variable_add_int("?", 0);
     //cmd_alias_add("auto-on", "set PS1=\r\nretcode=$?\r\n&&echo off");
     //cmd_alias_add("auto-off", "set PS1="DEFAULT_PROMPT"&&echo on");
+#endif
+#if MBED_CMDLINE_ENABLE_FEATURE_HISTORY
     cmd_history_save(0);          // the current line is the 0 item
 #endif
     cmd_line_clear(0);            // clear line
@@ -395,7 +400,7 @@ void cmd_request_screen_size(void)
 {
     cmd_printf(REQUEST_SCREEN_SIZE);
 }
-#if MBED_CMDLINE_USE_MINIMUM_CONFIG == 1
+#if MBED_CMDLINE_ENABLE_INTERNAL_VARIABLES == 0
 #define cmdline_get_prompt() DEFAULT_PROMPT
 #else
 const char *cmdline_get_prompt(void)
@@ -404,7 +409,7 @@ const char *cmdline_get_prompt(void)
     return var_ptr && var_ptr->type == VALUE_TYPE_STR ? var_ptr->value.ptr : "";
 }
 #endif
-#if MBED_CMDLINE_USE_MINIMUM_CONFIG == 1
+#if MBED_CMDLINE_ENABLE_INTERNAL_VARIABLES == 0
 #define cmd_get_retfmt() DEFAULT_PROMPT
 #else
 const char *cmd_get_retfmt(void)
@@ -435,16 +440,18 @@ const char *cmd_get_retfmt(void)
 #define MAN_ECHO    NULL
 #define MAN_ALIAS   NULL
 #define MAN_SET     NULL
+#define MAN_UNSET   NULL
 #define MAN_CLEAR   NULL
 #define MAN_HISTORY NULL
 #endif
 
 static void cmd_init_base_commands(void)
 {
+
+#if MBED_CMDLINE_ENABLE_ALL_INTERNAL_COMMANDS
+    cmd_add("set",      set_command,      "print or set variables", MAN_SET);
     cmd_add("help",     help_command,     "This help",            NULL);
     cmd_add("echo",     echo_command,     "Echo controlling",     MAN_ECHO);
-    cmd_add("set",      set_command,      "print or set variables", MAN_SET);
-#if MBED_CMDLINE_USE_MINIMUM_CONFIG == 0
     cmd_add("alias",    alias_command,    "Handle aliases",       MAN_ALIAS);
     cmd_add("unset",    unset_command,    "unset variables",      MAN_UNSET);
     cmd_add("clear",    clear_command,    "Clears the display",   MAN_CLEAR);
@@ -471,7 +478,7 @@ void cmd_free(void)
             cmd_variable_add(cur_ptr->value.ptr, NULL);
         }
     }
-#if MBED_CMDLINE_USE_MINIMUM_CONFIG == 0
+#if MBED_CMDLINE_ENABLE_FEATURE_HISTORY
     ns_list_foreach_safe(cmd_history_t, cur_ptr, &cmd.history_list) {
         MEM_FREE(cur_ptr->command_ptr);
         ns_list_remove(&cmd.history_list, cur_ptr);
@@ -585,6 +592,7 @@ static cmd_exe_t *cmd_next_ptr(int retcode)
         return cmd_pop();
     }
     switch (cmd.cmd_buffer_ptr->operator) {
+#if MBED_CMDLINE_ENABLE_FEATURE_OPERATORS
         case (OPERATOR_AND):
             if (retcode != CMDLINE_RETCODE_SUCCESS) {
                 //if fails, go to next command, which not have AND operator
@@ -608,6 +616,7 @@ static cmd_exe_t *cmd_next_ptr(int retcode)
             cmd_printf("pipe is not supported\r\n");
             while ((next_cmd = cmd_pop()) != 0);
             break;
+#endif
         case (OPERATOR_SEMI_COLON):
         default:
             //get next command to be execute (might be null if there is no more)
@@ -690,7 +699,7 @@ void cmd_init_screen()
     cmd_printf(MBED_CMDLINE_BOOT_MESSAGE);
     cmd_output();
 }
-#if MBED_CMDLINE_USE_MINIMUM_CONFIG == 0
+#if MBED_CMDLINE_ENABLE_FEATURE_HISTORY
 uint8_t cmd_history_size(uint8_t max)
 {
     if (max > 0) {
@@ -853,8 +862,8 @@ static int cmd_parse_argv(char *string_ptr, char **argv)
         if (str_ptr == NULL) {
             break;
         }
-        if (argc > MAX_ARGUMENTS) {
-            tr_warn("Maximum arguments (%d) reached", MAX_ARGUMENTS);
+        if (argc > MBED_CMDLINE_ARGUMENTS_MAX_COUNT) {
+            tr_warn("Maximum arguments (%d) reached", MBED_CMDLINE_ARGUMENTS_MAX_COUNT);
             break;
         }
         *str_ptr++ = 0;
@@ -898,6 +907,7 @@ static char *next_command(char *string_ptr, operator_t *oper)
                         quote = true;
                         break;
                     }
+#if MBED_CMDLINE_ENABLE_FEATURE_OPERATORS
                     case (';'):  //default operator
                         if (oper) {
                             *oper = OPERATOR_SEMI_COLON;
@@ -933,6 +943,7 @@ static char *next_command(char *string_ptr, operator_t *oper)
                             }
                             return ptr + 1;
                         }
+#endif
                     default:
                         break;
                 }
@@ -944,7 +955,7 @@ static char *next_command(char *string_ptr, operator_t *oper)
 }
 static int cmd_run(char *string_ptr)
 {
-    char *argv[MAX_ARGUMENTS];
+    char *argv[MBED_CMDLINE_ARGUMENTS_MAX_COUNT];
     int argc, ret;
 
     tr_info("Executing cmd: '%s'", string_ptr);
@@ -972,8 +983,10 @@ static int cmd_run(char *string_ptr)
         cmd_printf("Command '%s' not found.\r\n", argv[0]);
         MEM_FREE(command_str);
         ret = CMDLINE_RETCODE_COMMAND_NOT_FOUND;
+#if MBED_CMDLINE_ENABLE_INTERNAL_VARIABLES
         cmd_variable_add_int("?", ret);
         cmd_alias_add("_", string_ptr); // last executed command
+#endif
         return ret;
     }
     if (cmd.cmd_ptr->run_cb == NULL) {
@@ -997,8 +1010,10 @@ static int cmd_run(char *string_ptr)
     // Run the actual callback
     cmd.cmd_ptr->busy = true;
     ret = cmd.cmd_ptr->run_cb(argc, argv);
+#if MBED_CMDLINE_ENABLE_INTERNAL_VARIABLES
     cmd_variable_add_int("?", ret);
     cmd_alias_add("_", string_ptr); // last executed command
+#endif
     MEM_FREE(command_str);
     switch (ret) {
         case (CMDLINE_RETCODE_COMMAND_NOT_IMPLEMENTED):
@@ -1056,7 +1071,7 @@ static void cmd_arrow_left()
         cmd.cursor = 0;
     }
 }
-#if MBED_CMDLINE_USE_MINIMUM_CONFIG == 0
+#if MBED_CMDLINE_ENABLE_FEATURE_HISTORY
 static void cmd_arrow_up()
 {
     int16_t old_entry = cmd.history++;
@@ -1080,6 +1095,8 @@ static void cmd_arrow_down(void)
         cmd_history_get(cmd.history);
     }
 }
+#endif
+#if MBED_CMDLINE_ENABLE_FEATURE_ESCAPE_HANDLING
 void cmd_escape_read(int16_t u_data)
 {
     tr_debug("cmd_escape_read: %02x '%c' escape_index: %d: %s",
@@ -1092,10 +1109,12 @@ void cmd_escape_read(int16_t u_data)
         cmd_arrow_left();
     } else if (u_data == 'C') {
         cmd_arrow_right();
+#if MBED_CMDLINE_ENABLE_FEATURE_HISTORY
     } else if (u_data == 'A') {
         cmd_arrow_up();
     } else if (u_data == 'B') {
         cmd_arrow_down();
+#endif
     } else if (u_data == 'Z') {
         // Shift+TAB
         if (cmd.tab_lookup > 0) {
@@ -1151,6 +1170,7 @@ void cmd_escape_read(int16_t u_data)
                     memmove(&cmd.input[cmd.cursor], &cmd.input[cmd.cursor + 1], strlen(&cmd.input[cmd.cursor + 1]) + 1);
                 }
                 break;
+#if MBED_CMDLINE_ENABLE_FEATURE_HISTORY
             case ('4'): //end-of-line           # End key
                 cmd.cursor = strlen(cmd.input);
                 break;case ('5'): //beginning-of-history  # PageUp key
@@ -1159,7 +1179,7 @@ void cmd_escape_read(int16_t u_data)
             case ('6'): //end-of-history        # PageDown key
                 goto_beginning_of_history();
                 break;
-
+#endif
             default:
                 break;
         }
@@ -1171,6 +1191,8 @@ void cmd_escape_read(int16_t u_data)
     cmd.escaping = false;
     return;
 }
+#endif
+#if MBED_CMDLINE_ENABLE_FEATURE_HISTORY
 static void goto_end_of_history(void)
 {
     // handle new input if any and verify that
@@ -1191,14 +1213,15 @@ static void goto_end_of_history(void)
             allowStore = false;
         }
     }
+#if MBED_CMDLINE_ENABLE_FEATURE_HISTORY
     if (allowStore) {
         cmd_history_save(0);  // new is saved to place 0
         cmd_history_save(-1); // new is created to the current one
     }
-
     cmd_history_t *cmd_ptr = ns_list_get_last(&cmd.history_list);
     cmd_set_input(cmd_ptr->command_ptr, 0);
     cmd.history =  ns_list_count(&cmd.history_list) - 1;
+#endif
 }
 static void goto_beginning_of_history(void)
 {
@@ -1226,7 +1249,7 @@ void cmd_char_input(int16_t u_data)
         cmd.passthrough_fnc(u_data);
         return;
     }
-#if MBED_CMDLINE_USE_MINIMUM_CONFIG == 0
+#if MBED_CMDLINE_ENABLE_FEATURE_ESCAPE_HANDLING
     /*handle ecape command*/
     if (cmd.escaping == true) {
         cmd_escape_read(u_data);
@@ -1261,7 +1284,7 @@ void cmd_char_input(int16_t u_data)
         if (cmd.echo) {
             cmd_output();
         }
-#if MBED_CMDLINE_USE_MINIMUM_CONFIG == 0
+#if MBED_CMDLINE_ENABLE_FEATURE_ESCAPE_HANDLING
     } else if (u_data == ESC) {
         cmd_escape_start();
     } else if (u_data == BS || u_data == DEL) {
@@ -1485,7 +1508,7 @@ static void cmd_replace_variables(char *input)
     }
 }
 //history
-#if MBED_CMDLINE_USE_MINIMUM_CONFIG == 0
+#if MBED_CMDLINE_ENABLE_FEATURE_HISTORY
 static void cmd_history_item_delete(cmd_history_t *entry_ptr)
 {
     ns_list_remove(&cmd.history_list, entry_ptr);
@@ -1578,7 +1601,7 @@ static void cmd_line_clear(int from)
 
 static void cmd_execute(void)
 {
-#if MBED_CMDLINE_USE_MINIMUM_CONFIG == 0
+#if MBED_CMDLINE_ENABLE_FEATURE_HISTORY
     if (strlen(cmd.input) != 0) {
         bool noduplicates = true;
         cmd_history_t *entry_ptr = cmd_history_find(0);
@@ -1985,9 +2008,9 @@ int false_command(int argc, char *argv[])
     (void)argv;
     return CMDLINE_RETCODE_FAIL;
 }
-#if MBED_CMDLINE_USE_MINIMUM_CONFIG == 0
 int history_command(int argc, char *argv[])
 {
+#if MBED_CMDLINE_ENABLE_FEATURE_HISTORY
     if (argc == 1) {
         int history_size = (int)ns_list_count(&cmd.history_list);
         cmd_printf("History [%i/%i]:\r\n", history_size - 1, cmd.history_max_count - 1);
@@ -2004,9 +2027,9 @@ int history_command(int argc, char *argv[])
             cmd_history_size(strtoul(argv[1], 0, 10));
         }
     }
+#endif
     return 0;
 }
-#endif
 
 /** Parameter helping functions
  */
