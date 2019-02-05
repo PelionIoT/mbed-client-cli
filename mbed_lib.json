@@ -1,0 +1,55 @@
+{
+  "name": "cmdline",
+  "config": {
+    "enable_history": {
+      "help"      : "inlude history",
+      "macro_name": "MBED_CMDLINE_ENABLE_FEATURE_HISTORY",
+      "options"   : [true, false],
+      "value"     : null
+    },
+    "enable_escape_handling": {
+      "help"      : "enable escape handling",
+      "macro_name": "MBED_CMDLINE_ENABLE_FEATURE_ESCAPE_HANDLING",
+      "options"   : [true, false],
+      "value"     : null
+    },
+    "enable_operators": {
+      "help"      : "enable operators",
+      "macro_name": "MBED_CMDLINE_ENABLE_FEATURE_OPERATORS",
+      "options"   : [true, false],
+      "value"     : null
+    },
+    "enable_internal_commands": {
+      "help"      : "enable internal commands, like echo, set, unset",
+      "macro_name": "MBED_CMDLINE_ENABLE_ALL_INTERNAL_COMMANDS",
+      "options"   : [true, false],
+      "value"     : null
+    },
+    "enable_internal_variables": {
+      "help"      : "enable internal variables",
+      "macro_name": "MBED_CMDLINE_ENABLE_INTERNAL_VARIABLES",
+      "options"   : [true, false],
+      "value"     : null
+    },
+    "include_man": {
+      "help"      : "include man pages",
+      "macro_name": "MBED_CMDLINE_INCLUDE_MAN",
+      "value"     : null
+    },
+    "max_line_length": {
+      "help"      : "maximum input line length",
+      "macro_name": "MBED_CMDLINE_MAX_LINE_LENGTH",
+      "value"     : null
+    },
+    "max_args_count": {
+      "help"      : "maximum arguments count",
+      "macro_name": "MBED_CMDLINE_ARGUMENTS_MAX_COUNT",
+      "value"     : null
+    },
+    "max_history_count": {
+      "help"      : "maximum history count",
+      "macro_name": "MBED_CMDLINE_HISTORY_MAX_COUNT",
+      "value"     : null
+    }
+  }
+}

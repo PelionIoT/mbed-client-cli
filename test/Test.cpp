@@ -31,6 +31,19 @@
 
 #define MBED_CONF_MBED_TRACE_ENABLE 1
 #define MBED_CONF_MBED_TRACE_FEA_IPV6 0
+
+/*
+#define MBED_CMDLINE_ENABLE_FEATURE_HISTORY 1
+#define MBED_CMDLINE_ENABLE_FEATURE_ESCAPE_HANDLING 1
+#define MBED_CMDLINE_ENABLE_FEATURE_OPERATORS 1
+#define MBED_CMDLINE_ENABLE_ALL_INTERNAL_COMMANDS 1
+#define MBED_CMDLINE_ENABLE_INTERNAL_VARIABLES 1
+#define MBED_CMDLINE_INCLUDE_MAN 1
+#define MBED_CMDLINE_MAX_LINE_LENGTH 100
+#define MBED_CMDLINE_ARGUMENTS_MAX_COUNT 2
+#define MBED_CMDLINE_HISTORY_MAX_COUNT 1
+*/
+
 #include "mbed-trace/mbed_trace.h"
 #include "mbed-client-cli/ns_cmdline.h"
 #define MAX(x,y)   (x>y?x:y)
@@ -309,12 +322,12 @@ TEST(cli, help)
 }
 TEST(cli, retcodes)
 {
-#if MBED_CMDLINE_MINIMUM_CONFIG == 0
+#if MBED_CMDLINE_ENABLE_ALL_INTERNAL_COMMANDS
     TEST_RETCODE_WITH_COMMAND("true", CMDLINE_RETCODE_SUCCESS);
     TEST_RETCODE_WITH_COMMAND("false", CMDLINE_RETCODE_FAIL);
+    TEST_RETCODE_WITH_COMMAND("set --abc", CMDLINE_RETCODE_INVALID_PARAMETERS);
 #endif
     TEST_RETCODE_WITH_COMMAND("abc", CMDLINE_RETCODE_COMMAND_NOT_FOUND);
-    TEST_RETCODE_WITH_COMMAND("set --abc", CMDLINE_RETCODE_INVALID_PARAMETERS);
 }
 TEST(cli, cmd_echo)
 {
@@ -419,7 +432,7 @@ TEST(cli, cmd_echo11)
     ARRAY_CMP(CMDLINE("echo ok ") , buf);
     CLEAN();
 }
-#if MBED_CMDLINE_MINIMUM_CONFIG == 0
+#if MBED_CMDLINE_ENABLE_FEATURE_HISTORY
 TEST(cli, cmd_arrows_up)
 {
     REQUEST("echo foo-1");
@@ -657,7 +670,7 @@ TEST(cli, ctrl_w_1)
   ARRAY_CMP(CMDLINE_CUR("g ", "2", BACKWARD), buf);
   CLEAN();
 }
-#if MBED_CMDLINE_MINIMUM_CONFIG == 0
+#if MBED_CMDLINE_ENABLE_INTERNAL_VARIABLES
 TEST(cli, cmd_request_screen_size)
 {
   cmd_request_screen_size();
@@ -796,7 +809,6 @@ TEST(cli, cmd_tab_4)
     cmd_variable_add("dut1", NULL);
     CLEAN();
 }
-#if MBED_CMDLINE_MINIMUM_CONFIG == 0
 // alias test
 TEST(cli, cmd_alias_2)
 {
@@ -845,8 +857,7 @@ TEST(cli, cmd_series)
     CHECK_RETCODE(0);
     ARRAY_CMP(RESPONSE("dut1 \r\ndut2 \r\ndut3 "), buf);
 }
-#endif
-#if MBED_CMDLINE_MINIMUM_CONFIG == 0
+#if MBED_CMDLINE_ENABLE_INTERNAL_VARIABLES
 TEST(cli, cmd_var_1)
 {
     REQUEST("set foo \"bar test\"");
@@ -889,6 +900,7 @@ TEST(cli, cmd_var_2)
     REQUEST("unset faa");
 }
 #endif
+#if MBED_CMDLINE_ENABLE_ALL_INTERNAL_COMMANDS
 TEST(cli, cmd__)
 {
     REQUEST("echo foo");
@@ -921,7 +933,9 @@ TEST(cli, var_ps1)
               "?=0\r\n"
               "\r" ESCAPE("[2K") "abc " ESCAPE("[1D"), buf);
 }
+
 // operators
+#if MBED_CMDLINE_ENABLE_FEATURE_OPERATORS
 TEST(cli, operator_semicolon)
 {
     REQUEST("echo hello world")
@@ -931,7 +945,6 @@ TEST(cli, operator_semicolon)
     REQUEST("setd faa \"hello world\";echo $faa");
     ARRAY_CMP("\r\nCommand 'setd' not found.\r\n$faa \r\n" CMDLINE_EMPTY , buf);
 }
-#if MBED_CMDLINE_MINIMUM_CONFIG == 0
 TEST(cli, operators_and)
 {
   TEST_RETCODE_WITH_COMMAND("true && true", CMDLINE_RETCODE_SUCCESS);
@@ -946,12 +959,14 @@ TEST(cli, operators_or)
   TEST_RETCODE_WITH_COMMAND("false || true", CMDLINE_RETCODE_SUCCESS);
   TEST_RETCODE_WITH_COMMAND("false || false", CMDLINE_RETCODE_FAIL);
 }
-#endif
+
 TEST(cli, ampersand)
 {
     REQUEST("echo hello world&");
     ARRAY_CMP(RESPONSE("hello world ") , buf);
 }
+#endif
+#endif
 TEST(cli, maxlength)
 {
     int i;
@@ -1082,7 +1097,7 @@ TEST(cli, cmd_delete_null)
 {
     cmd_delete(NULL);
 }
-#if MBED_CMDLINE_MINIMUM_CONFIG == 0
+#if MBED_CMDLINE_ENABLE_FEATURE_HISTORY
 TEST(cli, cmd_history_size_set)
 {
     cmd_history_size(0);
