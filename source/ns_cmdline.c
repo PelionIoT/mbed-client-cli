@@ -43,6 +43,8 @@
 
 // configurations
 /*
+#define MBED_CMDLINE_ENABLE_FEATURE_ALIASES 1
+#define MBED_CMDLINE_USE_DUMMY_SET_ECHO_COMMANDS 1
 #define MBED_CMDLINE_INIT_AUTOMATION_MODE 1
 #define MBED_CMDLINE_ENABLE_FEATURE_HISTORY 1
 #define MBED_CMDLINE_ENABLE_FEATURE_ESCAPE_HANDLING 1
@@ -61,6 +63,12 @@
 
 #if MBED_CMDLINE_USE_MINIMUM_SET == 1
 // configure default minimum values, each value can be overwrite by compiling time
+#ifndef MBED_CMDLINE_ENABLE_FEATURE_ALIASES
+#define MBED_CMDLINE_ENABLE_FEATURE_ALIASES 0
+#endif
+#ifndef MBED_CMDLINE_USE_DUMMY_SET_ECHO_COMMANDS
+#define MBED_CMDLINE_USE_DUMMY_SET_ECHO_COMMANDS 1
+#endif
 #ifndef MBED_CMDLINE_INIT_AUTOMATION_MODE
 #define MBED_CMDLINE_INIT_AUTOMATION_MODE 1
 #endif
@@ -167,11 +175,18 @@
 #define VAR_RETFMT "RETFMT"
 #define MBED_CMDLINE_ESCAPE_BUFFER_SIZE 10
 
+// by default use
+#ifndef MBED_CMDLINE_ENABLE_FEATURE_ALIASES
+#define MBED_CMDLINE_ENABLE_FEATURE_ALIASES 1
+#endif
+#ifndef MBED_CMDLINE_USE_DUMMY_SET_ECHO_COMMANDS
+#define MBED_CMDLINE_USE_DUMMY_SET_ECHO_COMMANDS 0
+#elif defined(MBED_CMDLINE_ENABLE_ALL_INTERNAL_COMMANDS) && MBED_CMDLINE_ENABLE_ALL_INTERNAL_COMMANDS == 1 && MBED_CMDLINE_USE_DUMMY_SET_ECHO_COMMANDS == 1
+#warning "Cannot set MBED_CMDLINE_USE_DUMMY_SET_ECHO_COMMANDS along with MBED_CMDLINE_ENABLE_ALL_INTERNAL_COMMANDS"
+#endif
 // Maximum length of input line
-#ifdef MBED_CMDLINE_MAX_LINE_LENGTH
-#define MAX_LINE MBED_CMDLINE_MAX_LINE_LENGTH
-#else
-#define MAX_LINE 200
+#ifndef MBED_CMDLINE_MAX_LINE_LENGTH
+#define MBED_CMDLINE_MAX_LINE_LENGTH 200
 #endif
 // Maximum number of arguments in a single command
 #ifndef MBED_CMDLINE_ARGUMENTS_MAX_COUNT
@@ -268,7 +283,7 @@ typedef NS_LIST_HEAD(cmd_exe_t, link) cmd_list_t;
 
 
 typedef struct cmd_class_s {
-    char input[MAX_LINE];             // input data
+    char input[MBED_CMDLINE_MAX_LINE_LENGTH]; // input data
 
 #if MBED_CMDLINE_ENABLE_FEATURE_HISTORY
     int16_t history;                  // history position
@@ -277,13 +292,17 @@ typedef struct cmd_class_s {
 #endif
     int16_t cursor;                   // cursor position
     command_list_t command_list;      // commands list
+#if MBED_CMDLINE_ENABLE_FEATURE_ALIASES == 1
     alias_list_t alias_list;          // alias list
+#endif
+#if MBED_CMDLINE_ENABLE_ALL_INTERNAL_COMMANDS == 1
     variable_list_t variable_list;    // variables list
+#endif
 #if MBED_CMDLINE_ENABLE_FEATURE_ESCAPE_HANDLING == 1
     bool vt100_on;                    // control characters
     bool escaping;                    // escaping input
     int16_t escape_index;             // escape index
-    char escape[MBED_CMDLINE_ESCAPE_BUFFER_SIZE];                  // escape data
+    char escape[MBED_CMDLINE_ESCAPE_BUFFER_SIZE]; // escape data
 #endif
     bool init;                        // true when lists are initialized already
     bool insert;                      // insert enabled
@@ -400,12 +419,16 @@ void cmd_vprintf(const char *fmt, va_list ap)
 void cmd_init(cmd_print_t *outf)
 {
     if (!cmd.init) {
+#if MBED_CMDLINE_ENABLE_FEATURE_ALIASES == 1
         ns_list_init(&cmd.alias_list);
-#if MBED_CMDLINE_ENABLE_FEATURE_HISTORY
+#endif
+#if MBED_CMDLINE_ENABLE_FEATURE_HISTORY == 1
         ns_list_init(&cmd.history_list);
 #endif
         ns_list_init(&cmd.command_list);
+#if MBED_CMDLINE_ENABLE_ALL_INTERNAL_COMMANDS == 1
         ns_list_init(&cmd.variable_list);
+#endif
         ns_list_init(&cmd.cmd_buffer);
         cmd.init = true;
     }
@@ -506,6 +529,9 @@ static void cmd_init_base_commands(void)
     cmd_add("history",  history_command,  "View your command Line History", MAN_HISTORY);
     cmd_add("true",     true_command, 0, 0);
     cmd_add("false",    false_command, 0, 0);
+#elif MBED_CMDLINE_USE_DUMMY_SET_ECHO_COMMANDS == 1
+    cmd_add("set", set_command, 0, 0);
+    cmd_add("echo", echo_command, 0, 0);
 #endif
 }
 void cmd_reset(void)
@@ -518,14 +544,18 @@ void cmd_free(void)
     ns_list_foreach_safe(cmd_command_t, cur_ptr, &cmd.command_list) {
         cmd_delete(cur_ptr->name_ptr);
     }
+#if MBED_CMDLINE_ENABLE_FEATURE_ALIASES == 1
     ns_list_foreach_safe(cmd_alias_t, cur_ptr, &cmd.alias_list) {
         cmd_alias_add(cur_ptr->name_ptr, NULL);
     }
+#endif
+#if MBED_CMDLINE_ENABLE_ALL_INTERNAL_COMMANDS == 1
     ns_list_foreach_safe(cmd_variable_t, cur_ptr, &cmd.variable_list) {
         if (cur_ptr->type == VALUE_TYPE_STR) {
             cmd_variable_add(cur_ptr->value.ptr, NULL);
         }
     }
+#endif
 #if MBED_CMDLINE_ENABLE_FEATURE_HISTORY
     ns_list_foreach_safe(cmd_history_t, cur_ptr, &cmd.history_list) {
         MEM_FREE(cur_ptr->command_ptr);
@@ -793,10 +823,12 @@ static const char *cmd_input_lookup(char *name, int namelength, int n)
         cmd.tab_lookup_n = n + 1;
     } else {
         n -= cmd.tab_lookup_n;
+#if MBED_CMDLINE_ENABLE_FEATURE_ALIASES == 1
         cmd_alias_t *alias = alias_find_n(name, namelength, n);
         if (alias) {
             str = (const char *)alias->name_ptr;
         }
+#endif
     }
 
     return str;
@@ -1009,7 +1041,7 @@ static int cmd_run(char *string_ptr)
     int argc, ret;
 
     tr_info("Executing cmd: '%s'", string_ptr);
-    char *command_str = MEM_ALLOC(MAX_LINE);
+    char *command_str = MEM_ALLOC(MBED_CMDLINE_MAX_LINE_LENGTH);
     if (command_str == NULL) {
         tr_error("mem alloc failed in cmd_run");
         return CMDLINE_RETCODE_FAIL;
@@ -1021,8 +1053,12 @@ static int cmd_run(char *string_ptr)
     }
     strcpy(command_str, string_ptr);
     tr_deep("cmd_run('%s') ", command_str);
+#if MBED_CMDLINE_ENABLE_FEATURE_ALIASES == 1
     cmd_replace_alias(command_str);
+#endif
+#if MBED_CMDLINE_ENABLE_ALL_INTERNAL_COMMANDS == 1
     cmd_replace_variables(command_str);
+#endif
     tr_debug("Parsed cmd: '%s'", command_str);
 
     argc = cmd_parse_argv(command_str, argv);
@@ -1379,7 +1415,7 @@ void cmd_char_input(int16_t u_data)
             if (inc) {
                 cmd.tab_lookup_cmd_n--;
             }
-            memset(cmd.input + cmd.tab_lookup, 0, MAX_LINE - cmd.tab_lookup);
+            memset(cmd.input + cmd.tab_lookup, 0, MBED_CMDLINE_MAX_LINE_LENGTH - cmd.tab_lookup);
         }
         if (cmd.echo) {
             cmd_output();
@@ -1393,7 +1429,8 @@ void cmd_char_input(int16_t u_data)
     } else {
         cmd_reset_tab();
         tr_deep("cursor: %d, inputlen: %lu, u_data: %c\r\n", cmd.cursor, strlen(cmd.input), u_data);
-        if ((strlen(cmd.input) >= MAX_LINE - 1) || (cmd.cursor >= MAX_LINE - 1)) {
+        if ((strlen(cmd.input) >= MBED_CMDLINE_MAX_LINE_LENGTH - 1) ||
+            (cmd.cursor >= MBED_CMDLINE_MAX_LINE_LENGTH - 1)) {
             tr_warn("input buffer full");
             if (cmd.echo) {
                 cmd_output();
@@ -1522,6 +1559,7 @@ void cmd_echo_on(void)
 // alias
 int replace_alias(char *str, const char *old_str, const char *new_str)
 {
+#if MBED_CMDLINE_ENABLE_FEATURE_ALIASES == 1
     int old_len = strlen(old_str),
         new_len = strlen(new_str);
     if ((strncmp(str, old_str, old_len) == 0) &&
@@ -1531,13 +1569,16 @@ int replace_alias(char *str, const char *old_str, const char *new_str)
         memcpy(str, new_str, new_len);
         return new_len - old_len;
     }
+#endif
     return 0;
 }
 static void cmd_replace_alias(char *input)
 {
+#if MBED_CMDLINE_ENABLE_FEATURE_ALIASES == 1
     ns_list_foreach(cmd_alias_t, cur_ptr, &cmd.alias_list) {
         replace_alias(input, cur_ptr->name_ptr, cur_ptr->value_ptr);
     }
+#endif
 }
 //variable
 static void replace_variable(char *str, cmd_variable_t *variable_ptr)
@@ -1559,14 +1600,16 @@ static void replace_variable(char *str, cmd_variable_t *variable_ptr)
     }
     tmp[0] = '$';
     strcpy(tmp + 1, name);
-    replace_string(str, MAX_LINE, tmp, value);
+    replace_string(str, MBED_CMDLINE_MAX_LINE_LENGTH, tmp, value);
     MEM_FREE(tmp);
 }
 static void cmd_replace_variables(char *input)
 {
+#if MBED_CMDLINE_ENABLE_ALL_INTERNAL_COMMANDS == 1
     ns_list_foreach(cmd_variable_t, cur_ptr, &cmd.variable_list) {
         replace_variable(input, cur_ptr);
     }
+#endif
 }
 //history
 #if MBED_CMDLINE_ENABLE_FEATURE_HISTORY
@@ -1649,14 +1692,14 @@ static void cmd_history_get(uint16_t index)
     entry_ptr = cmd_history_find(index);
 
     if (entry_ptr != NULL) {
-        memset(cmd.input, 0, MAX_LINE);
+        memset(cmd.input, 0, MBED_CMDLINE_MAX_LINE_LENGTH);
         cmd_set_input(entry_ptr->command_ptr, 0);
     }
 }
 #endif
 static void cmd_line_clear(int from)
 {
-    memset(cmd.input + from, 0, MAX_LINE - from);
+    memset(cmd.input + from, 0, MBED_CMDLINE_MAX_LINE_LENGTH - from);
     cmd.cursor = from;
 }
 
@@ -1691,25 +1734,26 @@ static cmd_alias_t *alias_find(const char *alias)
         tr_error("alias_find invalid parameters");
         return NULL;
     }
-
+#if MBED_CMDLINE_ENABLE_FEATURE_ALIASES == 1
     ns_list_foreach(cmd_alias_t, cur_ptr, &cmd.alias_list) {
         if (strcmp(alias, cur_ptr->name_ptr) == 0) {
             alias_ptr = cur_ptr;
             break;
         }
     }
+#endif
     return alias_ptr;
 }
 
 static cmd_alias_t *alias_find_n(char *alias, int aliaslength, int n)
 {
     cmd_alias_t *alias_ptr = NULL;
-    int i = 0;
     if (alias == NULL || strlen(alias) == 0) {
         tr_error("alias_find invalid parameters");
         return NULL;
     }
-
+#if MBED_CMDLINE_ENABLE_FEATURE_ALIASES == 1
+    int i = 0;
     ns_list_foreach(cmd_alias_t, cur_ptr, &cmd.alias_list) {
         if (strncmp(alias, cur_ptr->name_ptr, aliaslength) == 0) {
             if (i == n) {
@@ -1719,6 +1763,7 @@ static cmd_alias_t *alias_find_n(char *alias, int aliaslength, int n)
             i++;
         }
     }
+#endif
     return alias_ptr;
 }
 static cmd_variable_t *variable_find(char *variable)
@@ -1728,13 +1773,14 @@ static cmd_variable_t *variable_find(char *variable)
         tr_error("variable_find invalid parameters");
         return NULL;
     }
-
+#if MBED_CMDLINE_ENABLE_ALL_INTERNAL_COMMANDS == 1
     ns_list_foreach(cmd_variable_t, cur_ptr, &cmd.variable_list) {
         if (strcmp(variable, cur_ptr->name_ptr) == 0) {
             variable_ptr = cur_ptr;
             break;
         }
     }
+#endif
     return variable_ptr;
 }
 static cmd_variable_t *variable_find_n(char *variable, int length, int n)
@@ -1744,6 +1790,7 @@ static cmd_variable_t *variable_find_n(char *variable, int length, int n)
         tr_error("variable_find invalid parameters");
         return NULL;
     }
+#if MBED_CMDLINE_ENABLE_ALL_INTERNAL_COMMANDS == 1
     int i = 0;
     ns_list_foreach(cmd_variable_t, cur_ptr, &cmd.variable_list) {
         if (strncmp(variable, cur_ptr->name_ptr, length) == 0) {
@@ -1754,19 +1801,23 @@ static cmd_variable_t *variable_find_n(char *variable, int length, int n)
             i++;
         }
     }
+#endif
     return variable_ptr;
 }
 static void cmd_alias_print_all(void)
 {
+#if MBED_CMDLINE_ENABLE_FEATURE_ALIASES == 1
     ns_list_foreach(cmd_alias_t, cur_ptr, &cmd.alias_list) {
         if (cur_ptr->name_ptr != NULL) {
             cmd_printf("%-18s'%s'\r\n", cur_ptr->name_ptr, cur_ptr->value_ptr ? cur_ptr->value_ptr : "");
         }
     }
+#endif
     return;
 }
 static void cmd_variable_print_all(void)
 {
+#if MBED_CMDLINE_ENABLE_ALL_INTERNAL_COMMANDS
     ns_list_foreach(cmd_variable_t, cur_ptr, &cmd.variable_list) {
         if (cur_ptr->type == VALUE_TYPE_STR) {
             cmd_printf("%s='%s'\r\n", cur_ptr->name_ptr, cur_ptr->value.ptr ? cur_ptr->value.ptr : "");
@@ -1774,11 +1825,13 @@ static void cmd_variable_print_all(void)
             cmd_printf("%s=%d\r\n", cur_ptr->name_ptr, cur_ptr->value.i);
         }
     }
+#endif
     return;
 }
 
 void cmd_alias_add(const char *alias, const char *value)
 {
+#if MBED_CMDLINE_ENABLE_FEATURE_ALIASES == 1
     cmd_alias_t *alias_ptr;
     if (alias == NULL || strlen(alias) == 0) {
         tr_warn("cmd_alias_add invalid parameters");
@@ -1826,10 +1879,14 @@ void cmd_alias_add(const char *alias, const char *value)
         }
         strcpy(alias_ptr->value_ptr, value);
     }
+#endif
     return;
 }
 static cmd_variable_t *cmd_variable_add_prepare(char *variable, char *value)
 {
+#if MBED_CMDLINE_ENABLE_ALL_INTERNAL_COMMANDS == 0
+    return NULL;
+#else
     if (variable == NULL || strlen(variable) == 0) {
         tr_warn("cmd_variable_add invalid parameters");
         return NULL;
@@ -1870,6 +1927,7 @@ static cmd_variable_t *cmd_variable_add_prepare(char *variable, char *value)
         return NULL;
     }
     return variable_ptr;
+#endif
 }
 void cmd_variable_add_int(char *variable, int value)
 {
@@ -1967,6 +2025,16 @@ int unset_command(int argc, char *argv[])
     cmd_variable_add(argv[1], NULL);
     return 0;
 }
+#if MBED_CMDLINE_USE_DUMMY_SET_ECHO_COMMANDS == 1
+int echo_command(int argc, char *argv[])
+{
+    return 0;
+}
+int set_command(int argc, char *argv[])
+{
+    return 0;
+}
+#else
 int set_command(int argc, char *argv[])
 {
     if (argc == 1) {
@@ -2029,6 +2097,7 @@ int echo_command(int argc, char *argv[])
     }
     return 0;
 }
+#endif
 int clear_command(int argc, char *argv[])
 {
     (void)argc;
