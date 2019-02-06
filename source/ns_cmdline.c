@@ -43,6 +43,7 @@
 
 // configurations
 /*
+#define MBED_CMDLINE_INIT_AUTOMATION_MODE 1
 #define MBED_CMDLINE_ENABLE_FEATURE_HISTORY 1
 #define MBED_CMDLINE_ENABLE_FEATURE_ESCAPE_HANDLING 1
 #define MBED_CMDLINE_ENABLE_FEATURE_OPERATORS 1
@@ -59,6 +60,10 @@
 #endif
 
 #if MBED_CMDLINE_USE_MINIMUM_SET == 1
+// configure default minimum values, each value can be overwrite by compiling time
+#ifndef MBED_CMDLINE_INIT_AUTOMATION_MODE
+#define MBED_CMDLINE_INIT_AUTOMATION_MODE 1
+#endif
 #ifndef MBED_CMDLINE_ENABLE_FEATURE_HISTORY
 #define MBED_CMDLINE_ENABLE_FEATURE_HISTORY 0
 #endif
@@ -86,6 +91,7 @@
 #ifndef MBED_CMDLINE_HISTORY_MAX_COUNT
 #define MBED_CMDLINE_HISTORY_MAX_COUNT 0
 #endif
+// end of default configurations
 #endif
 
 #ifdef YOTTA_CFG
@@ -171,10 +177,12 @@
 #define MBED_CMDLINE_ARGUMENTS_MAX_COUNT 30
 #endif
 // Maximum number of commands saved in history
-#ifdef MBED_CMDLINE_HISTORY_MAX_COUNT
-#define HISTORY_MAX_COUNT MBED_CMDLINE_HISTORY_MAX_COUNT
-#else
-#define HISTORY_MAX_COUNT 32
+#ifndef MBED_CMDLINE_HISTORY_MAX_COUNT
+#define MBED_CMDLINE_HISTORY_MAX_COUNT 32
+#endif
+// initialize automation mode at startup phase, no need to send set -commands
+#ifndef MBED_CMDLINE_INIT_AUTOMATION_MODE
+#define MBED_CMDLINE_INIT_AUTOMATION_MODE 0
 #endif
 // include manuals or not (save memory a little when not include)
 #ifndef MBED_CMDLINE_INCLUDE_MAN
@@ -271,7 +279,9 @@ typedef struct cmd_class_s {
     command_list_t command_list;      // commands list
     alias_list_t alias_list;          // alias list
     variable_list_t variable_list;    // variables list
+#if MBED_CMDLINE_ENABLE_FEATURE_ESCAPE_HANDLING == 0
     bool vt100_on;                    // control characters
+#endif
     bool init;                        // true when lists are initialized already
     bool escaping;                    // escaping input
     bool insert;                      // insert enabled
@@ -399,14 +409,16 @@ void cmd_init(cmd_print_t *outf)
     }
     cmd.out = outf ? outf : default_cmd_response_out;
     cmd.ctrl_fnc = NULL;
-    cmd.echo = true;
+    cmd.echo = MBED_CMDLINE_INIT_AUTOMATION_MODE == 0;
     cmd.escaping = false;
     cmd.insert = true;
     cmd.cursor = 0;
     cmd.prev_cr = false;
-    cmd.vt100_on = true;
+#if MBED_CMDLINE_ENABLE_FEATURE_ESCAPE_HANDLING == 1
+    cmd.vt100_on = MBED_CMDLINE_INIT_AUTOMATION_MODE == 0;
+#endif
 #if MBED_CMDLINE_ENABLE_FEATURE_HISTORY
-    cmd.history_max_count = HISTORY_MAX_COUNT;
+    cmd.history_max_count = MBED_CMDLINE_HISTORY_MAX_COUNT;
 #endif
     cmd.tab_lookup = 0;
     cmd.tab_lookup_cmd_n = 0;
@@ -415,7 +427,7 @@ void cmd_init(cmd_print_t *outf)
     cmd.idle = true;
     cmd.ready_cb = cmd_next;
     cmd.passthrough_fnc = NULL;
-#if MBED_CMDLINE_ENABLE_INTERNAL_VARIABLES
+#if MBED_CMDLINE_ENABLE_INTERNAL_VARIABLES == 1
     cmd_variable_add(VAR_PROMPT, DEFAULT_PROMPT);
     cmd_variable_add_int("?", 0);
     //cmd_alias_add("auto-on", "set PS1=\r\nretcode=$?\r\n&&echo off");
@@ -443,7 +455,7 @@ const char *cmdline_get_prompt(void)
 }
 #endif
 #if MBED_CMDLINE_ENABLE_INTERNAL_VARIABLES == 0
-#define cmd_get_retfmt() DEFAULT_PROMPT
+#define cmd_get_retfmt() MBED_CMDLINE_INIT_AUTOMATION_MODE ? DEFAULT_RETFMT : 0
 #else
 const char *cmd_get_retfmt(void)
 {
@@ -480,9 +492,10 @@ const char *cmd_get_retfmt(void)
 
 static void cmd_init_base_commands(void)
 {
-
-#if MBED_CMDLINE_ENABLE_ALL_INTERNAL_COMMANDS
+#if MBED_CMDLINE_ENABLE_ALL_INTERNAL_COMMANDS == 1
+#if MBED_CMDLINE_ENABLE_INTERNAL_VARIABLES == 1
     cmd_add("set",      set_command,      "print or set variables", MAN_SET);
+#endif
     cmd_add("help",     help_command,     "This help",            NULL);
     cmd_add("echo",     echo_command,     "Echo controlling",     MAN_ECHO);
     cmd_add("alias",    alias_command,    "Handle aliases",       MAN_ALIAS);
@@ -725,10 +738,12 @@ void cmd_mutex_unlock()
 }
 void cmd_init_screen()
 {
+#if MBED_CMDLINE_ENABLE_FEATURE_ESCAPE_HANDLING == 0
     if (cmd.vt100_on) {
         cmd_printf(CR_S CLEAR_ENTIRE_SCREEN); /* Clear screen */
         cmd_printf(ENABLE_AUTO_WRAP_MODE); /* enable line wrap */
     }
+#endif
     cmd_printf(MBED_CMDLINE_BOOT_MESSAGE);
     cmd_output();
 }
@@ -1016,7 +1031,7 @@ static int cmd_run(char *string_ptr)
         cmd_printf("Command '%s' not found.\r\n", argv[0]);
         MEM_FREE(command_str);
         ret = CMDLINE_RETCODE_COMMAND_NOT_FOUND;
-#if MBED_CMDLINE_ENABLE_INTERNAL_VARIABLES
+#if MBED_CMDLINE_ENABLE_INTERNAL_VARIABLES == 1
         cmd_variable_add_int("?", ret);
         cmd_alias_add("_", string_ptr); // last executed command
 #endif
@@ -1043,7 +1058,7 @@ static int cmd_run(char *string_ptr)
     // Run the actual callback
     cmd.cmd_ptr->busy = true;
     ret = cmd.cmd_ptr->run_cb(argc, argv);
-#if MBED_CMDLINE_ENABLE_INTERNAL_VARIABLES
+#if MBED_CMDLINE_ENABLE_INTERNAL_VARIABLES == 1
     cmd_variable_add_int("?", ret);
     cmd_alias_add("_", string_ptr); // last executed command
 #endif
@@ -1129,7 +1144,7 @@ static void cmd_arrow_down(void)
     }
 }
 #endif
-#if MBED_CMDLINE_ENABLE_FEATURE_ESCAPE_HANDLING
+#if MBED_CMDLINE_ENABLE_FEATURE_ESCAPE_HANDLING == 1
 void cmd_escape_read(int16_t u_data)
 {
     tr_debug("cmd_escape_read: %02x '%c' escape_index: %d: %s",
@@ -1282,7 +1297,7 @@ void cmd_char_input(int16_t u_data)
         cmd.passthrough_fnc(u_data);
         return;
     }
-#if MBED_CMDLINE_ENABLE_FEATURE_ESCAPE_HANDLING
+#if MBED_CMDLINE_ENABLE_FEATURE_ESCAPE_HANDLING == 1
     /*handle ecape command*/
     if (cmd.escaping == true) {
         cmd_escape_read(u_data);
@@ -1317,7 +1332,7 @@ void cmd_char_input(int16_t u_data)
         if (cmd.echo) {
             cmd_output();
         }
-#if MBED_CMDLINE_ENABLE_FEATURE_ESCAPE_HANDLING
+#if MBED_CMDLINE_ENABLE_FEATURE_ESCAPE_HANDLING == 1
     } else if (u_data == ESC) {
         cmd_escape_start();
     } else if (u_data == BS || u_data == DEL) {
@@ -1477,11 +1492,13 @@ static void cmd_clear_last_word()
 }
 void cmd_output(void)
 {
+#if MBED_CMDLINE_ENABLE_FEATURE_ESCAPE_HANDLING == 1
     if (cmd.vt100_on && cmd.idle) {
         int curpos = (int)strlen(cmd.input) - cmd.cursor + 1;
         cmd_printf(CR_S CLEAR_ENTIRE_LINE "%s%s " MOVE_CURSOR_LEFT_N_CHAR,
                    cmdline_get_prompt(), cmd.input, curpos);
     }
+#endif
 }
 void cmd_echo_off(void)
 {
@@ -1957,10 +1974,12 @@ int set_command(int argc, char *argv[])
         tr_debug("Setting variable %s = %s", argv[1], argv[2]);
         //handle special cases: vt100 on|off
         bool state;
+#if MBED_CMDLINE_ENABLE_FEATURE_ESCAPE_HANDLING == 1
         if (cmd_parameter_bool(argc, argv, "--vt100", &state)) {
             cmd.vt100_on = state;
             return 0;
         }
+#endif
         if (cmd_parameter_bool(argc, argv, "--retcode", &state)) {
             cmd_variable_add(VAR_RETFMT, state ? DEFAULT_RETFMT : NULL);
             return 0;
