@@ -1,54 +1,64 @@
 {
   "name": "cmdline",
   "config": {
-    "enable_history": {
-      "help"      : "inlude history",
-      "macro_name": "MBED_CMDLINE_ENABLE_FEATURE_HISTORY",
-      "options"   : [true, false],
+    "use_minumum_set": {
+      "help"      : "use pre configured minimum set which reduce most of features but allows to run icetea tests. Default: false",
+      "options"   : [true, false, null],
+      "value"     : null
+    },
+    "enable_aliases": {
+      "help"      : "enable alias feature. Default: true",
+      "options"   : [true, false, null],
       "value"     : null
     },
     "enable_escape_handling": {
-      "help"      : "enable escape handling",
-      "macro_name": "MBED_CMDLINE_ENABLE_FEATURE_ESCAPE_HANDLING",
-      "options"   : [true, false],
+      "help"      : "enable escape handling. Default: true",
+      "options"   : [true, false, null],
       "value"     : null
     },
     "enable_operators": {
-      "help"      : "enable operators",
-      "macro_name": "MBED_CMDLINE_ENABLE_FEATURE_OPERATORS",
-      "options"   : [true, false],
+      "help"      : "enable operators. Default: true",
+      "options"   : [true, false, null],
       "value"     : null
     },
     "enable_internal_commands": {
-      "help"      : "enable internal commands, like echo, set, unset",
-      "macro_name": "MBED_CMDLINE_ENABLE_ALL_INTERNAL_COMMANDS",
-      "options"   : [true, false],
+      "help"      : "enable internal commands, like echo, set, unset. Default: true",
+      "options"   : [true, false, null],
+      "value"     : null
+    },
+    "use_dummy_set_and_echo": {
+      "help"      : "when enable_internal_commands is disabled this can be used to activate dummy set and echo commands that is needed for icetea tests. Default: false",
+      "options"   : [true, false, null],
       "value"     : null
     },
     "enable_internal_variables": {
-      "help"      : "enable internal variables",
-      "macro_name": "MBED_CMDLINE_ENABLE_INTERNAL_VARIABLES",
-      "options"   : [true, false],
+      "help"      : "enable internal variables. Default: true",
+      "options"   : [true, false, null],
       "value"     : null
     },
     "include_man": {
-      "help"      : "include man pages",
-      "macro_name": "MBED_CMDLINE_INCLUDE_MAN",
+      "help"      : "include man pages. Default: true",
+      "options"   : [true, false, null],
       "value"     : null
     },
     "max_line_length": {
-      "help"      : "maximum input line length",
-      "macro_name": "MBED_CMDLINE_MAX_LINE_LENGTH",
+      "help"      : "maximum input line length. Default: 200",
+      "options"   : [true, false, null],
       "value"     : null
     },
-    "max_args_count": {
-      "help"      : "maximum arguments count",
-      "macro_name": "MBED_CMDLINE_ARGUMENTS_MAX_COUNT",
+    "args_max_count": {
+      "help"      : "maximum arguments count. Default: 30",
+      "options"   : [true, false, null],
       "value"     : null
     },
-    "max_history_count": {
-      "help"      : "maximum history count",
-      "macro_name": "MBED_CMDLINE_HISTORY_MAX_COUNT",
+    "enable_history": {
+      "help"      : "enable command history. Default: true",
+      "options"   : [true, false, null],
+      "value"     : null
+    },
+    "history_max_count": {
+      "help"      : "maximum history count. Default: 32",
+      "options"   : [true, false, null],
       "value"     : null
     }
   }

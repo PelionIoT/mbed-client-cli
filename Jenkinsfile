@@ -173,13 +173,17 @@ def yottaBuildStep(target, compilerLabel) {
               def exampleName = "example-linux"
               setBuildStatus('PENDING', "build ${exampleName}", 'build starts')
               try {
-                // try to compile different options
-                execute("make CFLAGS=-DMBED_CMDLINE_ENABLE_FEATURE_HISTORY=0")
-                execute("make CFLAGS=-DMBED_CMDLINE_ENABLE_FEATURE_ESCAPE_HANDLING=0")
-                execute("make CFLAGS=-DMBED_CMDLINE_ENABLE_FEATURE_OPERATORS=0")
-                execute("make CFLAGS=-DMBED_CMDLINE_ENABLE_ALL_INTERNAL_COMMANDS=0")
-                execute("make CFLAGS=-DMBED_CMDLINE_ENABLE_INTERNAL_VARIABLES=0")
-                execute("make CFLAGS=-DMBED_CMDLINE_INCLUDE_MAN=0")
+                // try to compile different configurations
+                execute("make CFLAGS=-DMBED_CONF_CMDLINE_USE_MINIMUM_SET=0")
+                execute("make CFLAGS=-DMBED_CONF_CMDLINE_ENABLE_ALIASES=0")
+                execute("make CFLAGS=-DMBED_CONF_CMDLINE_USE_DUMMY_SET_ECHO_COMMANDS=0")
+                execute("make CFLAGS=-DMBED_CONF_CMDLINE_INIT_AUTOMATION_MODE=0")
+                execute("make CFLAGS=-DMBED_CONF_CMDLINE_ENABLE_FEATURE_HISTORY=0")
+                execute("make CFLAGS=-DMBED_CONF_CMDLINE_ENABLE_ESCAPE_HANDLING=0")
+                execute("make CFLAGS=-DMBED_CONF_CMDLINE_ENABLE_OPERATORS=0")
+                execute("make CFLAGS=-DMBED_CONF_CMDLINE_ENABLE_INTERNAL_COMMANDS=0")
+                execute("make CFLAGS=-DMBED_CONF_CMDLINE_ENABLE_INTERNAL_VARIABLES=0")
+                execute("make CFLAGS=-DMBED_CONF_CMDLINE_INCLUDE_MAN=0")
                 execute("make")
                 setBuildStatus('SUCCESS', "build ${exampleName}", "build done")
               } catch(err) {
