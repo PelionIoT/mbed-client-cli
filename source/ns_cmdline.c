@@ -165,6 +165,7 @@
 #define DEFAULT_PROMPT "/>"
 #define VAR_PROMPT "PS1"
 #define VAR_RETFMT "RETFMT"
+#define MBED_CMDLINE_ESCAPE_BUFFER_SIZE 10
 
 // Maximum length of input line
 #ifdef MBED_CMDLINE_MAX_LINE_LENGTH
@@ -268,22 +269,23 @@ typedef NS_LIST_HEAD(cmd_exe_t, link) cmd_list_t;
 
 typedef struct cmd_class_s {
     char input[MAX_LINE];             // input data
-    char escape[10];                  // escape data
+
 #if MBED_CMDLINE_ENABLE_FEATURE_HISTORY
     int16_t history;                  // history position
     history_list_t history_list;      // input history
     uint8_t history_max_count;        // history max size
 #endif
     int16_t cursor;                   // cursor position
-    int16_t escape_index;             // escape index
     command_list_t command_list;      // commands list
     alias_list_t alias_list;          // alias list
     variable_list_t variable_list;    // variables list
 #if MBED_CMDLINE_ENABLE_FEATURE_ESCAPE_HANDLING == 1
     bool vt100_on;                    // control characters
+    bool escaping;                    // escaping input
+    int16_t escape_index;             // escape index
+    char escape[MBED_CMDLINE_ESCAPE_BUFFER_SIZE];                  // escape data
 #endif
     bool init;                        // true when lists are initialized already
-    bool escaping;                    // escaping input
     bool insert;                      // insert enabled
     int  tab_lookup;                  // originally lookup characters count
     int  tab_lookup_cmd_n;            // index in command list
@@ -410,11 +412,11 @@ void cmd_init(cmd_print_t *outf)
     cmd.out = outf ? outf : default_cmd_response_out;
     cmd.ctrl_fnc = NULL;
     cmd.echo = MBED_CMDLINE_INIT_AUTOMATION_MODE == 0;
-    cmd.escaping = false;
     cmd.insert = true;
     cmd.cursor = 0;
     cmd.prev_cr = false;
 #if MBED_CMDLINE_ENABLE_FEATURE_ESCAPE_HANDLING == 1
+    cmd.escaping = false;
     cmd.vt100_on = MBED_CMDLINE_INIT_AUTOMATION_MODE == 0;
 #endif
 #if MBED_CMDLINE_ENABLE_FEATURE_HISTORY
@@ -1079,12 +1081,16 @@ static int cmd_run(char *string_ptr)
 }
 void cmd_escape_start(void)
 {
+#if MBED_CMDLINE_ENABLE_FEATURE_ESCAPE_HANDLING == 1
     cmd.escaping = true;
     memset(cmd.escape, 0, sizeof(cmd.escape));
     cmd.escape_index = 0;
+#endif
 }
 static void cmd_arrow_right()
 {
+#if MBED_CMDLINE_ENABLE_FEATURE_ESCAPE_HANDLING == 1
+
     /* @todo handle shift
     if(strncmp(cmd.escape+1, "1;2", 3) == 0) {
         tr_debug("Shift pressed");
@@ -1100,9 +1106,11 @@ static void cmd_arrow_right()
     if ((int)cmd.cursor > (int)strlen(cmd.input)) {
         cmd.cursor = strlen(cmd.input);
     }
+#endif
 }
 static void cmd_arrow_left()
 {
+#if MBED_CMDLINE_ENABLE_FEATURE_ESCAPE_HANDLING == 1
     /* @todo handle shift
     if(strncmp(cmd.escape+1, "1;2", 3) == 0) {
         tr_debug("Shift pressed");
@@ -1118,6 +1126,7 @@ static void cmd_arrow_left()
     if (cmd.cursor < 0) {
         cmd.cursor = 0;
     }
+#endif
 }
 #if MBED_CMDLINE_ENABLE_FEATURE_HISTORY
 static void cmd_arrow_up()
@@ -1231,12 +1240,14 @@ void cmd_escape_read(int16_t u_data)
             default:
                 break;
         }
+#if MBED_CMDLINE_ENABLE_FEATURE_ESCAPE_HANDLING == 1
     } else if (isprint(u_data)) {  //IS_NUMBER || IS_CONTROL
         cmd.escape[cmd.escape_index++] = u_data;
         return;
     }
-    cmd_output();
     cmd.escaping = false;
+#endif
+    cmd_output();
     return;
 }
 #endif
