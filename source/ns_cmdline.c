@@ -738,7 +738,7 @@ void cmd_mutex_unlock()
 }
 void cmd_init_screen()
 {
-#if MBED_CMDLINE_ENABLE_FEATURE_ESCAPE_HANDLING == 0
+#if MBED_CMDLINE_ENABLE_FEATURE_ESCAPE_HANDLING == 1
     if (cmd.vt100_on) {
         cmd_printf(CR_S CLEAR_ENTIRE_SCREEN); /* Clear screen */
         cmd_printf(ENABLE_AUTO_WRAP_MODE); /* enable line wrap */
