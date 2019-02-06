@@ -279,7 +279,7 @@ typedef struct cmd_class_s {
     command_list_t command_list;      // commands list
     alias_list_t alias_list;          // alias list
     variable_list_t variable_list;    // variables list
-#if MBED_CMDLINE_ENABLE_FEATURE_ESCAPE_HANDLING == 0
+#if MBED_CMDLINE_ENABLE_FEATURE_ESCAPE_HANDLING == 1
     bool vt100_on;                    // control characters
 #endif
     bool init;                        // true when lists are initialized already
