@@ -2,64 +2,64 @@
   "name": "cmdline",
   "config": {
     "use_minumum_set": {
-      "help"      : "use pre configured minimum set which reduce most of features but allows to run icetea tests. Default: false",
-      "options"   : [true, false, null],
-      "value"     : null
+      "help": "use pre configured minimum set which reduce most of features but allows to run icetea tests. Default: false",
+      "accepted_values": [true, false, null],
+      "value": null
     },
     "enable_aliases": {
-      "help"      : "enable alias feature. Default: true",
-      "options"   : [true, false, null],
-      "value"     : null
+      "help": "enable alias feature. Default: true",
+      "accepted_values": [true, false, null],
+      "value": null
     },
     "enable_escape_handling": {
-      "help"      : "enable escape handling. Default: true",
-      "options"   : [true, false, null],
-      "value"     : null
+      "help": "enable escape handling. Default: true",
+      "accepted_values": [true, false, null],
+      "value": null
     },
     "enable_operators": {
-      "help"      : "enable operators. Default: true",
-      "options"   : [true, false, null],
-      "value"     : null
+      "help": "enable operators. Default: true",
+      "accepted_values": [true, false, null],
+      "value": null
     },
     "enable_internal_commands": {
-      "help"      : "enable internal commands, like echo, set, unset. Default: true",
-      "options"   : [true, false, null],
-      "value"     : null
+      "help": "enable internal commands, like echo, set, unset. Default: true",
+      "accepted_values": [true, false, null],
+      "value": null
     },
     "use_dummy_set_and_echo": {
-      "help"      : "when enable_internal_commands is disabled this can be used to activate dummy set and echo commands that is needed for icetea tests. Default: false",
-      "options"   : [true, false, null],
-      "value"     : null
+      "help": "when enable_internal_commands is disabled this can be used to activate dummy set and echo commands that is needed for icetea tests. Default: false",
+      "accepted_values": [true, false, null],
+      "value": null
     },
     "enable_internal_variables": {
-      "help"      : "enable internal variables. Default: true",
-      "options"   : [true, false, null],
-      "value"     : null
+      "help": "enable internal variables. Default: true",
+      "accepted_values": [true, false, null],
+      "value": null
     },
     "include_man": {
-      "help"      : "include man pages. Default: true",
-      "options"   : [true, false, null],
-      "value"     : null
+      "help": "include man pages. Default: true",
+      "accepted_values": [true, false, null],
+      "value": null
     },
     "max_line_length": {
-      "help"      : "maximum input line length. Default: 200",
-      "options"   : [true, false, null],
-      "value"     : null
+      "help": "maximum input line length. Default: 200",
+      "accepted_values": [true, false, null],
+      "value": null
     },
     "args_max_count": {
-      "help"      : "maximum arguments count. Default: 30",
-      "options"   : [true, false, null],
-      "value"     : null
+      "help": "maximum arguments count. Default: 30",
+      "accepted_values": [true, false, null],
+      "value": null
     },
     "enable_history": {
-      "help"      : "enable command history. Default: true",
-      "options"   : [true, false, null],
-      "value"     : null
+      "help": "enable command history. Default: true",
+      "accepted_values": [true, false, null],
+      "value": null
     },
     "history_max_count": {
-      "help"      : "maximum history count. Default: 32",
-      "options"   : [true, false, null],
-      "value"     : null
+      "help": "maximum history count. Default: 32",
+      "accepted_values": [true, false, null],
+      "value": null
     }
   }
 }
