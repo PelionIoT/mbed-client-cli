@@ -108,7 +108,7 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
               execute("mbed compile -t ${toolchain} -m ${target} --stats-depth=10")
               execute("cp --parents `find -name example-mbed-os-5.bin` ../mbed-client-cli")
               // compile minimum lib
-              execute("mbed compile -t ${toolchain} -m ${target} --stats-depth=10 -DMBED_CMDLINE_USE_MINIMUM_SET=1")
+              execute("mbed compile -t ${toolchain} -m ${target} --stats-depth=10 -DDMBED_CONF_CMDLINE_USE_MINIMUM_SET=1")
               execute("mkdir -p ../mbed-client-cli/output/minimal")
               execute("cp --parents `find -name example-mbed-os-5.bin` ../mbed-client-cli/output/minimal")
 
@@ -176,7 +176,7 @@ def yottaBuildStep(target, compilerLabel) {
                 // try to compile different configurations
                 execute("make CFLAGS=-DMBED_CONF_CMDLINE_USE_MINIMUM_SET=0")
                 execute("make CFLAGS=-DMBED_CONF_CMDLINE_ENABLE_ALIASES=0")
-                execute("make CFLAGS=-DMBED_CONF_CMDLINE_USE_DUMMY_SET_ECHO_COMMANDS=0")
+                execute("make CFLAGS=-DMBED_CONF_CMDLINE_USE_DUMMY_SET_ECHO_COMMANDS=1")
                 execute("make CFLAGS=-DMBED_CONF_CMDLINE_INIT_AUTOMATION_MODE=0")
                 execute("make CFLAGS=-DMBED_CONF_CMDLINE_ENABLE_FEATURE_HISTORY=0")
                 execute("make CFLAGS=-DMBED_CONF_CMDLINE_ENABLE_ESCAPE_HANDLING=0")
