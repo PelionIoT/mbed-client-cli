@@ -38,25 +38,48 @@
 #endif
 #endif
 
-// force traces for this module
-//#define FEA_TRACE_SUPPORT
 
-// configurations
-/*
-#define MBED_CONF_CMDLINE_USE_MINIMUM_SET 0
-#define MBED_CONF_CMDLINE_ENABLE_ALIASES 1
-#define MBED_CONF_CMDLINE_USE_DUMMY_SET_ECHO_COMMANDS 1
-#define MBED_CONF_CMDLINE_INIT_AUTOMATION_MODE 1
-#define MBED_CONF_CMDLINE_ENABLE_FEATURE_HISTORY 1
-#define MBED_CONF_CMDLINE_ENABLE_ESCAPE_HANDLING 1
-#define MBED_CONF_CMDLINE_ENABLE_OPERATORS 1
-#define MBED_CONF_CMDLINE_ENABLE_INTERNAL_COMMANDS 1
-#define MBED_CONF_CMDLINE_ENABLE_INTERNAL_VARIABLES 1
-#define MBED_CONF_CMDLINE_INCLUDE_MAN 1
-#define MBED_CONF_CMDLINE_MAX_LINE_LENGTH 100
-#define MBED_CONF_CMDLINE_ARGS_MAX_COUNT 2
-#define MBED_CONF_CMDLINE_HISTORY_MAX_COUNT 1
-*/
+// available configurations
+//#define MBED_CONF_CMDLINE_USE_MINIMUM_SET 0
+//#define MBED_CONF_CMDLINE_ENABLE_ALIASES 0
+//#define MBED_CONF_CMDLINE_USE_DUMMY_SET_ECHO_COMMANDS 1
+//#define MBED_CONF_CMDLINE_INIT_AUTOMATION_MODE 0
+//#define MBED_CONF_CMDLINE_ENABLE_FEATURE_HISTORY 0
+//#define MBED_CONF_CMDLINE_ENABLE_ESCAPE_HANDLING 0
+//#define MBED_CONF_CMDLINE_ENABLE_OPERATORS 0
+//#define MBED_CONF_CMDLINE_ENABLE_INTERNAL_COMMANDS 0
+//#define MBED_CONF_CMDLINE_ENABLE_INTERNAL_VARIABLES 0
+//#define MBED_CONF_CMDLINE_INCLUDE_MAN 0
+//#define MBED_CONF_CMDLINE_MAX_LINE_LENGTH 100
+//#define MBED_CONF_CMDLINE_ARGS_MAX_COUNT 2
+//#define MBED_CONF_CMDLINE_HISTORY_MAX_COUNT 1
+//#define MBED_CONF_CMDLINE_BOOT_MESSAGE "hello there\n"
+//#define MBED_CONF_CMDLINE_ENABLE_INTERNAL_TRACES 1
+//#define MBED_CONF_CMDLINE_ENABLE_DEEP_INTERNAL_TRACES 1
+
+
+
+// ------------------------
+// backward compatible
+#if defined(MBED_CMDLINE_MAX_LINE_LENGTH) && !defined(MBED_CONF_CMDLINE_MAX_LINE_LENGTH)
+#define MBED_CONF_CMDLINE_MAX_LINE_LENGTH MBED_CMDLINE_MAX_LINE_LENGTH
+#endif
+#if defined(MBED_CMDLINE_ARGUMENTS_MAX_COUNT) && !defined(MBED_CONF_CMDLINE_ARGS_MAX_COUNT)
+#define MBED_CONF_CMDLINE_ARGS_MAX_COUNT MBED_CMDLINE_ARGUMENTS_MAX_COUNT
+#endif
+#if defined(MBED_CMDLINE_HISTORY_MAX_COUNT) && !defined(MBED_CONF_CMDLINE_HISTORY_MAX_COUNT)
+#define MBED_CONF_CMDLINE_HISTORY_MAX_COUNT MBED_CMDLINE_HISTORY_MAX_COUNT
+#endif
+#if defined(MBED_CMDLINE_INCLUDE_MAN) && !defined(MBED_CONF_CMDLINE_INCLUDE_MAN)
+#define MBED_CONF_CMDLINE_INCLUDE_MAN MBED_CMDLINE_INCLUDE_MAN
+#endif
+#if defined(MBED_CLIENT_CLI_TRACE_ENABLE) && !defined(MBED_CONF_CMDLINE_ENABLE_INTERNAL_TRACES)
+#define MBED_CONF_CMDLINE_ENABLE_INTERNAL_TRACES MBED_CLIENT_CLI_TRACE_ENABLE
+#endif
+#if defined(MBED_CMDLINE_BOOT_MESSAGE) && !defined(MBED_CONF_CMDLINE_BOOT_MESSAGE)
+#define MBED_CONF_CMDLINE_BOOT_MESSAGE MBED_CMDLINE_BOOT_MESSAGE
+#endif
+// ------------------------
 
 #ifndef MBED_CONF_CMDLINE_USE_MINIMUM_SET
 #define MBED_CONF_CMDLINE_USE_MINIMUM_SET 0
@@ -112,7 +135,6 @@
 #endif
 #include "mbed-trace/mbed_trace.h"
 
-//#define TRACE_DEEP
 //#define TRACE_PRINTF
 
 #ifdef TRACE_PRINTF
@@ -120,10 +142,10 @@
 #define tr_debug(...) printf( __VA_ARGS__);printf("\r\n")
 #endif
 
-// #define MBED_CLIENT_CLI_TRACE_ENABLE
-// MBED_CLIENT_CLI_TRACE_ENABLE is to enable the traces for debugging,
+// #define MBED_CONF_CMDLINE_ENABLE_INTERNAL_TRACES 1
+// MBED_CONF_CMDLINE_ENABLE_INTERNAL_TRACES is to enable the traces for debugging,
 // By default all debug traces are disabled.
-#ifndef MBED_CLIENT_CLI_TRACE_ENABLE
+#if !defined(MBED_CONF_CMDLINE_ENABLE_INTERNAL_TRACES) || MBED_CONF_CMDLINE_ENABLE_INTERNAL_TRACES == 0
 #undef tr_error
 #define tr_error(...)
 #undef tr_warn
@@ -134,7 +156,7 @@
 #define tr_info(...)
 #endif
 
-#ifdef TRACE_DEEP
+#ifdef MBED_CONF_CMDLINE_ENABLE_DEEP_INTERNAL_TRACES
 #define tr_deep   tr_debug
 #else
 #define tr_deep(...)
@@ -142,8 +164,8 @@
 
 #define TRACE_GROUP "cmdL"
 
-#ifndef MBED_CMDLINE_BOOT_MESSAGE
-#define MBED_CMDLINE_BOOT_MESSAGE "ARM Ltd\r\n"
+#ifndef MBED_CONF_CMDLINE_BOOT_MESSAGE
+#define MBED_CONF_CMDLINE_BOOT_MESSAGE "ARM Ltd\r\n"
 #endif
 #define ESCAPE(x) "\x1b" x
 #define CR_S "\r"
@@ -187,7 +209,7 @@
 #endif
 // Maximum length of input line
 #ifndef MBED_CONF_CMDLINE_MAX_LINE_LENGTH
-#define MBED_CONF_CMDLINE_MAX_LINE_LENGTH 200
+#define MBED_CONF_CMDLINE_MAX_LINE_LENGTH 2000
 #endif
 // Maximum number of arguments in a single command
 #ifndef MBED_CONF_CMDLINE_ARGS_MAX_COUNT
@@ -521,13 +543,17 @@ static void cmd_init_base_commands(void)
 #if MBED_CONF_CMDLINE_ENABLE_INTERNAL_COMMANDS == 1
 #if MBED_CONF_CMDLINE_ENABLE_INTERNAL_VARIABLES == 1
     cmd_add("set",      set_command,      "print or set variables", MAN_SET);
+    cmd_add("unset",    unset_command,    "unset variables",      MAN_UNSET);
 #endif
     cmd_add("help",     help_command,     "This help",            NULL);
     cmd_add("echo",     echo_command,     "Echo controlling",     MAN_ECHO);
+#if MBED_CONF_CMDLINE_ENABLE_ALIASES == 1
     cmd_add("alias",    alias_command,    "Handle aliases",       MAN_ALIAS);
-    cmd_add("unset",    unset_command,    "unset variables",      MAN_UNSET);
+#endif
     cmd_add("clear",    clear_command,    "Clears the display",   MAN_CLEAR);
+#if MBED_CONF_CMDLINE_ENABLE_FEATURE_HISTORY == 1
     cmd_add("history",  history_command,  "View your command Line History", MAN_HISTORY);
+#endif
     cmd_add("true",     true_command, 0, 0);
     cmd_add("false",    false_command, 0, 0);
 #elif MBED_CONF_CMDLINE_USE_DUMMY_SET_ECHO_COMMANDS == 1
@@ -670,6 +696,9 @@ static cmd_exe_t *cmd_next_ptr(int retcode)
     if (cmd.cmd_buffer_ptr == NULL) {
         return cmd_pop();
     }
+#if MBED_CONF_CMDLINE_ENABLE_OPERATORS == 0
+    (void)retcode;
+#endif
     switch (cmd.cmd_buffer_ptr->operator) {
 #if MBED_CONF_CMDLINE_ENABLE_OPERATORS
         case (OPERATOR_AND):
@@ -777,19 +806,22 @@ void cmd_init_screen()
         cmd_printf(ENABLE_AUTO_WRAP_MODE); /* enable line wrap */
     }
 #endif
-    cmd_printf(MBED_CMDLINE_BOOT_MESSAGE);
+    cmd_printf(MBED_CONF_CMDLINE_BOOT_MESSAGE);
     cmd_output();
 }
-#if MBED_CONF_CMDLINE_ENABLE_FEATURE_HISTORY
 uint8_t cmd_history_size(uint8_t max)
 {
+#if MBED_CONF_CMDLINE_ENABLE_FEATURE_HISTORY
     if (max > 0) {
         cmd.history_max_count = max;
         cmd_history_clean_overflow();
     }
     return cmd.history_max_count;
-}
+#else
+    (void)max;
+    return 0;
 #endif
+}
 static void cmd_echo(bool on)
 {
     cmd.echo = on;
@@ -878,6 +910,7 @@ void cmd_add(const char *name, cmd_run_cb *callback, const char *info, const cha
 #if MBED_CONF_CMDLINE_INCLUDE_MAN == 1
     cmd_ptr->man_ptr = man;
 #else
+    (void)man;
     cmd_ptr->man_ptr = 0;
 #endif
     cmd_ptr->run_cb = callback;
@@ -977,6 +1010,9 @@ static char *next_command(char *string_ptr, operator_t *oper)
 {
     char *ptr = string_ptr;
     bool quote = false;
+#if MBED_CONF_CMDLINE_ENABLE_OPERATORS == 0
+    (void)oper;
+#endif
     while (*ptr != 0) {
         if (quote) {
             if (*ptr == '"') {
@@ -1558,7 +1594,11 @@ void cmd_echo_on(void)
 // alias
 int replace_alias(char *str, const char *old_str, const char *new_str)
 {
-#if MBED_CONF_CMDLINE_ENABLE_ALIASES == 1
+#if MBED_CONF_CMDLINE_ENABLE_ALIASES == 0
+    (void)str;
+    (void)old_str;
+    (void)new_str;
+#else
     int old_len = strlen(old_str),
         new_len = strlen(new_str);
     if ((strncmp(str, old_str, old_len) == 0) &&
@@ -1573,7 +1613,9 @@ int replace_alias(char *str, const char *old_str, const char *new_str)
 }
 static void cmd_replace_alias(char *input)
 {
-#if MBED_CONF_CMDLINE_ENABLE_ALIASES == 1
+#if MBED_CONF_CMDLINE_ENABLE_ALIASES == 0
+    (void)input;
+#else
     ns_list_foreach(cmd_alias_t, cur_ptr, &cmd.alias_list) {
         replace_alias(input, cur_ptr->name_ptr, cur_ptr->value_ptr);
     }
@@ -1604,14 +1646,16 @@ static void replace_variable(char *str, cmd_variable_t *variable_ptr)
 }
 static void cmd_replace_variables(char *input)
 {
-#if MBED_CONF_CMDLINE_ENABLE_INTERNAL_COMMANDS == 1
+#if MBED_CONF_CMDLINE_ENABLE_INTERNAL_COMMANDS == 0
+    (void)input;
+#else
     ns_list_foreach(cmd_variable_t, cur_ptr, &cmd.variable_list) {
         replace_variable(input, cur_ptr);
     }
 #endif
 }
 //history
-#if MBED_CONF_CMDLINE_ENABLE_FEATURE_HISTORY
+#if MBED_CONF_CMDLINE_ENABLE_FEATURE_HISTORY == 1
 static void cmd_history_item_delete(cmd_history_t *entry_ptr)
 {
     ns_list_remove(&cmd.history_list, entry_ptr);
@@ -1728,20 +1772,24 @@ static void cmd_execute(void)
 
 static cmd_alias_t *alias_find(const char *alias)
 {
+#if MBED_CONF_CMDLINE_ENABLE_ALIASES == 0
+    (void)alias;
+    return NULL;
+#else
     cmd_alias_t *alias_ptr = NULL;
     if (alias == NULL || strlen(alias) == 0) {
         tr_error("alias_find invalid parameters");
         return NULL;
     }
-#if MBED_CONF_CMDLINE_ENABLE_ALIASES == 1
+
     ns_list_foreach(cmd_alias_t, cur_ptr, &cmd.alias_list) {
         if (strcmp(alias, cur_ptr->name_ptr) == 0) {
             alias_ptr = cur_ptr;
             break;
         }
     }
-#endif
     return alias_ptr;
+#endif
 }
 
 static cmd_alias_t *alias_find_n(char *alias, int aliaslength, int n)
@@ -1751,7 +1799,10 @@ static cmd_alias_t *alias_find_n(char *alias, int aliaslength, int n)
         tr_error("alias_find invalid parameters");
         return NULL;
     }
-#if MBED_CONF_CMDLINE_ENABLE_ALIASES == 1
+#if MBED_CONF_CMDLINE_ENABLE_ALIASES == 0
+    (void)aliaslength;
+    (void)n;
+#else
     int i = 0;
     ns_list_foreach(cmd_alias_t, cur_ptr, &cmd.alias_list) {
         if (strncmp(alias, cur_ptr->name_ptr, aliaslength) == 0) {
@@ -1789,7 +1840,10 @@ static cmd_variable_t *variable_find_n(char *variable, int length, int n)
         tr_error("variable_find invalid parameters");
         return NULL;
     }
-#if MBED_CONF_CMDLINE_ENABLE_INTERNAL_COMMANDS == 1
+#if MBED_CONF_CMDLINE_ENABLE_INTERNAL_COMMANDS == 0
+    (void)length;
+    (void)n;
+#else
     int i = 0;
     ns_list_foreach(cmd_variable_t, cur_ptr, &cmd.variable_list) {
         if (strncmp(variable, cur_ptr->name_ptr, length) == 0) {
@@ -1811,12 +1865,12 @@ static void cmd_alias_print_all(void)
             cmd_printf("%-18s'%s'\r\n", cur_ptr->name_ptr, cur_ptr->value_ptr ? cur_ptr->value_ptr : "");
         }
     }
-#endif
     return;
+#endif
 }
 static void cmd_variable_print_all(void)
 {
-#if MBED_CONF_CMDLINE_ENABLE_INTERNAL_COMMANDS
+#if MBED_CONF_CMDLINE_ENABLE_INTERNAL_COMMANDS == 1
     ns_list_foreach(cmd_variable_t, cur_ptr, &cmd.variable_list) {
         if (cur_ptr->type == VALUE_TYPE_STR) {
             cmd_printf("%s='%s'\r\n", cur_ptr->name_ptr, cur_ptr->value.ptr ? cur_ptr->value.ptr : "");
@@ -1824,13 +1878,16 @@ static void cmd_variable_print_all(void)
             cmd_printf("%s=%d\r\n", cur_ptr->name_ptr, cur_ptr->value.i);
         }
     }
-#endif
     return;
+#endif
 }
 
 void cmd_alias_add(const char *alias, const char *value)
 {
-#if MBED_CONF_CMDLINE_ENABLE_ALIASES == 1
+#if MBED_CONF_CMDLINE_ENABLE_ALIASES == 0
+    (void)alias;
+    (void)value;
+#else
     cmd_alias_t *alias_ptr;
     if (alias == NULL || strlen(alias) == 0) {
         tr_warn("cmd_alias_add invalid parameters");
@@ -1878,12 +1935,14 @@ void cmd_alias_add(const char *alias, const char *value)
         }
         strcpy(alias_ptr->value_ptr, value);
     }
-#endif
     return;
+#endif
 }
 static cmd_variable_t *cmd_variable_add_prepare(char *variable, char *value)
 {
 #if MBED_CONF_CMDLINE_ENABLE_INTERNAL_COMMANDS == 0
+    (void)variable;
+    (void)value;
     return NULL;
 #else
     if (variable == NULL || strlen(variable) == 0) {
@@ -2027,10 +2086,14 @@ int unset_command(int argc, char *argv[])
 #if MBED_CONF_CMDLINE_USE_DUMMY_SET_ECHO_COMMANDS == 1
 int echo_command(int argc, char *argv[])
 {
+    (void)argc;
+    (void)argv;
     return 0;
 }
 int set_command(int argc, char *argv[])
 {
+    (void)argc;
+    (void)argv;
     return 0;
 }
 #else
@@ -2158,6 +2221,9 @@ int history_command(int argc, char *argv[])
             cmd_history_size(strtoul(argv[1], 0, 10));
         }
     }
+#else
+    (void)argc;
+    (void)argv;
 #endif
     return 0;
 }

@@ -60,6 +60,20 @@
       "help": "maximum history count. Default: 32",
       "accepted_values": [true, false, null],
       "value": null
+    },
+    "boot_message": {
+      "help": "Set custom boot message when calling cmd_init() or cmd_init_screen()",
+      "value": null
+    },
+    "enable_internal_traces": {
+      "help": "Enable internal traces",
+      "accepted_values": [true, false, null],
+      "value": null
+    },
+    "enable_deep_internal_traces": {
+      "help": "Enable more verbose internal traces",
+      "accepted_values": [true, false, null],
+      "value": null
     }
   }
 }

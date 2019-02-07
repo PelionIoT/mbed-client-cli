@@ -34,17 +34,19 @@
 
 // dummy command with some option
 static int cmd_dummy(int argc, char *argv[]) {
-  if( cmd_has_option(argc, argv, "o") ) {
-    cmd_printf("This is o option\r\n");
-  } else {
-    return CMDLINE_RETCODE_INVALID_PARAMETERS;
-  }
-  return CMDLINE_RETCODE_SUCCESS;
+    if( cmd_has_option(argc, argv, "o") ) {
+        cmd_printf("This is o option\r\n");
+    } else {
+        return CMDLINE_RETCODE_INVALID_PARAMETERS;
+    }
+    return CMDLINE_RETCODE_SUCCESS;
 }
 volatile bool running = true;
 static int cmd_exit(int argc, char *argv[]) {
-  running = false;
-  return CMDLINE_RETCODE_SUCCESS;
+    (void)argc;
+    (void)argv;
+    running = false;
+    return CMDLINE_RETCODE_SUCCESS;
 }
 
 
