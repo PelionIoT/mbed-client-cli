@@ -24,10 +24,12 @@ if(DEFINED TARGET_LIKE_X86_WINDOWS_NATIVE OR DEFINED TARGET_LIKE_X86_LINUX_NATIV
             ../source/ns_list_internal/ns_list.c
             )
         if(DEFINED TARGET_LIKE_X86_LINUX_NATIVE)
-            if("${TEST}" STREQUAL "full")
+            if(${TEST} STREQUAL "full")
+                MESSAGE("USE GCOV BUILD")
                 set_target_properties(mbed-client-cli-${TEST} PROPERTIES -fprofile-arcs -ftest-coverage)
                 target_link_libraries(mbed-client-cli-${TEST} gcov)
             else()
+                MESSAGE("use default test..")
                 target_link_libraries(mbed-client-cli-${TEST})
             endif()
         else()
