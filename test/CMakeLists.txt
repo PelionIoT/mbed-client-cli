@@ -25,7 +25,9 @@ if(DEFINED TARGET_LIKE_X86_WINDOWS_NATIVE OR DEFINED TARGET_LIKE_X86_LINUX_NATIV
                     ../source/ns_cmdline.c
                     ../source/ns_list_internal/ns_list.c
                     )
-            add_definitions("-fprofile-arcs -ftest-coverage")
+            if(TEST "full")
+                add_definitions("-fprofile-arcs -ftest-coverage")
+            endif()
             target_link_libraries(mbed-client-cli-${TEST} gcov)
         elseif(DEFINED TARGET_LIKE_X86_OSX_NATIVE)
             add_library( mbed-client-cli-${TEST}
