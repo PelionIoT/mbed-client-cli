@@ -33,16 +33,42 @@
 #define MBED_CONF_MBED_TRACE_FEA_IPV6 0
 
 /*
-#define MBED_CMDLINE_ENABLE_FEATURE_HISTORY 1
+#define MBED_CONF_CMDLINE_ENABLE_HISTORY 1
 #define MBED_CMDLINE_ENABLE_FEATURE_ESCAPE_HANDLING 1
 #define MBED_CMDLINE_ENABLE_FEATURE_OPERATORS 1
-#define MBED_CMDLINE_ENABLE_ALL_INTERNAL_COMMANDS 1
-#define MBED_CMDLINE_ENABLE_INTERNAL_VARIABLES 1
+#define MBED_CONF_CMDLINE_ENABLE_ALL_INTERNAL_COMMANDS 1
+#define MBED_CONF_CMDLINE_ENABLE_INTERNAL_VARIABLES 1
 #define MBED_CMDLINE_INCLUDE_MAN 1
 #define MBED_CMDLINE_MAX_LINE_LENGTH 100
 #define MBED_CMDLINE_ARGUMENTS_MAX_COUNT 2
 #define MBED_CMDLINE_HISTORY_MAX_COUNT 1
 */
+
+#if MBED_CONF_CMDLINE_USE_MINIMUM_SET == 1
+// this is copypaste from pre-defined minimum config
+#define MBED_CONF_CMDLINE_INIT_AUTOMATION_MODE 1
+#define MBED_CONF_CMDLINE_ENABLE_HISTORY 0
+#define MBED_CONF_CMDLINE_ENABLE_ESCAPE_HANDLING 0
+#define MBED_CONF_CMDLINE_ENABLE_OPERATORS 0
+#define MBED_CONF_CMDLINE_ENABLE_ALL_INTERNAL_COMMANDS 0
+#define MBED_CONF_CMDLINE_ENABLE_INTERNAL_VARIABLES 0
+#define MBED_CONF_CMDLINE_INCLUDE_MAN 0
+#define MBED_CONF_CMDLINE_MAX_LINE_LENGTH 100
+#define MBED_CONF_CMDLINE_ARGUMENTS_MAX_COUNT 10
+#define MBED_CONF_CMDLINE_HISTORY_MAX_COUNT 0
+#else
+// this is copypaste from pre-defined minimum config
+#define MBED_CONF_CMDLINE_INIT_AUTOMATION_MODE 0
+#define MBED_CONF_CMDLINE_ENABLE_HISTORY 1
+#define MBED_CONF_CMDLINE_ENABLE_ESCAPE_HANDLING 1
+#define MBED_CONF_CMDLINE_ENABLE_OPERATORS 1
+#define MBED_CONF_CMDLINE_ENABLE_ALL_INTERNAL_COMMANDS 1
+#define MBED_CONF_CMDLINE_ENABLE_INTERNAL_VARIABLES 1
+#define MBED_CONF_CMDLINE_INCLUDE_MAN 1
+#define MBED_CONF_CMDLINE_MAX_LINE_LENGTH 2000
+#define MBED_CONF_CMDLINE_ARGUMENTS_MAX_COUNT 30
+#define MBED_CONF_CMDLINE_HISTORY_MAX_COUNT 10
+#endif
 
 #include "mbed-trace/mbed_trace.h"
 #include "mbed-client-cli/ns_cmdline.h"
@@ -301,6 +327,7 @@ TEST(cli, cmd_has_option)
     char *argv[] =  { "cmd", "-p", "p2", "3", "p4", "p5" };
     CHECK_EQUAL(cmd_has_option(6, argv, "-p"), true);
 }
+#if MBED_CONF_CMDLINE_ENABLE_INTERNAL_COMMANDS == 1
 TEST(cli, echo_state)
 {
   CHECK_EQUAL(cmd_echo_state(), true);
@@ -309,20 +336,27 @@ TEST(cli, echo_state)
   cmd_echo_on();
   CHECK_EQUAL(cmd_echo_state(), true);
 }
+#endif
+
 TEST(cli, help)
 {
+#if MBED_CONF_CMDLINE_ENABLE_ALL_INTERNAL_COMMANDS == 0
+    TEST_RETCODE_WITH_COMMAND("help", CMDLINE_RETCODE_COMMAND_NOT_FOUND);
+#else
     REQUEST("help");
-    CHECK(strlen(buf) > 20 );
+    CHECK(strlen(buf) > 20);
     CHECK_RETCODE(0);
 
     INIT_BUF();
     REQUEST("echo --help");
-    CHECK(strlen(buf) > 20 );
+    CHECK(strlen(buf) > 20);
     CHECK_RETCODE(0);
+#endif
 }
+
 TEST(cli, retcodes)
 {
-#if MBED_CMDLINE_ENABLE_ALL_INTERNAL_COMMANDS
+#if MBED_CONF_CMDLINE_ENABLE_ALL_INTERNAL_COMMANDS
     TEST_RETCODE_WITH_COMMAND("true", CMDLINE_RETCODE_SUCCESS);
     TEST_RETCODE_WITH_COMMAND("false", CMDLINE_RETCODE_FAIL);
     TEST_RETCODE_WITH_COMMAND("set --abc", CMDLINE_RETCODE_INVALID_PARAMETERS);
@@ -331,10 +365,15 @@ TEST(cli, retcodes)
 }
 TEST(cli, cmd_echo)
 {
+#if MBED_CONF_CMDLINE_INIT_AUTOMATION_MODE == 1
+    TEST_RETCODE_WITH_COMMAND("echo Hi!", CMDLINE_RETCODE_SUCCESS);
+#else
     REQUEST("echo Hi!");
     ARRAY_CMP(RESPONSE("Hi! ") , buf);
     CHECK_RETCODE(0);
+#endif
 }
+#if MBED_CONF_CMDLINE_ENABLE_ALL_INTERNAL_COMMANDS
 TEST(cli, cmd_echo_with_cr)
 {
     input("echo crlf");INIT_BUF();input("\r\n");
@@ -432,7 +471,8 @@ TEST(cli, cmd_echo11)
     ARRAY_CMP(CMDLINE("echo ok ") , buf);
     CLEAN();
 }
-#if MBED_CMDLINE_ENABLE_FEATURE_HISTORY
+#endif
+#if MBED_CONF_CMDLINE_ENABLE_HISTORY
 TEST(cli, cmd_arrows_up)
 {
     REQUEST("echo foo-1");
@@ -475,6 +515,14 @@ TEST(cli, cmd_arrows_up_down)
     DOWN();
     ARRAY_CMP(CMDLINE(" "), buf);
     CLEAN();
+}
+TEST(cli, cmd_set)
+{
+    TEST_RETCODE_WITH_COMMAND("set abc def", CMDLINE_RETCODE_SUCCESS);
+#if MBED_CONF_CMDLINE_INIT_AUTOMATION_MODE == 0 && MBED_CONF_CMDLINE_ENABLE_INTERNAL_COMMANDS == 1
+    REQUEST("echo $abc");
+    ARRAY_CMP(RESPONSE("def ") , buf);
+#endif
 }
 TEST(cli, cmd_history)
 {
@@ -567,6 +615,7 @@ TEST(cli, cmd_text_pageup_up)
     CLEAN();
 }
 #endif
+#if MBED_CONF_CMDLINE_ENABLE_ESCAPE_HANDLING
 TEST(cli, cmd_alt_left_right)
 {
   input("11 22 33");
@@ -670,7 +719,9 @@ TEST(cli, ctrl_w_1)
   ARRAY_CMP(CMDLINE_CUR("g ", "2", BACKWARD), buf);
   CLEAN();
 }
-#if MBED_CMDLINE_ENABLE_INTERNAL_VARIABLES
+#endif
+
+#if MBED_CONF_CMDLINE_ENABLE_INTERNAL_VARIABLES
 TEST(cli, cmd_request_screen_size)
 {
   cmd_request_screen_size();
@@ -685,6 +736,7 @@ TEST(cli, cmd_request_screen_size)
             CMDLINE_EMPTY, buf);
 }
 #endif
+#if MBED_CONF_CMDLINE_ENABLE_ESCAPE_HANDLING
 TEST(cli, cmd_tab_1)
 {
     INIT_BUF();
@@ -731,6 +783,7 @@ TEST(cli, cmd_tab_2)
 
     input("\n");
 }
+#endif
 TEST(cli, cmd_delete)
 {
     INIT_BUF();
@@ -739,6 +792,7 @@ TEST(cli, cmd_delete)
     REQUEST("role");
     CHECK_RETCODE(CMDLINE_RETCODE_COMMAND_NOT_FOUND);
 }
+#if MBED_CONF_CMDLINE_ENABLE_INTERNAL_COMMANDS == 1
 TEST(cli, cmd_escape)
 {
   INIT_BUF();
@@ -749,6 +803,8 @@ TEST(cli, cmd_escape)
   REQUEST("echo \"\\\\\"\"");
   ARRAY_CMP(RESPONSE("\\\" "), buf);
 }
+#endif
+#if MBED_CONF_CMDLINE_ENABLE_ALIASES == 1
 TEST(cli, cmd_tab_3)
 {
     INIT_BUF();
@@ -781,6 +837,8 @@ TEST(cli, cmd_tab_3)
     ESC();
     INIT_BUF();
 }
+#endif
+#if MBED_CONF_CMDLINE_ENABLE_INTERNAL_COMMANDS == 1
 TEST(cli, cmd_tab_4)
 {
     INIT_BUF();
@@ -809,6 +867,7 @@ TEST(cli, cmd_tab_4)
     cmd_variable_add("dut1", NULL);
     CLEAN();
 }
+
 // alias test
 TEST(cli, cmd_alias_2)
 {
@@ -857,7 +916,8 @@ TEST(cli, cmd_series)
     CHECK_RETCODE(0);
     ARRAY_CMP(RESPONSE("dut1 \r\ndut2 \r\ndut3 "), buf);
 }
-#if MBED_CMDLINE_ENABLE_INTERNAL_VARIABLES
+#endif
+#if MBED_CONF_CMDLINE_ENABLE_INTERNAL_VARIABLES
 TEST(cli, cmd_var_1)
 {
     REQUEST("set foo \"bar test\"");
@@ -900,7 +960,7 @@ TEST(cli, cmd_var_2)
     REQUEST("unset faa");
 }
 #endif
-#if MBED_CMDLINE_ENABLE_ALL_INTERNAL_COMMANDS
+#if MBED_CONF_CMDLINE_ENABLE_ALL_INTERNAL_COMMANDS
 TEST(cli, cmd__)
 {
     REQUEST("echo foo");
@@ -1004,9 +1064,13 @@ TEST(cli, passthrough_set)
     ARRAY_CMP(REDIR_DATA, passthrough_buffer);
 
     cmd_input_passthrough_func(NULL);
-
+    INIT_BUF();
     REQUEST(REDIR_DATA);
+#if MBED_CONF_CMDLINE_INIT_AUTOMATION_MODE == 1
+    ARRAY_CMP("retcode: 0\r\n", buf)
+#else
     ARRAY_CMP(RESPONSE("Hi! ") , buf);
+#endif
 }
 TEST(cli, passthrough_lf)
 {
@@ -1057,7 +1121,6 @@ TEST(cli, cmd_continue)
   CHECK_RETCODE(CMDLINE_RETCODE_SUCCESS);
   CHECK_EQUAL(cmd_long_called, 1);
 }
-
 TEST(cli, cmd_out_func_set_null)
 {
     cmd_out_func(NULL);
@@ -1085,6 +1148,7 @@ int sohf_cb_called = 0;
 void sohf_cb(uint8_t c) {
   sohf_cb_called++;
 }
+#if MBED_CMDLINE_ENABLE_FEATURE_ESCAPE_HANDLING == 1
 TEST(cli, cmd_ctrl_func_set)
 {
     cmd_ctrl_func(sohf_cb);
@@ -1092,12 +1156,13 @@ TEST(cli, cmd_ctrl_func_set)
     CHECK_EQUAL(sohf_cb_called, 1);
     cmd_ctrl_func(NULL);
 }
+#endif
 
 TEST(cli, cmd_delete_null)
 {
     cmd_delete(NULL);
 }
-#if MBED_CMDLINE_ENABLE_FEATURE_HISTORY
+#if MBED_CONF_CMDLINE_ENABLE_HISTORY
 TEST(cli, cmd_history_size_set)
 {
     cmd_history_size(0);
