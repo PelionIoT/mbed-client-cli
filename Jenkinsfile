@@ -156,7 +156,7 @@ def yottaBuildStep(target, compilerLabel) {
           stage("test:${buildName}") {
             setBuildStatus('PENDING', "test ${buildName}", 'test starts')
             try {
-              execute("yotta test mbed_client_cli_test")
+              execute("yotta test")
               execute("lcov --base-directory . --directory . --capture --output-file coverage.info")
               execute("genhtml -o ./test_coverage coverage.info")
               execute("gcovr -x -o junit.xml")
