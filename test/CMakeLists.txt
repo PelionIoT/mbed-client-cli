@@ -26,7 +26,7 @@ if(DEFINED TARGET_LIKE_X86_WINDOWS_NATIVE OR DEFINED TARGET_LIKE_X86_LINUX_NATIV
                     ../source/ns_list_internal/ns_list.c
                     )
             if("${TEST}" STREQUAL "full")
-                add_definitions("-fprofile-arcs -ftest-coverage")
+                target_compile_definitions(mbed-client-cli-${TEST} PUBLIC "-fprofile-arcs -ftest-coverage")
             endif()
             target_link_libraries(mbed-client-cli-${TEST} gcov)
         elseif(DEFINED TARGET_LIKE_X86_OSX_NATIVE)
@@ -42,7 +42,7 @@ if(DEFINED TARGET_LIKE_X86_WINDOWS_NATIVE OR DEFINED TARGET_LIKE_X86_LINUX_NATIV
                     )
             target_link_libraries(mbed-client-cli-${TEST})
         endif()
-        target_compile_definitions(mbed-client-cli-${TEST} PUBLIC  ${flag})
+        target_compile_definitions(mbed-client-cli-${TEST} PUBLIC ${flag})
 
         # describe the test executable
         add_executable(mbed_client_cli_test_${TEST} Test.cpp)
