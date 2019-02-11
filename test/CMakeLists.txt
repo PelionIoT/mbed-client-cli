@@ -19,27 +19,18 @@ if(DEFINED TARGET_LIKE_X86_WINDOWS_NATIVE OR DEFINED TARGET_LIKE_X86_LINUX_NATIV
 
         MESSAGE("TEST flag: ${flag}")
 
-
+        add_library( mbed-client-cli-${TEST}
+            ../source/ns_cmdline.c
+            ../source/ns_list_internal/ns_list.c
+            )
         if(DEFINED TARGET_LIKE_X86_LINUX_NATIVE)
-            add_library( mbed-client-cli-${TEST}
-                    ../source/ns_cmdline.c
-                    ../source/ns_list_internal/ns_list.c
-                    )
             if("${TEST}" STREQUAL "full")
-                target_compile_definitions(mbed-client-cli-${TEST} PUBLIC "-fprofile-arcs -ftest-coverage")
+                set_target_properties(mbed-client-cli-${TEST} PROPERTIES -fprofile-arcs -ftest-coverage)
+                target_link_libraries(mbed-client-cli-${TEST} gcov)
+            else()
+                target_link_libraries(mbed-client-cli-${TEST})
             endif()
-            target_link_libraries(mbed-client-cli-${TEST} gcov)
-        elseif(DEFINED TARGET_LIKE_X86_OSX_NATIVE)
-            add_library( mbed-client-cli-${TEST}
-                    ../source/ns_cmdline.c
-                    ../source/ns_list_internal/ns_list.c
-                    )
-            target_link_libraries(mbed-client-cli-${TEST})
         else()
-            add_library( mbed-client-cli-${TEST}
-                    ../source/ns_cmdline.c
-                    ../source/ns_list_internal/ns_list.c
-                    )
             target_link_libraries(mbed-client-cli-${TEST})
         endif()
         target_compile_definitions(mbed-client-cli-${TEST} PUBLIC ${flag})
