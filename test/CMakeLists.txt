@@ -6,12 +6,12 @@ if(DEFINED TARGET_LIKE_X86_WINDOWS_NATIVE OR DEFINED TARGET_LIKE_X86_LINUX_NATIV
 
     # FULL BUILD TESTS
     set(FLAGS
-            MBED_CONF_CMDLINE_USE_MINIMUM_SET=0
             MBED_CONF_CMDLINE_USE_MINIMUM_SET=1
+            MBED_CONF_CMDLINE_USE_MINIMUM_SET=0
             )
     set(TESTS
-            full
             min
+            full
             )
     foreach(flag ${FLAGS})
         list(FIND FLAGS ${flag} index)
@@ -25,9 +25,13 @@ if(DEFINED TARGET_LIKE_X86_WINDOWS_NATIVE OR DEFINED TARGET_LIKE_X86_LINUX_NATIV
             )
 
         if("${TEST}" STREQUAL "full")
-            add_definitions("-g -O0 -Wall -fprofile-arcs -ftest-coverage")
+            # add_definitions("-g -O0 -Wall -fprofile-arcs -ftest-coverage")
             if(DEFINED TARGET_LIKE_X86_LINUX_NATIVE)
                 MESSAGE("USE GCOV BUILD (Linux)")
+                set_target_properties(mbed-client-cli-${TEST} PROPERTIES COMPILE_FLAGS
+                        "-g -O0 -Wall -fprofile-arcs -ftest-coverage"
+                        )
+                #target_link_properties(mbed-client-cli-${TEST} -g -0= -Wall -fprofile-arcs -ftest-coverage)
                 target_link_libraries(mbed-client-cli-${TEST} gcov)
             #[[
             elseif(DEFINED TARGET_LIKE_X86_OSX_NATIVE)
