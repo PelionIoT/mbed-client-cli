@@ -1185,7 +1185,6 @@ TEST(cli, cmd_parameter_timestamp_1)
     const char *key = "-t";
     int64_t value = 0;
     CHECK_EQUAL(true, cmd_parameter_timestamp(argc, argv, key, &value));
-    printf("%lld\r\n", value);
     LONGS_EQUAL(809048709, value);
 }
 TEST(cli, cmd_parameter_timestamp_2)
