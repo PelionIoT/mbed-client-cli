@@ -1178,7 +1178,7 @@ TEST(cli, cmd_add_invalid_params)
     cmd_add("", cmd_dummy, NULL, NULL);
     cmd_add("abc", NULL, NULL, NULL);
 }
-TEST(cli, cmd_parameter_timestamp_1)
+/*TEST(cli, cmd_parameter_timestamp_1)
 {
     int argc = 3;
     char *argv[] = {"cmd", "-t", "12345,6789"};
@@ -1186,7 +1186,7 @@ TEST(cli, cmd_parameter_timestamp_1)
     int64_t value = 0;
     CHECK_EQUAL(true, cmd_parameter_timestamp(argc, argv, key, &value));
     LONGS_EQUAL(809048709, value);
-}
+}*/
 TEST(cli, cmd_parameter_timestamp_2)
 {
     int argc = 3;
