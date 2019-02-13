@@ -2372,10 +2372,12 @@ bool cmd_parameter_timestamp(int argc, char *argv[], const char *key, int64_t *v
             } else if (strchr(argv[i + 1], ':') != 0) {
                 // Format 00:00:00:00:00:00:00:00
                 uint8_t buf[8];
-                if (string_to_bytes(argv[i + 1], buf, 8) == 0) {
+                if (strlen(argv[i + 1]) == 23 &&
+                    string_to_bytes(argv[i + 1], buf, 8) == 0) {
                     *value = read_64_bit(buf);
                 } else {
                     cmd_printf("timestamp should be 8 bytes long\r\n");
+                    return false;
                 }
             } else {
                 // Format uint64

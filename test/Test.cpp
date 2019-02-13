@@ -325,6 +325,11 @@ TEST(cli, cmd_parameter_last)
     char *argv[] =  { "cmd", "p1", "p2", "3", "p4", "p5" };
     CHECK_EQUAL(cmd_parameter_last(6, argv), "p5");
 }
+TEST(cli, cmd_parameter_last_not_exists)
+{
+    char *argv[] =  { "cmd" };
+    CHECK_EQUAL(cmd_parameter_last(1, argv), NULL);
+}
 TEST(cli, cmd_has_option)
 {
     char *argv[] =  { "cmd", "-p", "p2", "3", "p4", "p5" };
@@ -538,6 +543,20 @@ TEST(cli, cmd_history)
       "[0]: echo test\r\n" \
       "[1]: history\r\n" \
       CMDLINE_EMPTY;
+    ARRAY_CMP(to_be, buf);
+    CLEAN();
+}
+TEST(cli, cmd_history_clear)
+{
+    //history when there is some
+    REQUEST("echo test");
+    TEST_RETCODE_WITH_COMMAND("history clear", CMDLINE_RETCODE_SUCCESS);
+    INIT_BUF();
+    REQUEST("history");
+    const char* to_be =
+          "\r\nHistory [1/31]:\r\n" \
+          "[0]: history\r\n" \
+          CMDLINE_EMPTY;
     ARRAY_CMP(to_be, buf);
     CLEAN();
 }
@@ -1201,6 +1220,24 @@ TEST(cli, cmd_parameter_timestamp_2)
     LONGS_EQUAL(78187493520, value)
 }
 TEST(cli, cmd_parameter_timestamp_3)
+{
+    int argc = 3;
+    char *argv[] = {"cmd", "-t", "12345"};
+    const char *key = "-t";
+    int64_t value = 0;
+    CHECK_EQUAL(true, cmd_parameter_timestamp(argc, argv, key, &value));
+    LONGS_EQUAL(12345, value);
+}
+TEST(cli, cmd_parameter_timestamp_4)
+{
+    int argc = 3;
+    char *argv[] = {"cmd", "-t", ":"};
+    const char *key = "-t";
+    int64_t value = 0;
+    CHECK_EQUAL(false, cmd_parameter_timestamp(argc, argv, key, &value));
+    LONGS_EQUAL(0, value);
+}
+TEST(cli, cmd_parameter_timestamp_5)
 {
     int argc = 3;
     char *argv[] = {"cmd", "-tt", "123"};
