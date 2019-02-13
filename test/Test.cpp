@@ -1178,15 +1178,19 @@ TEST(cli, cmd_add_invalid_params)
     cmd_add("", cmd_dummy, NULL, NULL);
     cmd_add("abc", NULL, NULL, NULL);
 }
-/*TEST(cli, cmd_parameter_timestamp_1)
+/*
+// @todo need more work to get in track
+TEST(cli, cmd_parameter_timestamp_1)
 {
     int argc = 3;
     char *argv[] = {"cmd", "-t", "12345,6789"};
     const char *key = "-t";
     int64_t value = 0;
+    // for some reason this causes crash when first strtok is called.!?!? Perhaps some bug?
     CHECK_EQUAL(true, cmd_parameter_timestamp(argc, argv, key, &value));
     LONGS_EQUAL(809048709, value);
-}*/
+}
+*/
 TEST(cli, cmd_parameter_timestamp_2)
 {
     int argc = 3;
