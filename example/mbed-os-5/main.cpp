@@ -35,13 +35,13 @@ void serial_out_mutex_release()
 
 // dummy command with some option
 static int cmd_dummy(int argc, char *argv[]) {
-  if( cmd_has_option(argc, argv, "o") ) {
-    cmd_printf("This is o option\r\n");
-  } else {
-    tr_debug("Try to write 'dummy -o' instead");
-    return CMDLINE_RETCODE_INVALID_PARAMETERS;
-  }
-  return CMDLINE_RETCODE_SUCCESS;
+    if( cmd_has_option(argc, argv, "o") ) {
+        cmd_printf("This is o option\r\n");
+    } else {
+        tr_debug("Try to write 'dummy -o' instead");
+        return CMDLINE_RETCODE_INVALID_PARAMETERS;
+    }
+    return CMDLINE_RETCODE_SUCCESS;
 }
 int main(void)
 {

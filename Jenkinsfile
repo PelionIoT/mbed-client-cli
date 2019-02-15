@@ -105,8 +105,13 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
               execute("mbed new .")
               execute("mbed deploy")
               execute("rm -rf ./mbed-os/features/frameworks/mbed-client-cli")
-              execute("mbed compile -t ${toolchain} -m ${target}")
+              execute("mbed compile -t ${toolchain} -m ${target} --stats-depth=10")
               execute("cp --parents `find -name example-mbed-os-5.bin` ../mbed-client-cli")
+              // compile minimum lib
+              execute("mbed compile -t ${toolchain} -m ${target} --stats-depth=10 -DMBED_CONF_CMDLINE_USE_MINIMUM_SET=1")
+              execute("mkdir -p ../mbed-client-cli/output/minimal")
+              execute("cp --parents `find -name example-mbed-os-5.bin` ../mbed-client-cli/output/minimal")
+
               setBuildStatus('SUCCESS', "build ${exampleName}", "build done")
             } catch(err) {
               echo "Caught exception: ${err}"
@@ -151,7 +156,7 @@ def yottaBuildStep(target, compilerLabel) {
           stage("test:${buildName}") {
             setBuildStatus('PENDING', "test ${buildName}", 'test starts')
             try {
-              execute("yotta test mbed_client_cli_test")
+              execute("yotta test")
               execute("lcov --base-directory . --directory . --capture --output-file coverage.info")
               execute("genhtml -o ./test_coverage coverage.info")
               execute("gcovr -x -o junit.xml")
@@ -168,6 +173,17 @@ def yottaBuildStep(target, compilerLabel) {
               def exampleName = "example-linux"
               setBuildStatus('PENDING', "build ${exampleName}", 'build starts')
               try {
+                // try to compile different configurations
+                execute("make CFLAGS=-DMBED_CONF_CMDLINE_USE_MINIMUM_SET=0")
+                execute("make CFLAGS=-DMBED_CONF_CMDLINE_ENABLE_ALIASES=0")
+                execute("make CFLAGS=-DMBED_CONF_CMDLINE_USE_DUMMY_SET_ECHO_COMMANDS=1")
+                execute("make CFLAGS=-DMBED_CONF_CMDLINE_INIT_AUTOMATION_MODE=0")
+                execute("make CFLAGS=-DMBED_CONF_CMDLINE_ENABLE_HISTORY=0")
+                execute("make CFLAGS=-DMBED_CONF_CMDLINE_ENABLE_ESCAPE_HANDLING=0")
+                execute("make CFLAGS=-DMBED_CONF_CMDLINE_ENABLE_OPERATORS=0")
+                execute("make CFLAGS=-DMBED_CONF_CMDLINE_ENABLE_INTERNAL_COMMANDS=0")
+                execute("make CFLAGS=-DMBED_CONF_CMDLINE_ENABLE_INTERNAL_VARIABLES=0")
+                execute("make CFLAGS=-DMBED_CONF_CMDLINE_INCLUDE_MAN=0")
                 execute("make")
                 setBuildStatus('SUCCESS', "build ${exampleName}", "build done")
               } catch(err) {

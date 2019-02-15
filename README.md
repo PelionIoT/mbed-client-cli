@@ -47,18 +47,51 @@ cmd_exe( <command> );
 
 Full API is described [here](mbed-client-cli/ns_cmdline.h)
 
-### Confiration
+### Configuration
 
 Following defines can be used to configure defaults:
 
 |define|type|default value|description|
 |------|----|-------------|-----------|
-|`MBED_CMDLINE_BOOT_MESSAGE`|C string|`ARM Ltd\r\n`|default boot message|
-|`MBED_CMDLINE_MAX_LINE_LENGTH`|int|2000|maximum command line length|
-|`MBED_CMDLINE_ARGUMENTS_MAX_COUNT`|int|30|maximum count of command arguments|
-|`MBED_CMDLINE_HISTORY_MAX_COUNT`|int|32|maximum history size|
-|`MBED_CMDLINE_INCLUDE_MAN`|bool|true|switching off ignore all man pages - to save used flash memory size|
-|`MBED_CLIENT_CLI_TRACE_ENABLE`|bool|false|To switch on cli internal traces|
+|`MBED_CONF_CMDLINE_USE_MINIMUM_SET`|bool|false|Use preconfigured minimum build. See more details from below|
+|`MBED_CONF_CMDLINE_ENABLE_ALIASES`|bool|true|Enable aliases|
+|`MBED_CONF_CMDLINE_USE_DUMMY_SET_ECHO_COMMANDS`|bool|true|Enable dummy `set` and `echo` commands|
+|`MBED_CONF_CMDLINE_INIT_AUTOMATION_MODE`|bool|false|Enable automation mode during initalize phase|
+|`MBED_CONF_CMDLINE_ENABLE_ESCAPE_HANDLING`|bool|true|Enable escape handling|
+|`MBED_CONF_CMDLINE_ENABLE_OPERATORS`|bool|true|Enable operators. E.g. `echo abc && echo def`|
+|`MBED_CONF_CMDLINE_ENABLE_INTERNAL_COMMANDS`|bool|true|Enable internal commands. E.g. `echo`|
+|`MBED_CONF_CMDLINE_ENABLE_INTERNAL_VARIABLES`|bool|true|Enable internal variables|
+|`MBED_CONF_CMDLINE_BOOT_MESSAGE`|C string|`ARM Ltd\r\n`|default boot message|
+|`MBED_CONF_CMDLINE_MAX_LINE_LENGTH`|int|2000|maximum command line length|
+|`MBED_CONF_CMDLINE_ARGS_MAX_COUNT`|int|30|maximum count of command arguments|
+|`MBED_CONF_CMDLINE_ENABLE_HISTORY`|bool|true|Enable command history. browsable using key up/down|
+|`MBED_CONF_CMDLINE_HISTORY_MAX_COUNT`|int|32|maximum history size|
+|`MBED_CONF_CMDLINE_INCLUDE_MAN`|bool|true|Include man pages|
+|`MBED_CONF_CMDLINE_ENABLE_INTERNAL_TRACES`|bool|false|Enable cli internal traces|
+|`MBED_CONF_CMDLINE_ENABLE_DEEP_INTERNAL_TRACES`|bool|false|Enable cli deep internal traces|
+
+
+#### Minimize footprint
+
+To reduce required flash and RAM usage there is pre-defined profile which can be enabled by using precompiler variable:
+
+`MBED_CONF_CMDLINE_USE_MINIMUM_SET=1`
+
+This switch off most of features and reduce buffer sizes. Below is whole configueration:
+
+|define|value|
+|------|----|
+|`MBED_CONF_CMDLINE_ENABLE_ALIASES`|false|
+|`MBED_CONF_CMDLINE_USE_DUMMY_SET_ECHO_COMMANDS`|false|
+|`MBED_CONF_CMDLINE_INIT_AUTOMATION_MODE`|false|
+|`MBED_CONF_CMDLINE_ENABLE_ESCAPE_HANDLING`|false|
+|`MBED_CONF_CMDLINE_ENABLE_OPERATORS`|false|
+|`MBED_CONF_CMDLINE_ENABLE_INTERNAL_COMMANDS`|false|
+|`MBED_CONF_CMDLINE_ENABLE_INTERNAL_VARIABLES`|false|
+|`MBED_CONF_CMDLINE_MAX_LINE_LENGTH`|100|
+|`MBED_CONF_CMDLINE_ARGS_MAX_COUNT`|10|
+|`MBED_CONF_CMDLINE_ENABLE_HISTORY`|false|
+|`MBED_CONF_CMDLINE_INCLUDE_MAN`|false|
 
 ### Pre defines return codes
 
@@ -79,7 +112,7 @@ These codes are reserved and used in test tools.
 ## Tracing
 
 Command Line Library has trace messages, which are disabled by default.
-`MBED_CLIENT_CLI_TRACE_ENABLE` flag if defined, enables all the trace prints for debugging.
+`MBED_CONF_CMDLINE_ENABLE_INTERNAL_TRACES` flag if defined, enables all the trace prints for debugging.
 
 ## Usage example
 
