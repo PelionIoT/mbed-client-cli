@@ -85,7 +85,7 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
             execute("mbed --version")
             execute("echo https://github.com/armmbed/mbed-os/#3d4582bda07654ef51eb2e39c6294a3d1499ab65 > mbed-os.lib")
             execute("mbed deploy")
-            execute("mbed compile -m ${target} -t ${toolchain} --library") 
+            execute("mbed compile -m ${target} -t ${toolchain} --library")
             setBuildStatus('SUCCESS', "build ${buildName}", "build done")
           } catch (err) {
             echo "Caught exception: ${err}"
