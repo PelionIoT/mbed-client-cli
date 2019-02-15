@@ -54,21 +54,21 @@ Following defines can be used to configure defaults:
 |define|type|default value|description|
 |------|----|-------------|-----------|
 |`MBED_CONF_CMDLINE_USE_MINIMUM_SET`|bool|false|Use preconfigured minimum build. See more details from below|
-|`MBED_CONF_CMDLINE_ENABLE_ALIASES`|bool|true|To switch on aliases|
-|`MBED_CONF_CMDLINE_USE_DUMMY_SET_ECHO_COMMANDS`|bool|true|To switch on dummy `set` and `echo` commands|
-|`MBED_CONF_CMDLINE_INIT_AUTOMATION_MODE`|bool|false|To switch on automation mode during initalize phase|
-|`MBED_CONF_CMDLINE_ENABLE_ESCAPE_HANDLING`|bool|true|To switch on escape handling|
-|`MBED_CONF_CMDLINE_ENABLE_OPERATORS`|bool|true|To switch on operators. E.g. `echo abc && echo def`|
-|`MBED_CONF_CMDLINE_ENABLE_INTERNAL_COMMANDS`|bool|true|To switch on all internal commands|
-|`MBED_CONF_CMDLINE_ENABLE_INTERNAL_VARIABLES`|bool|true|To switch on internal variables|
+|`MBED_CONF_CMDLINE_ENABLE_ALIASES`|bool|true|Enable aliases|
+|`MBED_CONF_CMDLINE_USE_DUMMY_SET_ECHO_COMMANDS`|bool|true|Enable dummy `set` and `echo` commands|
+|`MBED_CONF_CMDLINE_INIT_AUTOMATION_MODE`|bool|false|Enable automation mode during initalize phase|
+|`MBED_CONF_CMDLINE_ENABLE_ESCAPE_HANDLING`|bool|true|Enable escape handling|
+|`MBED_CONF_CMDLINE_ENABLE_OPERATORS`|bool|true|Enable operators. E.g. `echo abc && echo def`|
+|`MBED_CONF_CMDLINE_ENABLE_INTERNAL_COMMANDS`|bool|true|Enable internal commands. E.g. `echo`|
+|`MBED_CONF_CMDLINE_ENABLE_INTERNAL_VARIABLES`|bool|true|Enable internal variables|
 |`MBED_CONF_CMDLINE_BOOT_MESSAGE`|C string|`ARM Ltd\r\n`|default boot message|
 |`MBED_CONF_CMDLINE_MAX_LINE_LENGTH`|int|2000|maximum command line length|
 |`MBED_CONF_CMDLINE_ARGS_MAX_COUNT`|int|30|maximum count of command arguments|
-|`MBED_CONF_CMDLINE_ENABLE_FEATURE_HISTORY`|bool|true|Enable command history. browsable using key up/down|
+|`MBED_CONF_CMDLINE_ENABLE_HISTORY`|bool|true|Enable command history. browsable using key up/down|
 |`MBED_CONF_CMDLINE_HISTORY_MAX_COUNT`|int|32|maximum history size|
-|`MBED_CONF_CMDLINE_INCLUDE_MAN`|bool|true|switching off ignore all man pages|
-|`MBED_CONF_CMDLINE_ENABLE_INTERNAL_TRACES`|bool|false|To switch on cli internal traces|
-|`MBED_CONF_CMDLINE_ENABLE_DEEP_INTERNAL_TRACES`|bool|false|To switch on cli deep internal traces|
+|`MBED_CONF_CMDLINE_INCLUDE_MAN`|bool|true|Include man pages|
+|`MBED_CONF_CMDLINE_ENABLE_INTERNAL_TRACES`|bool|false|Enable cli internal traces|
+|`MBED_CONF_CMDLINE_ENABLE_DEEP_INTERNAL_TRACES`|bool|false|Enable cli deep internal traces|
 
 
 #### Minimize footprint
@@ -90,7 +90,7 @@ This switch off most of features and reduce buffer sizes. Below is whole configu
 |`MBED_CONF_CMDLINE_ENABLE_INTERNAL_VARIABLES`|false|
 |`MBED_CONF_CMDLINE_MAX_LINE_LENGTH`|100|
 |`MBED_CONF_CMDLINE_ARGS_MAX_COUNT`|10|
-|`MBED_CONF_CMDLINE_ENABLE_FEATURE_HISTORY`|false|
+|`MBED_CONF_CMDLINE_ENABLE_HISTORY`|false|
 |`MBED_CONF_CMDLINE_INCLUDE_MAN`|false|
 
 ### Pre defines return codes

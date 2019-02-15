@@ -2,62 +2,62 @@
   "name": "cmdline",
   "config": {
     "use_minumum_set": {
-      "help": "use pre configured minimum set which reduce most of features but allows to run icetea tests. Default: false",
+      "help": "use pre configured minimum set which reduce most of features but allows to run icetea tests. Defaults to 'false' when not set",
       "accepted_values": [true, false, null],
       "value": null
     },
     "enable_aliases": {
-      "help": "enable alias feature. Default: true",
+      "help": "enable alias feature. Defaults to 'true' when not set",
       "accepted_values": [true, false, null],
       "value": null
     },
     "enable_escape_handling": {
-      "help": "enable escape handling. Default: true",
+      "help": "enable escape handling. Defaults to 'true' when not set",
       "accepted_values": [true, false, null],
       "value": null
     },
     "enable_operators": {
-      "help": "enable operators. Default: true",
+      "help": "enable operators. Defaults to 'true' when not set",
       "accepted_values": [true, false, null],
       "value": null
     },
     "enable_internal_commands": {
-      "help": "enable internal commands, like echo, set, unset. Default: true",
+      "help": "enable internal commands, like echo, set, unset. Defaults to 'true' when not set",
       "accepted_values": [true, false, null],
       "value": null
     },
     "use_dummy_set_and_echo": {
-      "help": "when enable_internal_commands is disabled this can be used to activate dummy set and echo commands that is needed for icetea tests. Default: false",
+      "help": "when enable_internal_commands is disabled this can be used to activate dummy set and echo commands that is needed for icetea tests. Defaults to 'false' when not set",
       "accepted_values": [true, false, null],
       "value": null
     },
     "enable_internal_variables": {
-      "help": "enable internal variables. Default: true",
+      "help": "enable internal variables. Defaults to 'true' when not set",
       "accepted_values": [true, false, null],
       "value": null
     },
     "include_man": {
-      "help": "include man pages. Default: true",
+      "help": "include man pages. Defaults to 'true' when not set",
       "accepted_values": [true, false, null],
       "value": null
     },
     "max_line_length": {
-      "help": "maximum input line length. Default: 200",
+      "help": "maximum input line length. Defaults to 200 when not set",
       "accepted_values": [true, false, null],
       "value": null
     },
     "args_max_count": {
-      "help": "maximum arguments count. Default: 30",
+      "help": "maximum arguments count. Defaults to 30 when not set",
       "accepted_values": [true, false, null],
       "value": null
     },
     "enable_history": {
-      "help": "enable command history. Default: true",
+      "help": "enable command history. Defaults to 'true' when not set",
       "accepted_values": [true, false, null],
       "value": null
     },
     "history_max_count": {
-      "help": "maximum history count. Default: 32",
+      "help": "maximum history count. Defaults to 32 when not set",
       "accepted_values": [true, false, null],
       "value": null
     },
@@ -66,12 +66,12 @@
       "value": null
     },
     "enable_internal_traces": {
-      "help": "Enable internal traces",
+      "help": "Enable internal traces. Defaults to 'false' when not set",
       "accepted_values": [true, false, null],
       "value": null
     },
     "enable_deep_internal_traces": {
-      "help": "Enable more verbose internal traces",
+      "help": "Enable more verbose internal traces. Defaults to 'false' when not set",
       "accepted_values": [true, false, null],
       "value": null
     }

@@ -178,7 +178,7 @@ def yottaBuildStep(target, compilerLabel) {
                 execute("make CFLAGS=-DMBED_CONF_CMDLINE_ENABLE_ALIASES=0")
                 execute("make CFLAGS=-DMBED_CONF_CMDLINE_USE_DUMMY_SET_ECHO_COMMANDS=1")
                 execute("make CFLAGS=-DMBED_CONF_CMDLINE_INIT_AUTOMATION_MODE=0")
-                execute("make CFLAGS=-DMBED_CONF_CMDLINE_ENABLE_FEATURE_HISTORY=0")
+                execute("make CFLAGS=-DMBED_CONF_CMDLINE_ENABLE_HISTORY=0")
                 execute("make CFLAGS=-DMBED_CONF_CMDLINE_ENABLE_ESCAPE_HANDLING=0")
                 execute("make CFLAGS=-DMBED_CONF_CMDLINE_ENABLE_OPERATORS=0")
                 execute("make CFLAGS=-DMBED_CONF_CMDLINE_ENABLE_INTERNAL_COMMANDS=0")

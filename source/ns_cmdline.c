@@ -44,7 +44,7 @@
 //#define MBED_CONF_CMDLINE_ENABLE_ALIASES 0
 //#define MBED_CONF_CMDLINE_USE_DUMMY_SET_ECHO_COMMANDS 1
 //#define MBED_CONF_CMDLINE_INIT_AUTOMATION_MODE 0
-//#define MBED_CONF_CMDLINE_ENABLE_FEATURE_HISTORY 0
+//#define MBED_CONF_CMDLINE_ENABLE_HISTORY 0
 //#define MBED_CONF_CMDLINE_ENABLE_ESCAPE_HANDLING 0
 //#define MBED_CONF_CMDLINE_ENABLE_OPERATORS 0
 //#define MBED_CONF_CMDLINE_ENABLE_INTERNAL_COMMANDS 0
@@ -96,8 +96,8 @@
 #ifndef MBED_CONF_CMDLINE_INIT_AUTOMATION_MODE
 #define MBED_CONF_CMDLINE_INIT_AUTOMATION_MODE 1
 #endif
-#ifndef MBED_CONF_CMDLINE_ENABLE_FEATURE_HISTORY
-#define MBED_CONF_CMDLINE_ENABLE_FEATURE_HISTORY 0
+#ifndef MBED_CONF_CMDLINE_ENABLE_HISTORY
+#define MBED_CONF_CMDLINE_ENABLE_HISTORY 0
 #endif
 #ifndef MBED_CONF_CMDLINE_ENABLE_ESCAPE_HANDLING
 #define MBED_CONF_CMDLINE_ENABLE_ESCAPE_HANDLING 0
@@ -224,8 +224,8 @@
 #define MBED_CONF_CMDLINE_INCLUDE_MAN 1
 #endif
 // allow to browse history using up/down keys (require ESCAPE_HANDLING)
-#ifndef MBED_CONF_CMDLINE_ENABLE_FEATURE_HISTORY
-#define MBED_CONF_CMDLINE_ENABLE_FEATURE_HISTORY 1
+#ifndef MBED_CONF_CMDLINE_ENABLE_HISTORY
+#define MBED_CONF_CMDLINE_ENABLE_HISTORY 1
 #endif
 // Maximum number of commands saved in history
 #ifndef MBED_CONF_CMDLINE_HISTORY_MAX_COUNT
@@ -308,7 +308,7 @@ typedef NS_LIST_HEAD(cmd_exe_t, link) cmd_list_t;
 typedef struct cmd_class_s {
     char input[MBED_CONF_CMDLINE_MAX_LINE_LENGTH]; // input data
 
-#if MBED_CONF_CMDLINE_ENABLE_FEATURE_HISTORY
+#if MBED_CONF_CMDLINE_ENABLE_HISTORY
     int16_t history;                  // history position
     history_list_t history_list;      // input history
     uint8_t history_max_count;        // history max size
@@ -445,7 +445,7 @@ void cmd_init(cmd_print_t *outf)
 #if MBED_CONF_CMDLINE_ENABLE_ALIASES == 1
         ns_list_init(&cmd.alias_list);
 #endif
-#if MBED_CONF_CMDLINE_ENABLE_FEATURE_HISTORY == 1
+#if MBED_CONF_CMDLINE_ENABLE_HISTORY == 1
         ns_list_init(&cmd.history_list);
 #endif
         ns_list_init(&cmd.command_list);
@@ -465,7 +465,7 @@ void cmd_init(cmd_print_t *outf)
     cmd.escaping = false;
     cmd.vt100_on = MBED_CONF_CMDLINE_INIT_AUTOMATION_MODE == 0;
 #endif
-#if MBED_CONF_CMDLINE_ENABLE_FEATURE_HISTORY
+#if MBED_CONF_CMDLINE_ENABLE_HISTORY
     cmd.history_max_count = MBED_CONF_CMDLINE_HISTORY_MAX_COUNT;
 #endif
     cmd.tab_lookup = 0;
@@ -481,7 +481,7 @@ void cmd_init(cmd_print_t *outf)
     //cmd_alias_add("auto-on", "set PS1=\r\nretcode=$?\r\n&&echo off");
     //cmd_alias_add("auto-off", "set PS1="DEFAULT_PROMPT"&&echo on");
 #endif
-#if MBED_CONF_CMDLINE_ENABLE_FEATURE_HISTORY
+#if MBED_CONF_CMDLINE_ENABLE_HISTORY
     cmd_history_save(0);          // the current line is the 0 item
 #endif
     cmd_line_clear(0);            // clear line
@@ -551,7 +551,7 @@ static void cmd_init_base_commands(void)
     cmd_add("alias",    alias_command,    "Handle aliases",       MAN_ALIAS);
 #endif
     cmd_add("clear",    clear_command,    "Clears the display",   MAN_CLEAR);
-#if MBED_CONF_CMDLINE_ENABLE_FEATURE_HISTORY == 1
+#if MBED_CONF_CMDLINE_ENABLE_HISTORY == 1
     cmd_add("history",  history_command,  "View your command Line History", MAN_HISTORY);
 #endif
     cmd_add("true",     true_command, 0, 0);
@@ -583,7 +583,7 @@ void cmd_free(void)
         }
     }
 #endif
-#if MBED_CONF_CMDLINE_ENABLE_FEATURE_HISTORY
+#if MBED_CONF_CMDLINE_ENABLE_HISTORY
     ns_list_foreach_safe(cmd_history_t, cur_ptr, &cmd.history_list) {
         MEM_FREE(cur_ptr->command_ptr);
         ns_list_remove(&cmd.history_list, cur_ptr);
@@ -811,7 +811,7 @@ void cmd_init_screen()
 }
 uint8_t cmd_history_size(uint8_t max)
 {
-#if MBED_CONF_CMDLINE_ENABLE_FEATURE_HISTORY
+#if MBED_CONF_CMDLINE_ENABLE_HISTORY
     if (max > 0) {
         cmd.history_max_count = max;
         cmd_history_clean_overflow();
@@ -1201,7 +1201,7 @@ static void cmd_arrow_left()
     }
 #endif
 }
-#if MBED_CONF_CMDLINE_ENABLE_FEATURE_HISTORY
+#if MBED_CONF_CMDLINE_ENABLE_HISTORY
 static void cmd_arrow_up()
 {
     int16_t old_entry = cmd.history++;
@@ -1239,7 +1239,7 @@ void cmd_escape_read(int16_t u_data)
         cmd_arrow_left();
     } else if (u_data == 'C') {
         cmd_arrow_right();
-#if MBED_CONF_CMDLINE_ENABLE_FEATURE_HISTORY
+#if MBED_CONF_CMDLINE_ENABLE_HISTORY
     } else if (u_data == 'A') {
         cmd_arrow_up();
     } else if (u_data == 'B') {
@@ -1300,10 +1300,11 @@ void cmd_escape_read(int16_t u_data)
                     memmove(&cmd.input[cmd.cursor], &cmd.input[cmd.cursor + 1], strlen(&cmd.input[cmd.cursor + 1]) + 1);
                 }
                 break;
-#if MBED_CONF_CMDLINE_ENABLE_FEATURE_HISTORY
+#if MBED_CONF_CMDLINE_ENABLE_HISTORY
             case ('4'): //end-of-line           # End key
                 cmd.cursor = strlen(cmd.input);
-                break;case ('5'): //beginning-of-history  # PageUp key
+                break;
+            case ('5'): //beginning-of-history  # PageUp key
                 goto_end_of_history();
                 break;
             case ('6'): //end-of-history        # PageDown key
@@ -1324,7 +1325,7 @@ void cmd_escape_read(int16_t u_data)
     return;
 }
 #endif
-#if MBED_CONF_CMDLINE_ENABLE_FEATURE_HISTORY
+#if MBED_CONF_CMDLINE_ENABLE_HISTORY
 static void goto_end_of_history(void)
 {
     // handle new input if any and verify that
@@ -1655,7 +1656,7 @@ static void cmd_replace_variables(char *input)
 #endif
 }
 //history
-#if MBED_CONF_CMDLINE_ENABLE_FEATURE_HISTORY == 1
+#if MBED_CONF_CMDLINE_ENABLE_HISTORY == 1
 static void cmd_history_item_delete(cmd_history_t *entry_ptr)
 {
     ns_list_remove(&cmd.history_list, entry_ptr);
@@ -1748,7 +1749,7 @@ static void cmd_line_clear(int from)
 
 static void cmd_execute(void)
 {
-#if MBED_CONF_CMDLINE_ENABLE_FEATURE_HISTORY
+#if MBED_CONF_CMDLINE_ENABLE_HISTORY
     if (strlen(cmd.input) != 0) {
         bool noduplicates = true;
         cmd_history_t *entry_ptr = cmd_history_find(0);
@@ -2204,7 +2205,7 @@ int false_command(int argc, char *argv[])
 }
 int history_command(int argc, char *argv[])
 {
-#if MBED_CONF_CMDLINE_ENABLE_FEATURE_HISTORY
+#if MBED_CONF_CMDLINE_ENABLE_HISTORY
     if (argc == 1) {
         int history_size = (int)ns_list_count(&cmd.history_list);
         cmd_printf("History [%i/%i]:\r\n", history_size - 1, cmd.history_max_count - 1);
