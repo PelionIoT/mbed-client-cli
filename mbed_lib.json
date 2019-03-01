@@ -1,7 +1,7 @@
 {
   "name": "cmdline",
   "config": {
-    "use_minumum_set": {
+    "use_minimum_set": {
       "help": "use pre configured minimum set which reduce most of features but allows to run icetea tests. Defaults to 'false' when not set",
       "accepted_values": [true, false, null],
       "value": null
@@ -43,12 +43,10 @@
     },
     "max_line_length": {
       "help": "maximum input line length. Defaults to 200 when not set",
-      "accepted_values": [true, false, null],
       "value": null
     },
     "args_max_count": {
       "help": "maximum arguments count. Defaults to 30 when not set",
-      "accepted_values": [true, false, null],
       "value": null
     },
     "enable_history": {
@@ -58,7 +56,6 @@
     },
     "history_max_count": {
       "help": "maximum history count. Defaults to 32 when not set",
-      "accepted_values": [true, false, null],
       "value": null
     },
     "boot_message": {
