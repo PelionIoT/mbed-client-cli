@@ -360,32 +360,32 @@ cmd_class_t cmd = {
 /* Function prototypes
  */
 static void             cmd_init_base_commands(void);
-static void             cmd_replace_alias(char *input);
-static void             cmd_replace_variables(char *input);
+void                    cmd_replace_alias(char *input);
+void                    cmd_replace_variables(char *input);
 static int              cmd_parse_argv(char *string_ptr, char **argv);
 static void             cmd_execute(void);
 static void             cmd_line_clear(int from);
-static void             cmd_history_save(int16_t index);
-static void             cmd_history_get(uint16_t index);
-static void             cmd_history_clean_overflow(void);
-static void             cmd_history_clean(void);
-static cmd_history_t   *cmd_history_find(int16_t index);
+void                    cmd_history_save(int16_t index);
+void                    cmd_history_get(uint16_t index);
+void                    cmd_history_clean_overflow(void);
+void                    cmd_history_clean(void);
+cmd_history_t          *cmd_history_find(int16_t index);
 static void             cmd_echo(bool on);
-static bool             cmd_tab_lookup(void);
-static void             cmd_clear_last_word(void);
-static void             cmd_move_cursor_to_last_space(void);
-static void             cmd_move_cursor_to_next_space(void);
+bool                    cmd_tab_lookup(void);
+void                    cmd_clear_last_word(void);
+void                    cmd_move_cursor_to_last_space(void);
+void                    cmd_move_cursor_to_next_space(void);
 static const char      *cmd_input_lookup(char *name, int namelength, int n);
 static char            *cmd_input_lookup_var(char *name, int namelength, int n);
 static cmd_command_t   *cmd_find(const char *name);
 static cmd_command_t   *cmd_find_n(char *name, int nameLength, int n);
-static cmd_alias_t     *alias_find(const char *alias);
-static cmd_alias_t     *alias_find_n(char *alias, int aliaslength, int n);
-static cmd_variable_t  *variable_find(char *variable);
-static cmd_variable_t  *variable_find_n(char *variable, int length, int n);
+cmd_alias_t            *alias_find(const char *alias);
+cmd_alias_t            *alias_find_n(char *alias, int aliaslength, int n);
+cmd_variable_t         *variable_find(char *variable);
+cmd_variable_t         *variable_find_n(char *variable, int length, int n);
 static void             cmd_print_man(cmd_command_t *command_ptr);
-static void             goto_end_of_history(void);
-static void             goto_beginning_of_history(void);
+void                    goto_end_of_history(void);
+void                    goto_beginning_of_history(void);
 static void             cmd_set_input(const char *str, int cur);
 static char            *next_command(char *string_ptr, operator_t *mode);
 /** Run single command through cmd intepreter
@@ -1160,7 +1160,7 @@ void cmd_escape_start(void)
     cmd.escape_index = 0;
 #endif
 }
-static void cmd_arrow_right()
+void cmd_arrow_right()
 {
 #if MBED_CONF_CMDLINE_ENABLE_ESCAPE_HANDLING == 1
 
@@ -1181,7 +1181,7 @@ static void cmd_arrow_right()
     }
 #endif
 }
-static void cmd_arrow_left()
+void cmd_arrow_left()
 {
 #if MBED_CONF_CMDLINE_ENABLE_ESCAPE_HANDLING == 1
     /* @todo handle shift
@@ -1326,7 +1326,7 @@ void cmd_escape_read(int16_t u_data)
 }
 #endif
 #if MBED_CONF_CMDLINE_ENABLE_HISTORY
-static void goto_end_of_history(void)
+void goto_end_of_history(void)
 {
     // handle new input if any and verify that
     // it is not already in beginning of history or current position
@@ -1354,7 +1354,7 @@ static void goto_end_of_history(void)
     cmd_set_input(cmd_ptr->command_ptr, 0);
     cmd.history =  ns_list_count(&cmd.history_list) - 1;
 }
-static void goto_beginning_of_history(void)
+void goto_beginning_of_history(void)
 {
     cmd_history_t *cmd_ptr = ns_list_get_first(&cmd.history_list);
     cmd_set_input(cmd_ptr->command_ptr, 0);
@@ -1530,7 +1530,7 @@ bool cmd_tab_lookup(void)
     }
     return false;
 }
-static void cmd_move_cursor_to_last_space(void)
+void cmd_move_cursor_to_last_space(void)
 {
     if (cmd.cursor) {
         cmd.cursor--;
@@ -1544,7 +1544,7 @@ static void cmd_move_cursor_to_last_space(void)
         cmd.cursor = 0;
     }
 }
-static void cmd_move_cursor_to_next_space(void)
+void cmd_move_cursor_to_next_space(void)
 {
     while (cmd.input[cmd.cursor] == ' ') {
         cmd.cursor++;
@@ -1556,7 +1556,7 @@ static void cmd_move_cursor_to_next_space(void)
         cmd.cursor = (int)strlen(cmd.input);
     }
 }
-static void cmd_clear_last_word()
+void cmd_clear_last_word()
 {
     if (!cmd.cursor) {
         return;
@@ -1612,7 +1612,7 @@ int replace_alias(char *str, const char *old_str, const char *new_str)
 #endif
     return 0;
 }
-static void cmd_replace_alias(char *input)
+void cmd_replace_alias(char *input)
 {
 #if MBED_CONF_CMDLINE_ENABLE_ALIASES == 0
     (void)input;
@@ -1623,7 +1623,7 @@ static void cmd_replace_alias(char *input)
 #endif
 }
 //variable
-static void replace_variable(char *str, cmd_variable_t *variable_ptr)
+void replace_variable(char *str, cmd_variable_t *variable_ptr)
 {
     const char *name = variable_ptr->name_ptr;
     int name_len = strlen(variable_ptr->name_ptr);
@@ -1645,7 +1645,7 @@ static void replace_variable(char *str, cmd_variable_t *variable_ptr)
     replace_string(str, MBED_CONF_CMDLINE_MAX_LINE_LENGTH, tmp, value);
     MEM_FREE(tmp);
 }
-static void cmd_replace_variables(char *input)
+void cmd_replace_variables(char *input)
 {
 #if MBED_CONF_CMDLINE_ENABLE_INTERNAL_COMMANDS == 0
     (void)input;
@@ -1663,7 +1663,7 @@ static void cmd_history_item_delete(cmd_history_t *entry_ptr)
     MEM_FREE(entry_ptr->command_ptr);
     MEM_FREE(entry_ptr);
 }
-static cmd_history_t *cmd_history_find(int16_t index)
+cmd_history_t *cmd_history_find(int16_t index)
 {
     cmd_history_t *entry_ptr = NULL;
     int16_t count = 0;
@@ -1677,7 +1677,7 @@ static cmd_history_t *cmd_history_find(int16_t index)
     return entry_ptr;
 }
 
-static void cmd_history_clean_overflow(void)
+void cmd_history_clean_overflow(void)
 {
     while (ns_list_count(&cmd.history_list) > cmd.history_max_count) {
         cmd_history_t *cmd_ptr = ns_list_get_last(&cmd.history_list);
@@ -1685,7 +1685,7 @@ static void cmd_history_clean_overflow(void)
         cmd_history_item_delete(cmd_ptr);
     }
 }
-static void cmd_history_clean(void)
+void cmd_history_clean(void)
 {
     while (ns_list_count(&cmd.history_list) > 0) {
         tr_debug("removing older history");
@@ -1771,7 +1771,7 @@ static void cmd_execute(void)
 }
 
 
-static cmd_alias_t *alias_find(const char *alias)
+cmd_alias_t *alias_find(const char *alias)
 {
 #if MBED_CONF_CMDLINE_ENABLE_ALIASES == 0
     (void)alias;
@@ -1793,7 +1793,7 @@ static cmd_alias_t *alias_find(const char *alias)
 #endif
 }
 
-static cmd_alias_t *alias_find_n(char *alias, int aliaslength, int n)
+cmd_alias_t *alias_find_n(char *alias, int aliaslength, int n)
 {
     cmd_alias_t *alias_ptr = NULL;
     if (alias == NULL || strlen(alias) == 0) {
@@ -1817,7 +1817,7 @@ static cmd_alias_t *alias_find_n(char *alias, int aliaslength, int n)
 #endif
     return alias_ptr;
 }
-static cmd_variable_t *variable_find(char *variable)
+cmd_variable_t *variable_find(char *variable)
 {
     cmd_variable_t *variable_ptr = NULL;
     if (variable == NULL || strlen(variable) == 0) {
@@ -1834,7 +1834,7 @@ static cmd_variable_t *variable_find(char *variable)
 #endif
     return variable_ptr;
 }
-static cmd_variable_t *variable_find_n(char *variable, int length, int n)
+cmd_variable_t *variable_find_n(char *variable, int length, int n)
 {
     cmd_variable_t *variable_ptr = NULL;
     if (variable == NULL || strlen(variable) == 0) {
@@ -1869,7 +1869,7 @@ static void cmd_alias_print_all(void)
     return;
 #endif
 }
-static void cmd_variable_print_all(void)
+void cmd_variable_print_all(void)
 {
 #if MBED_CONF_CMDLINE_ENABLE_INTERNAL_COMMANDS == 1
     ns_list_foreach(cmd_variable_t, cur_ptr, &cmd.variable_list) {
