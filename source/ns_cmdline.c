@@ -379,15 +379,15 @@ static const char      *cmd_input_lookup(char *name, int namelength, int n);
 static char            *cmd_input_lookup_var(char *name, int namelength, int n);
 static cmd_command_t   *cmd_find(const char *name);
 static cmd_command_t   *cmd_find_n(char *name, int nameLength, int n);
-cmd_alias_t            *alias_find(const char *alias);
-cmd_alias_t            *alias_find_n(char *alias, int aliaslength, int n);
-cmd_variable_t         *variable_find(char *variable);
-cmd_variable_t         *variable_find_n(char *variable, int length, int n);
+cmd_alias_t            *cmd_alias_find(const char *alias);
+cmd_alias_t            *cmd_alias_find_n(char *alias, int aliaslength, int n);
+cmd_variable_t         *cmd_variable_find(char *variable);
+cmd_variable_t         *cmd_variable_find_n(char *variable, int length, int n);
 static void             cmd_print_man(cmd_command_t *command_ptr);
-void                    goto_end_of_history(void);
-void                    goto_beginning_of_history(void);
+void                    cmd_goto_end_of_history(void);
+void                    cmd_goto_beginning_of_history(void);
 static void             cmd_set_input(const char *str, int cur);
-static char            *next_command(char *string_ptr, operator_t *mode);
+static char            *cmd_next_command(char *string_ptr, operator_t *mode);
 /** Run single command through cmd intepreter
  * \param string_ptr    command string with parameters
  * \ret  command return code (CMDLINE_RETCODE_*)
@@ -498,7 +498,7 @@ void cmd_request_screen_size(void)
 #else
 const char *cmdline_get_prompt(void)
 {
-    cmd_variable_t *var_ptr = variable_find(VAR_PROMPT);
+    cmd_variable_t *var_ptr = cmd_variable_find(VAR_PROMPT);
     return var_ptr && var_ptr->type == VALUE_TYPE_STR ? var_ptr->value.ptr : "";
 }
 #endif
@@ -507,7 +507,7 @@ const char *cmdline_get_prompt(void)
 #else
 const char *cmd_get_retfmt(void)
 {
-    cmd_variable_t *var_ptr = variable_find(VAR_RETFMT);
+    cmd_variable_t *var_ptr = cmd_variable_find(VAR_RETFMT);
     return var_ptr && var_ptr->type == VALUE_TYPE_STR ? var_ptr->value.ptr : 0;
 }
 #endif
@@ -740,7 +740,7 @@ static void cmd_split(char *string_ptr)
     char *ptr = string_ptr, *next;
     operator_t oper = OPERATOR_SEMI_COLON;
     do {
-        next = next_command(ptr, &oper);
+        next = cmd_next_command(ptr, &oper);
         cmd_push(ptr, oper);
         ptr = next;
         if (next && !*next) {
@@ -857,7 +857,7 @@ static const char *cmd_input_lookup(char *name, int namelength, int n)
     } else {
         n -= cmd.tab_lookup_n;
 #if MBED_CONF_CMDLINE_ENABLE_ALIASES == 1
-        cmd_alias_t *alias = alias_find_n(name, namelength, n);
+        cmd_alias_t *alias = cmd_alias_find_n(name, namelength, n);
         if (alias) {
             str = (const char *)alias->name_ptr;
         }
@@ -869,7 +869,7 @@ static const char *cmd_input_lookup(char *name, int namelength, int n)
 static char *cmd_input_lookup_var(char *name, int namelength, int n)
 {
     char *str = NULL;
-    cmd_variable_t *var = variable_find_n(name, namelength, n);
+    cmd_variable_t *var = cmd_variable_find_n(name, namelength, n);
     if (var) {
         str = var->name_ptr;
     }
@@ -1006,7 +1006,7 @@ static void cmd_set_input(const char *str, int cur)
 /**
  * If oper is not null, function set null pointers
  */
-static char *next_command(char *string_ptr, operator_t *oper)
+static char *cmd_next_command(char *string_ptr, operator_t *oper)
 {
     char *ptr = string_ptr;
     bool quote = false;
@@ -1201,7 +1201,7 @@ void cmd_arrow_left()
     }
 #endif
 }
-#if MBED_CONF_CMDLINE_ENABLE_HISTORY
+#if MBED_CONF_CMDLINE_ENABLE_HISTORY && MBED_CONF_CMDLINE_ENABLE_ESCAPE_HANDLING
 static void cmd_arrow_up()
 {
     int16_t old_entry = cmd.history++;
@@ -1305,10 +1305,10 @@ void cmd_escape_read(int16_t u_data)
                 cmd.cursor = strlen(cmd.input);
                 break;
             case ('5'): //beginning-of-history  # PageUp key
-                goto_end_of_history();
+                cmd_goto_end_of_history();
                 break;
             case ('6'): //end-of-history        # PageDown key
-                goto_beginning_of_history();
+                cmd_goto_beginning_of_history();
                 break;
 #endif
             default:
@@ -1326,7 +1326,7 @@ void cmd_escape_read(int16_t u_data)
 }
 #endif
 #if MBED_CONF_CMDLINE_ENABLE_HISTORY
-void goto_end_of_history(void)
+void cmd_goto_end_of_history(void)
 {
     // handle new input if any and verify that
     // it is not already in beginning of history or current position
@@ -1354,7 +1354,7 @@ void goto_end_of_history(void)
     cmd_set_input(cmd_ptr->command_ptr, 0);
     cmd.history =  ns_list_count(&cmd.history_list) - 1;
 }
-void goto_beginning_of_history(void)
+void cmd_goto_beginning_of_history(void)
 {
     cmd_history_t *cmd_ptr = ns_list_get_first(&cmd.history_list);
     cmd_set_input(cmd_ptr->command_ptr, 0);
@@ -1771,7 +1771,7 @@ static void cmd_execute(void)
 }
 
 
-cmd_alias_t *alias_find(const char *alias)
+cmd_alias_t *cmd_alias_find(const char *alias)
 {
 #if MBED_CONF_CMDLINE_ENABLE_ALIASES == 0
     (void)alias;
@@ -1793,7 +1793,7 @@ cmd_alias_t *alias_find(const char *alias)
 #endif
 }
 
-cmd_alias_t *alias_find_n(char *alias, int aliaslength, int n)
+cmd_alias_t *cmd_alias_find_n(char *alias, int aliaslength, int n)
 {
     cmd_alias_t *alias_ptr = NULL;
     if (alias == NULL || strlen(alias) == 0) {
@@ -1817,7 +1817,7 @@ cmd_alias_t *alias_find_n(char *alias, int aliaslength, int n)
 #endif
     return alias_ptr;
 }
-cmd_variable_t *variable_find(char *variable)
+cmd_variable_t *cmd_variable_find(char *variable)
 {
     cmd_variable_t *variable_ptr = NULL;
     if (variable == NULL || strlen(variable) == 0) {
@@ -1834,7 +1834,7 @@ cmd_variable_t *variable_find(char *variable)
 #endif
     return variable_ptr;
 }
-cmd_variable_t *variable_find_n(char *variable, int length, int n)
+cmd_variable_t *cmd_variable_find_n(char *variable, int length, int n)
 {
     cmd_variable_t *variable_ptr = NULL;
     if (variable == NULL || strlen(variable) == 0) {
@@ -1894,7 +1894,7 @@ void cmd_alias_add(const char *alias, const char *value)
         tr_warn("cmd_alias_add invalid parameters");
         return;
     }
-    alias_ptr = alias_find(alias);
+    alias_ptr = cmd_alias_find(alias);
     if (alias_ptr == NULL) {
         if (value == NULL) {
             return;    // no need to add new null one
@@ -1950,7 +1950,7 @@ static cmd_variable_t *cmd_variable_add_prepare(char *variable, char *value)
         tr_warn("cmd_variable_add invalid parameters");
         return NULL;
     }
-    cmd_variable_t *variable_ptr = variable_find(variable);
+    cmd_variable_t *variable_ptr = cmd_variable_find(variable);
     if (variable_ptr == NULL) {
         if (value == NULL) {
             return NULL;    //  adding null variable
