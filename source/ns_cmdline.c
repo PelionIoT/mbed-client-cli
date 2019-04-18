@@ -1692,7 +1692,7 @@ void cmd_history_clean(void)
         cmd_history_item_delete(ns_list_get_last(&cmd.history_list));
     }
 }
-static void cmd_history_save(int16_t index)
+void cmd_history_save(int16_t index)
 {
     /*if entry true save it to first item which is the one currently edited*/
     cmd_history_t *entry_ptr;
@@ -1727,7 +1727,7 @@ static void cmd_history_save(int16_t index)
 
     cmd_history_clean_overflow();
 }
-static void cmd_history_get(uint16_t index)
+void cmd_history_get(uint16_t index)
 {
     cmd_history_t *entry_ptr;
 
