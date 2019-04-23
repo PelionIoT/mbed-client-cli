@@ -126,6 +126,12 @@
 // end of default configurations
 #endif
 
+#if defined(__GNUC__) || defined(__clang__) || defined(__CC_ARM)
+#define CMDLINE_UNUSED __attribute__((__unused__))
+#else
+#define CMDLINE_UNUSED
+#endif
+
 #ifdef YOTTA_CFG
 #include "ns_list_internal/ns_list.h"
 #include "mbed-client-cli/ns_cmdline.h"
@@ -360,34 +366,38 @@ cmd_class_t cmd = {
 /* Function prototypes
  */
 static void             cmd_init_base_commands(void);
-static void             cmd_replace_alias(char *input);
-static void             cmd_replace_variables(char *input);
+static void             cmd_replace_alias(char *input) CMDLINE_UNUSED;
+static void             cmd_replace_variables(char *input) CMDLINE_UNUSED;
 static int              cmd_parse_argv(char *string_ptr, char **argv);
 static void             cmd_execute(void);
 static void             cmd_line_clear(int from);
-static void             cmd_history_save(int16_t index);
-static void             cmd_history_get(uint16_t index);
-static void             cmd_history_clean_overflow(void);
-static void             cmd_history_clean(void);
-static cmd_history_t   *cmd_history_find(int16_t index);
+static void             cmd_history_save(int16_t index) CMDLINE_UNUSED;
+static void             cmd_history_get(uint16_t index) CMDLINE_UNUSED;
+static void             cmd_history_clean_overflow(void) CMDLINE_UNUSED;
+static void             cmd_history_clean(void) CMDLINE_UNUSED;
+static cmd_history_t   *cmd_history_find(int16_t index) CMDLINE_UNUSED;
 static void             cmd_echo(bool on);
-static bool             cmd_tab_lookup(void);
-static void             cmd_clear_last_word(void);
-static void             cmd_move_cursor_to_last_space(void);
-static void             cmd_move_cursor_to_next_space(void);
+static bool             cmd_tab_lookup(void) CMDLINE_UNUSED;
+static void             cmd_clear_last_word(void) CMDLINE_UNUSED;
+static void             cmd_move_cursor_to_last_space(void) CMDLINE_UNUSED;
+static void             cmd_move_cursor_to_next_space(void) CMDLINE_UNUSED;
+static void             cmd_arrow_right() CMDLINE_UNUSED;
+static void             cmd_arrow_left() CMDLINE_UNUSED;
 static const char      *cmd_input_lookup(char *name, int namelength, int n);
 static char            *cmd_input_lookup_var(char *name, int namelength, int n);
-static cmd_command_t   *cmd_find(const char *name);
-static cmd_command_t   *cmd_find_n(char *name, int nameLength, int n);
-static cmd_alias_t     *alias_find(const char *alias);
-static cmd_alias_t     *alias_find_n(char *alias, int aliaslength, int n);
-static cmd_variable_t  *variable_find(char *variable);
-static cmd_variable_t  *variable_find_n(char *variable, int length, int n);
+static cmd_command_t   *cmd_find(const char *name) CMDLINE_UNUSED;
+static cmd_command_t   *cmd_find_n(char *name, int nameLength, int n) CMDLINE_UNUSED;
+static cmd_alias_t     *alias_find(const char *alias) CMDLINE_UNUSED;
+static cmd_alias_t     *alias_find_n(char *alias, int aliaslength, int n) CMDLINE_UNUSED;
+static cmd_variable_t  *variable_find(char *variable) CMDLINE_UNUSED;
+static cmd_variable_t  *variable_find_n(char *variable, int length, int n) CMDLINE_UNUSED;
 static void             cmd_print_man(cmd_command_t *command_ptr);
-static void             goto_end_of_history(void);
-static void             goto_beginning_of_history(void);
+static void             goto_end_of_history(void) CMDLINE_UNUSED;
+static void             goto_beginning_of_history(void) CMDLINE_UNUSED;
 static void             cmd_set_input(const char *str, int cur);
 static char            *next_command(char *string_ptr, operator_t *mode);
+static void             replace_variable(char *str, cmd_variable_t *variable_ptr) CMDLINE_UNUSED;
+static void             cmd_variable_print_all(void) CMDLINE_UNUSED;
 /** Run single command through cmd intepreter
  * \param string_ptr    command string with parameters
  * \ret  command return code (CMDLINE_RETCODE_*)
