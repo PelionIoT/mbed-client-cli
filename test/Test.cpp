@@ -1246,3 +1246,14 @@ TEST(cli, cmd_parameter_timestamp_5)
     CHECK_EQUAL(false, cmd_parameter_timestamp(argc, argv, key, &value));
     LONGS_EQUAL(0, value);
 }
+TEST(cli, cmd_free)
+{
+    INIT_BUF();
+    cmd_free();
+    // these should not do anything since
+    // library is not initialized anymore
+    cmd_exe("");
+    cmd_ready(0);
+    cmd_next(0);
+    STRCMP_EQUAL("" , buf);
+}

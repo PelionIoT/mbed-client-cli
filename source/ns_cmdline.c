@@ -583,6 +583,10 @@ void cmd_reset(void)
 }
 void cmd_free(void)
 {
+    if (!cmd.init) {
+         tr_warn("cmd_free() called without init");
+         return;
+    }
     ns_list_foreach_safe(cmd_command_t, cur_ptr, &cmd.command_list) {
         cmd_delete(cur_ptr->name_ptr);
     }
@@ -607,6 +611,7 @@ void cmd_free(void)
 #endif
     cmd.mutex_wait_fnc = NULL;
     cmd.mutex_release_fnc = NULL;
+    cmd.init = false;
 }
 
 void cmd_input_passthrough_func(input_passthrough_func_t passthrough_fnc)
@@ -616,6 +621,10 @@ void cmd_input_passthrough_func(input_passthrough_func_t passthrough_fnc)
 
 void cmd_exe(char *str)
 {
+    if (!cmd.init) {
+        tr_warn("cmd_exe() called without init");
+        return;
+    }
     cmd_split(str);
     if (cmd.cmd_buffer_ptr == 0) {
         //execution buffer is empty
@@ -631,6 +640,10 @@ void cmd_set_ready_cb(cmd_ready_cb_f *cb)
 }
 void cmd_ready(int retcode)
 {
+    if (!cmd.init) {
+        tr_warn("cmd_ready() called without init");
+        return;
+    }
     if (cmd.cmd_ptr && cmd.cmd_ptr->busy) {
         //execution finished
         cmd.cmd_ptr->busy = false;
@@ -655,6 +668,10 @@ void cmd_ready(int retcode)
 }
 void cmd_next(int retcode)
 {
+    if (!cmd.init) {
+        tr_warn("cmd_next() called without init");
+        return;
+    }
     cmd.idle = true;
     //figure out next command
     cmd.cmd_buffer_ptr = cmd_next_ptr(retcode);
