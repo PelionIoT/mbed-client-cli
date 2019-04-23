@@ -563,16 +563,18 @@ static void cmd_init_base_commands(void)
 }
 void cmd_reset(void)
 {
+    // backup
     cmd_print_t *outf = cmd.out;
     void (*mutex_wait_f)(void) = cmd.mutex_wait_fnc;
     void (*mutex_release_f)(void) = cmd.mutex_release_fnc;
     cmd_ready_cb_f* ready_cb = cmd.ready_cb;
+    //re-initialize
     cmd_free();
     cmd_init(outf);
+    // restore
     cmd.mutex_wait_fnc = mutex_wait_f;
     cmd.mutex_release_fnc = mutex_release_f;
     cmd.ready_cb = ready_cb;
-    cmd_init_base_commands();
 }
 void cmd_free(void)
 {
