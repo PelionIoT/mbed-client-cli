@@ -378,8 +378,8 @@ static void             cmd_history_get(uint16_t index);
 static void             cmd_history_clean_overflow(void);
 static void             cmd_history_clean(void);
 static cmd_history_t   *cmd_history_find(int16_t index);
-static void             cmd_goto_end_of_history(void);
-static void             cmd_goto_beginning_of_history(void);
+static void             cmd_goto_end_of_history(void) CMDLINE_UNUSED;
+static void             cmd_goto_beginning_of_history(void) CMDLINE_UNUSED;
 #endif
 static void             cmd_echo(bool on);
 static bool             cmd_tab_lookup(void) CMDLINE_UNUSED;
