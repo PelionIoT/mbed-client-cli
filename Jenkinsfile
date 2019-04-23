@@ -175,6 +175,7 @@ def yottaBuildStep(target, compilerLabel) {
               try {
                 // try to compile different configurations
                 execute("make CFLAGS=-DMBED_CONF_CMDLINE_USE_MINIMUM_SET=0")
+                execute("make CFLAGS=-DMBED_CONF_CMDLINE_USE_MINIMUM_SET=1")
                 execute("make CFLAGS=-DMBED_CONF_CMDLINE_ENABLE_ALIASES=0")
                 execute("make CFLAGS=-DMBED_CONF_CMDLINE_USE_DUMMY_SET_ECHO_COMMANDS=1")
                 execute("make CFLAGS=-DMBED_CONF_CMDLINE_INIT_AUTOMATION_MODE=0")
