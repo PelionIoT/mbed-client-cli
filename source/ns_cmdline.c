@@ -126,6 +126,12 @@
 // end of default configurations
 #endif
 
+#if defined(__GNUC__) || defined(__clang__) || defined(__CC_ARM)
+#define CMDLINE_UNUSED __attribute__((unused))
+#else
+#define CMDLINE_UNUSED
+#endif
+
 #ifdef YOTTA_CFG
 #include "ns_list_internal/ns_list.h"
 #include "mbed-client-cli/ns_cmdline.h"
@@ -360,34 +366,43 @@ cmd_class_t cmd = {
 /* Function prototypes
  */
 static void             cmd_init_base_commands(void);
-static void             cmd_replace_alias(char *input);
-static void             cmd_replace_variables(char *input);
+static void             cmd_replace_alias(char *input) CMDLINE_UNUSED;
+static void             cmd_replace_variables(char *input) CMDLINE_UNUSED;
 static int              cmd_parse_argv(char *string_ptr, char **argv);
 static void             cmd_execute(void);
 static void             cmd_line_clear(int from);
+#if MBED_CONF_CMDLINE_ENABLE_HISTORY == 1
+static void             cmd_history_item_delete(cmd_history_t *entry_ptr);
 static void             cmd_history_save(int16_t index);
 static void             cmd_history_get(uint16_t index);
 static void             cmd_history_clean_overflow(void);
 static void             cmd_history_clean(void);
 static cmd_history_t   *cmd_history_find(int16_t index);
+static void             cmd_goto_end_of_history(void) CMDLINE_UNUSED;
+static void             cmd_goto_beginning_of_history(void) CMDLINE_UNUSED;
+#endif
 static void             cmd_echo(bool on);
-static bool             cmd_tab_lookup(void);
-static void             cmd_clear_last_word(void);
-static void             cmd_move_cursor_to_last_space(void);
-static void             cmd_move_cursor_to_next_space(void);
+static bool             cmd_tab_lookup(void) CMDLINE_UNUSED;
+static void             cmd_clear_last_word(void) CMDLINE_UNUSED;
+static void             cmd_move_cursor_to_last_space(void) CMDLINE_UNUSED;
+static void             cmd_move_cursor_to_next_space(void) CMDLINE_UNUSED;
+static void             cmd_arrow_right() CMDLINE_UNUSED;
+static void             cmd_arrow_left() CMDLINE_UNUSED;
+static void             cmd_arrow_down() CMDLINE_UNUSED;
+static void             cmd_arrow_up() CMDLINE_UNUSED;
 static const char      *cmd_input_lookup(char *name, int namelength, int n);
 static char            *cmd_input_lookup_var(char *name, int namelength, int n);
-static cmd_command_t   *cmd_find(const char *name);
-static cmd_command_t   *cmd_find_n(char *name, int nameLength, int n);
-static cmd_alias_t     *alias_find(const char *alias);
-static cmd_alias_t     *alias_find_n(char *alias, int aliaslength, int n);
-static cmd_variable_t  *variable_find(char *variable);
-static cmd_variable_t  *variable_find_n(char *variable, int length, int n);
+static cmd_command_t   *cmd_find(const char *name) CMDLINE_UNUSED;
+static cmd_command_t   *cmd_find_n(char *name, int nameLength, int n) CMDLINE_UNUSED;
+static cmd_alias_t     *alias_find(const char *alias) CMDLINE_UNUSED;
+static cmd_alias_t     *alias_find_n(char *alias, int aliaslength, int n) CMDLINE_UNUSED;
+static cmd_variable_t  *variable_find(char *variable) CMDLINE_UNUSED;
+static cmd_variable_t  *variable_find_n(char *variable, int length, int n) CMDLINE_UNUSED;
 static void             cmd_print_man(cmd_command_t *command_ptr);
-static void             goto_end_of_history(void);
-static void             goto_beginning_of_history(void);
 static void             cmd_set_input(const char *str, int cur);
 static char            *next_command(char *string_ptr, operator_t *mode);
+static void             replace_variable(char *str, cmd_variable_t *variable_ptr) CMDLINE_UNUSED;
+static void             cmd_variable_print_all(void) CMDLINE_UNUSED;
 /** Run single command through cmd intepreter
  * \param string_ptr    command string with parameters
  * \ret  command return code (CMDLINE_RETCODE_*)
@@ -1228,9 +1243,9 @@ static void cmd_arrow_left()
     }
 #endif
 }
-#if MBED_CONF_CMDLINE_ENABLE_HISTORY
 static void cmd_arrow_up()
 {
+#if MBED_CONF_CMDLINE_ENABLE_HISTORY
     int16_t old_entry = cmd.history++;
     if (NULL == cmd_history_find(cmd.history)) {
         cmd.history = old_entry;
@@ -1239,9 +1254,12 @@ static void cmd_arrow_up()
         cmd_history_save(old_entry);
         cmd_history_get(cmd.history);
     }
+#endif
 }
-static void cmd_arrow_down(void)
+static void cmd_arrow_down()
 {
+#if MBED_CONF_CMDLINE_ENABLE_HISTORY
+
     int16_t old_entry = cmd.history--;
     if (cmd.history < 0) {
         cmd.history = 0;
@@ -1251,8 +1269,8 @@ static void cmd_arrow_down(void)
         cmd_history_save(old_entry);
         cmd_history_get(cmd.history);
     }
-}
 #endif
+}
 #if MBED_CONF_CMDLINE_ENABLE_ESCAPE_HANDLING == 1
 void cmd_escape_read(int16_t u_data)
 {
@@ -1332,10 +1350,10 @@ void cmd_escape_read(int16_t u_data)
                 cmd.cursor = strlen(cmd.input);
                 break;
             case ('5'): //beginning-of-history  # PageUp key
-                goto_end_of_history();
+                cmd_goto_end_of_history();
                 break;
             case ('6'): //end-of-history        # PageDown key
-                goto_beginning_of_history();
+                cmd_goto_beginning_of_history();
                 break;
 #endif
             default:
@@ -1353,7 +1371,7 @@ void cmd_escape_read(int16_t u_data)
 }
 #endif
 #if MBED_CONF_CMDLINE_ENABLE_HISTORY
-static void goto_end_of_history(void)
+static void cmd_goto_end_of_history(void)
 {
     // handle new input if any and verify that
     // it is not already in beginning of history or current position
@@ -1381,7 +1399,7 @@ static void goto_end_of_history(void)
     cmd_set_input(cmd_ptr->command_ptr, 0);
     cmd.history =  ns_list_count(&cmd.history_list) - 1;
 }
-static void goto_beginning_of_history(void)
+static void cmd_goto_beginning_of_history(void)
 {
     cmd_history_t *cmd_ptr = ns_list_get_first(&cmd.history_list);
     cmd_set_input(cmd_ptr->command_ptr, 0);
