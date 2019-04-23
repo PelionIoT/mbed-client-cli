@@ -1255,12 +1255,12 @@ TEST(cli, cmd_free)
     cmd_exe("");
     cmd_ready(0);
     cmd_next(0);
-    REQUEST("invalid")
+    REQUEST("invalid");
     CHECK_RETCODE(-1);
 }
 TEST(cli, cmd_reset)
 {
     cmd_reset();
-    REQUEST("invalid")
+    REQUEST("invalid");
     CHECK_RETCODE(CMDLINE_RETCODE_COMMAND_NOT_FOUND);
 }
