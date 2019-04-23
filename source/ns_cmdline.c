@@ -596,6 +596,7 @@ void cmd_free(void)
 #endif
     cmd.mutex_wait_fnc = NULL;
     cmd.mutex_release_fnc = NULL;
+    cmd.init = false;
 }
 
 void cmd_input_passthrough_func(input_passthrough_func_t passthrough_fnc)
