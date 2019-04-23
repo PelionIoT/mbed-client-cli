@@ -127,7 +127,7 @@
 #endif
 
 #if defined(__GNUC__) || defined(__clang__) || defined(__CC_ARM)
-#define CMDLINE_UNUSED __attribute__((__unused__))
+#define CMDLINE_UNUSED __attribute__((unused))
 #else
 #define CMDLINE_UNUSED
 #endif
