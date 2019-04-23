@@ -366,38 +366,38 @@ cmd_class_t cmd = {
 /* Function prototypes
  */
 static void             cmd_init_base_commands(void);
-static void             cmd_replace_alias(char *input) CMDLINE_UNUSED;
-static void             cmd_replace_variables(char *input) CMDLINE_UNUSED;
+CMDLINE_UNUSED static void             cmd_replace_alias(char *input);
+CMDLINE_UNUSED static void             cmd_replace_variables(char *input);
 static int              cmd_parse_argv(char *string_ptr, char **argv);
 static void             cmd_execute(void);
 static void             cmd_line_clear(int from);
-static void             cmd_history_save(int16_t index) CMDLINE_UNUSED;
-static void             cmd_history_get(uint16_t index) CMDLINE_UNUSED;
-static void             cmd_history_clean_overflow(void) CMDLINE_UNUSED;
-static void             cmd_history_clean(void) CMDLINE_UNUSED;
-static cmd_history_t   *cmd_history_find(int16_t index) CMDLINE_UNUSED;
+CMDLINE_UNUSED static void             cmd_history_save(int16_t index);
+CMDLINE_UNUSED static void             cmd_history_get(uint16_t index);
+CMDLINE_UNUSED static void             cmd_history_clean_overflow(void);
+CMDLINE_UNUSED static void             cmd_history_clean(void);
+CMDLINE_UNUSED static cmd_history_t   *cmd_history_find(int16_t index);
 static void             cmd_echo(bool on);
-static bool             cmd_tab_lookup(void) CMDLINE_UNUSED;
-static void             cmd_clear_last_word(void) CMDLINE_UNUSED;
-static void             cmd_move_cursor_to_last_space(void) CMDLINE_UNUSED;
-static void             cmd_move_cursor_to_next_space(void) CMDLINE_UNUSED;
-static void             cmd_arrow_right() CMDLINE_UNUSED;
-static void             cmd_arrow_left() CMDLINE_UNUSED;
+CMDLINE_UNUSED static bool             cmd_tab_lookup(void);
+CMDLINE_UNUSED static void             cmd_clear_last_word(void);
+CMDLINE_UNUSED static void             cmd_move_cursor_to_last_space(void);
+CMDLINE_UNUSED static void             cmd_move_cursor_to_next_space(void);
+CMDLINE_UNUSED static void             cmd_arrow_right();
+CMDLINE_UNUSED static void             cmd_arrow_left();
 static const char      *cmd_input_lookup(char *name, int namelength, int n);
 static char            *cmd_input_lookup_var(char *name, int namelength, int n);
-static cmd_command_t   *cmd_find(const char *name) CMDLINE_UNUSED;
-static cmd_command_t   *cmd_find_n(char *name, int nameLength, int n) CMDLINE_UNUSED;
-static cmd_alias_t     *alias_find(const char *alias) CMDLINE_UNUSED;
-static cmd_alias_t     *alias_find_n(char *alias, int aliaslength, int n) CMDLINE_UNUSED;
-static cmd_variable_t  *variable_find(char *variable) CMDLINE_UNUSED;
-static cmd_variable_t  *variable_find_n(char *variable, int length, int n) CMDLINE_UNUSED;
+CMDLINE_UNUSED static cmd_command_t   *cmd_find(const char *name);
+CMDLINE_UNUSED static cmd_command_t   *cmd_find_n(char *name, int nameLength, int n);
+CMDLINE_UNUSED static cmd_alias_t     *alias_find(const char *alias);
+CMDLINE_UNUSED static cmd_alias_t     *alias_find_n(char *alias, int aliaslength, int n);
+CMDLINE_UNUSED static cmd_variable_t  *variable_find(char *variable);
+CMDLINE_UNUSED static cmd_variable_t  *variable_find_n(char *variable, int length, int n);
 static void             cmd_print_man(cmd_command_t *command_ptr);
-static void             goto_end_of_history(void) CMDLINE_UNUSED;
-static void             goto_beginning_of_history(void) CMDLINE_UNUSED;
+CMDLINE_UNUSED static void             goto_end_of_history(void);
+CMDLINE_UNUSED static void             goto_beginning_of_history(void);
 static void             cmd_set_input(const char *str, int cur);
 static char            *next_command(char *string_ptr, operator_t *mode);
-static void             replace_variable(char *str, cmd_variable_t *variable_ptr) CMDLINE_UNUSED;
-static void             cmd_variable_print_all(void) CMDLINE_UNUSED;
+CMDLINE_UNUSED static void             replace_variable(char *str, cmd_variable_t *variable_ptr);
+CMDLINE_UNUSED static void             cmd_variable_print_all(void);
 /** Run single command through cmd intepreter
  * \param string_ptr    command string with parameters
  * \ret  command return code (CMDLINE_RETCODE_*)
