@@ -386,10 +386,10 @@ static bool             cmd_tab_lookup(void) CMDLINE_UNUSED;
 static void             cmd_clear_last_word(void) CMDLINE_UNUSED;
 static void             cmd_move_cursor_to_last_space(void) CMDLINE_UNUSED;
 static void             cmd_move_cursor_to_next_space(void) CMDLINE_UNUSED;
-static void             cmd_arrow_right() CMDLINE_UNUSED;
-static void             cmd_arrow_left() CMDLINE_UNUSED;
-static void             cmd_arrow_down() CMDLINE_UNUSED;
-static void             cmd_arrow_up() CMDLINE_UNUSED;
+static void             cmd_arrow_right(void) CMDLINE_UNUSED;
+static void             cmd_arrow_left(void) CMDLINE_UNUSED;
+static void             cmd_arrow_down(void) CMDLINE_UNUSED;
+static void             cmd_arrow_up(void) CMDLINE_UNUSED;
 static const char      *cmd_input_lookup(char *name, int namelength, int n);
 static char            *cmd_input_lookup_var(char *name, int namelength, int n);
 static cmd_command_t   *cmd_find(const char *name) CMDLINE_UNUSED;
@@ -817,20 +817,20 @@ void cmd_mutex_release_func(void (*mutex_release_f)(void))
     cmd.mutex_release_fnc = mutex_release_f;
 }
 
-void cmd_mutex_lock()
+void cmd_mutex_lock(void)
 {
     if (cmd.mutex_wait_fnc) {
         cmd.mutex_wait_fnc();
     }
 }
 
-void cmd_mutex_unlock()
+void cmd_mutex_unlock(void)
 {
     if (cmd.mutex_release_fnc) {
         cmd.mutex_release_fnc();
     }
 }
-void cmd_init_screen()
+void cmd_init_screen(void)
 {
 #if MBED_CONF_CMDLINE_ENABLE_ESCAPE_HANDLING == 1
     if (cmd.vt100_on) {
@@ -1197,7 +1197,7 @@ void cmd_escape_start(void)
     cmd.escape_index = 0;
 #endif
 }
-static void cmd_arrow_right()
+static void cmd_arrow_right(void)
 {
 #if MBED_CONF_CMDLINE_ENABLE_ESCAPE_HANDLING == 1
 
@@ -1218,7 +1218,7 @@ static void cmd_arrow_right()
     }
 #endif
 }
-static void cmd_arrow_left()
+static void cmd_arrow_left(void)
 {
 #if MBED_CONF_CMDLINE_ENABLE_ESCAPE_HANDLING == 1
     /* @todo handle shift
@@ -1238,7 +1238,7 @@ static void cmd_arrow_left()
     }
 #endif
 }
-static void cmd_arrow_up()
+static void cmd_arrow_up(void)
 {
 #if MBED_CONF_CMDLINE_ENABLE_HISTORY
     int16_t old_entry = cmd.history++;
@@ -1251,7 +1251,7 @@ static void cmd_arrow_up()
     }
 #endif
 }
-static void cmd_arrow_down()
+static void cmd_arrow_down(void)
 {
 #if MBED_CONF_CMDLINE_ENABLE_HISTORY
 
@@ -1596,7 +1596,7 @@ static void cmd_move_cursor_to_next_space(void)
         cmd.cursor = (int)strlen(cmd.input);
     }
 }
-static void cmd_clear_last_word()
+static void cmd_clear_last_word(void)
 {
     if (!cmd.cursor) {
         return;
