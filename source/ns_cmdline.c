@@ -1110,6 +1110,11 @@ static int cmd_run(char *string_ptr)
     int argc, ret;
 
     tr_info("Executing cmd: '%s'", string_ptr);
+
+    // Initialize first argv to utilize the existing command-not-found -path in case of
+    // getting only whitespace(s) as command string.
+    argv[0] = "";
+
     char *command_str = MEM_ALLOC(MBED_CONF_CMDLINE_MAX_LINE_LENGTH);
     if (command_str == NULL) {
         tr_error("mem alloc failed in cmd_run");
