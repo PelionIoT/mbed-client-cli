@@ -62,7 +62,7 @@ Following defines can be used to configure defaults:
 |`MBED_CONF_CMDLINE_ENABLE_INTERNAL_COMMANDS`|bool|true|Enable internal commands. E.g. `echo`|
 |`MBED_CONF_CMDLINE_ENABLE_INTERNAL_VARIABLES`|bool|true|Enable internal variables|
 |`MBED_CONF_CMDLINE_BOOT_MESSAGE`|C string|`ARM Ltd\r\n`|default boot message|
-|`MBED_CONF_CMDLINE_MAX_LINE_LENGTH`|int|200|maximum command line length|
+|`MBED_CONF_CMDLINE_MAX_LINE_LENGTH`|int|2000|maximum command line length|
 |`MBED_CONF_CMDLINE_ARGS_MAX_COUNT`|int|30|maximum count of command arguments|
 |`MBED_CONF_CMDLINE_ENABLE_HISTORY`|bool|true|Enable command history. browsable using key up/down|
 |`MBED_CONF_CMDLINE_HISTORY_MAX_COUNT`|int|32|maximum history size|
