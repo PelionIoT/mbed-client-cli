@@ -162,6 +162,7 @@
 #define tr_info(...)
 #endif
 
+//#define MBED_CONF_CMDLINE_ENABLE_DEEP_INTERNAL_TRACES
 #ifdef MBED_CONF_CMDLINE_ENABLE_DEEP_INTERNAL_TRACES
 #define tr_deep   tr_debug
 #else
@@ -621,6 +622,7 @@ void cmd_input_passthrough_func(input_passthrough_func_t passthrough_fnc)
 
 void cmd_exe(char *str)
 {
+    tr_debug("cmd_exe(): %s", str);
     if (!cmd.init) {
         tr_warn("cmd_exe() called without init");
         return;
@@ -640,6 +642,7 @@ void cmd_set_ready_cb(cmd_ready_cb_f *cb)
 }
 void cmd_ready(int retcode)
 {
+    tr_debug("cmd_ready(): %d", retcode);
     if (!cmd.init) {
         tr_warn("cmd_ready() called without init");
         return;
@@ -672,6 +675,7 @@ void cmd_next(int retcode)
         tr_warn("cmd_next() called without init");
         return;
     }
+    tr_debug("cmd_next()");
     cmd.idle = true;
     //figure out next command
     cmd.cmd_buffer_ptr = cmd_next_ptr(retcode);
@@ -697,7 +701,6 @@ void cmd_next(int retcode)
         if (retfmt) {
             cmd_printf(retfmt, retcode);
         }
-        cmd_line_clear(0);
         if (cmd.echo) {
             cmd_output();    //ready
         }
@@ -796,6 +799,7 @@ static void cmd_push(char *cmd_str, operator_t oper)
         return;
     }
     strcpy(cmd_ptr->cmd_s, cmd_str);
+    tr_deep("cmd_push: %s", cmd_ptr->cmd_s);
     cmd_ptr->operator = oper;
     ns_list_add_to_end(&cmd.cmd_buffer, cmd_ptr);
 }
@@ -1784,6 +1788,7 @@ static void cmd_history_get(uint16_t index)
 static void cmd_line_clear(int from)
 {
     memset(cmd.input + from, 0, MBED_CONF_CMDLINE_MAX_LINE_LENGTH - from);
+    tr_debug("cmd.input cleared from %d: %s", from, cmd.input);
     cmd.cursor = from;
 }
 
