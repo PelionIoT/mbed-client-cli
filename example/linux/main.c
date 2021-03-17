@@ -49,6 +49,13 @@ static int cmd_exit(int argc, char *argv[]) {
     return CMDLINE_RETCODE_SUCCESS;
 }
 
+static int cmd_reset_app(int argc, char *argv[]) {
+    (void)argc;
+    (void)argv;
+    cmd_reset();
+    return CMDLINE_RETCODE_SUCCESS;
+}
+
 
 int main(void)
 {
@@ -61,6 +68,7 @@ int main(void)
     mbed_trace_init();
     cmd_init( 0 ); // initialize cmdline with print function
     cmd_add("exit", cmd_exit, "exit shell", 0);
+    cmd_add("reset", cmd_reset_app, "reset shell", 0);
     cmd_add("dummy", cmd_dummy,
       "dummy command",
       "This is dummy command, which does not do anything except\n"

@@ -1248,12 +1248,21 @@ TEST(cli, cmd_parameter_timestamp_5)
 }
 TEST(cli, cmd_free)
 {
-    INIT_BUF();
     cmd_free();
+#define CUSTOM_CODE = 100;
+    previous_retcode = CUSTOM_CODE;
     // these should not do anything since
     // library is not initialized anymore
     cmd_exe("");
     cmd_ready(0);
     cmd_next(0);
-    STRCMP_EQUAL("" , buf);
+    REQUEST("invalid");
+    // verify that ready_cb is not called
+    CHECK_RETCODE(CUSTOM_CODE);
+}
+TEST(cli, cmd_reset)
+{
+    cmd_reset();
+    REQUEST("invalid");
+    CHECK_RETCODE(CMDLINE_RETCODE_COMMAND_NOT_FOUND);
 }
