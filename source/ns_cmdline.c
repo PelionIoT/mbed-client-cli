@@ -2050,7 +2050,7 @@ void cmd_variable_add_int(char *variable, int value)
 void cmd_variable_add(char *variable, char *value)
 {
     cmd_variable_t *variable_ptr = cmd_variable_add_prepare(variable, value);
-    if (variable_ptr == NULL) {
+    if (variable_ptr == NULL || value == NULL) {
         return;
     }
     int value_len = strlen(value);
