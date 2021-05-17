@@ -586,8 +586,8 @@ void cmd_reset(void)
 void cmd_free(void)
 {
     if (!cmd.init) {
-         tr_warn("cmd_free() called without init");
-         return;
+        tr_warn("cmd_free() called without init");
+        return;
     }
     ns_list_foreach_safe(cmd_command_t, cur_ptr, &cmd.command_list) {
         cmd_delete(cur_ptr->name_ptr);
@@ -1511,7 +1511,7 @@ void cmd_char_input(int16_t u_data)
         cmd_reset_tab();
         tr_deep("cursor: %d, inputlen: %lu, u_data: %c\r\n", cmd.cursor, strlen(cmd.input), u_data);
         if ((strlen(cmd.input) >= MBED_CONF_CMDLINE_MAX_LINE_LENGTH - 1) ||
-            (cmd.cursor >= MBED_CONF_CMDLINE_MAX_LINE_LENGTH - 1)) {
+                (cmd.cursor >= MBED_CONF_CMDLINE_MAX_LINE_LENGTH - 1)) {
             tr_warn("input buffer full");
             if (cmd.echo) {
                 cmd_output();
@@ -2051,7 +2051,7 @@ void cmd_variable_add_int(char *variable, int value)
 void cmd_variable_add(char *variable, char *value)
 {
     cmd_variable_t *variable_ptr = cmd_variable_add_prepare(variable, value);
-    if (variable_ptr == NULL) {
+    if (variable_ptr == NULL || value == NULL) {
         return;
     }
     int value_len = strlen(value);
@@ -2420,7 +2420,7 @@ bool cmd_parameter_timestamp(int argc, char *argv[], const char *key, int64_t *v
                 // Format 00:00:00:00:00:00:00:00
                 uint8_t buf[8];
                 if (strlen(argv[i + 1]) == 23 &&
-                    string_to_bytes(argv[i + 1], buf, 8) == 0) {
+                        string_to_bytes(argv[i + 1], buf, 8) == 0) {
                     *value = read_64_bit(buf);
                 } else {
                     cmd_printf("timestamp should be 8 bytes long\r\n");
