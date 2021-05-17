@@ -34,8 +34,9 @@ void serial_out_mutex_release()
 }
 
 // dummy command with some option
-static int cmd_dummy(int argc, char *argv[]) {
-    if( cmd_has_option(argc, argv, "o") ) {
+static int cmd_dummy(int argc, char *argv[])
+{
+    if (cmd_has_option(argc, argv, "o")) {
         cmd_printf("This is o option\r\n");
     } else {
         tr_debug("Try to write 'dummy -o' instead");
@@ -48,23 +49,23 @@ int main(void)
     // Initialize trace library
     mbed_trace_init();
     // Register callback used to lock serial out mutex
-    mbed_trace_mutex_wait_function_set( serial_out_mutex_wait );
+    mbed_trace_mutex_wait_function_set(serial_out_mutex_wait);
     // Register callback used to release serial out mutex
-    mbed_trace_mutex_release_function_set( serial_out_mutex_release );
+    mbed_trace_mutex_release_function_set(serial_out_mutex_release);
 
     // Initialize cmd library
-    cmd_init( 0 );
+    cmd_init(0);
     // Register callback used to lock serial out mutex
-    cmd_mutex_wait_func( serial_out_mutex_wait );
+    cmd_mutex_wait_func(serial_out_mutex_wait);
     // Register callback used to release serial out mutex
-    cmd_mutex_release_func( serial_out_mutex_release );
+    cmd_mutex_release_func(serial_out_mutex_release);
     // add dummy -command
     cmd_add("dummy", cmd_dummy,
-      "dummy command",
-      "This is dummy command, which does not do anything except\n"
-      "print text when o -option is given."); // add one dummy command
+            "dummy command",
+            "This is dummy command, which does not do anything except\n"
+            "print text when o -option is given."); // add one dummy command
     cmd_init_screen();
-    while(true) {
+    while (true) {
         int c = getchar();
         if (c != EOF) {
             cmd_char_input(c);

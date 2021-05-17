@@ -33,8 +33,9 @@
 #endif
 
 // dummy command with some option
-static int cmd_dummy(int argc, char *argv[]) {
-    if( cmd_has_option(argc, argv, "o") ) {
+static int cmd_dummy(int argc, char *argv[])
+{
+    if (cmd_has_option(argc, argv, "o")) {
         cmd_printf("This is o option\r\n");
     } else {
         return CMDLINE_RETCODE_INVALID_PARAMETERS;
@@ -42,7 +43,8 @@ static int cmd_dummy(int argc, char *argv[]) {
     return CMDLINE_RETCODE_SUCCESS;
 }
 volatile bool running = true;
-static int cmd_exit(int argc, char *argv[]) {
+static int cmd_exit(int argc, char *argv[])
+{
     (void)argc;
     (void)argv;
     running = false;
@@ -59,28 +61,28 @@ int main(void)
 #endif
     // Initialize trace library
     mbed_trace_init();
-    cmd_init( 0 ); // initialize cmdline with print function
+    cmd_init(0);   // initialize cmdline with print function
     cmd_add("exit", cmd_exit, "exit shell", 0);
     cmd_add("dummy", cmd_dummy,
-      "dummy command",
-      "This is dummy command, which does not do anything except\n"
-      "print text when o -option is given."); // add one dummy command
+            "dummy command",
+            "This is dummy command, which does not do anything except\n"
+            "print text when o -option is given."); // add one dummy command
 
     cmd_init_screen();
-    while(running) {
+    while (running) {
 #if EXAMPLE_USE_NCURSES == 1
         int c = getch();
 #else
         int c = getchar();
 #endif
-        switch(c) {
-          case(CTRL('c')):
-            running = false;
-            break;
-          case(EOF):
-            break;
-          default:
-            cmd_char_input(c);
+        switch (c) {
+            case (CTRL('c')):
+                running = false;
+                break;
+            case (EOF):
+                break;
+            default:
+                cmd_char_input(c);
         }
     }
 #if EXAMPLE_USE_NCURSES == 1

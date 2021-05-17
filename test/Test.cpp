@@ -168,17 +168,15 @@ void cmd_ready_cb(int retcode)
 
 TEST_GROUP(cli)
 {
-  void setup()
-  {
-    cmd_init(&myprint);
-    cmd_set_ready_cb(cmd_ready_cb);
-    INIT_BUF();
-  }
-  void teardown()
-  {
-    INIT_BUF();
-    cmd_free();
-  }
+    void setup() {
+        cmd_init(&myprint);
+        cmd_set_ready_cb(cmd_ready_cb);
+        INIT_BUF();
+    }
+    void teardown() {
+        INIT_BUF();
+        cmd_free();
+    }
 };
 
 TEST(cli, init)
@@ -192,7 +190,7 @@ TEST(cli, cmd_printf_with_mutex_not_set)
     check_mutex_lock_state = false;
 
     cmd_printf("Hello hello!");
-    STRCMP_EQUAL("Hello hello!" , buf);
+    STRCMP_EQUAL("Hello hello!", buf);
 
     CHECK(mutex_call_count_at_entry == mutex_wait_count);
     CHECK(mutex_call_count_at_entry == mutex_release_count);
@@ -207,7 +205,7 @@ TEST(cli, cmd_printf_with_mutex_set)
     check_mutex_lock_state = true;
 
     cmd_printf("!olleh olleH");
-    STRCMP_EQUAL("!olleh olleH" , buf);
+    STRCMP_EQUAL("!olleh olleH", buf);
     CHECK(mutex_wait_count == mutex_release_count);
 
     check_mutex_lock_state = false;
@@ -223,7 +221,7 @@ TEST(cli, external_mutex_handles)
 
     cmd_mutex_lock();
     cmd_printf("!olleh olleH");
-    STRCMP_EQUAL("!olleh olleH" , buf);
+    STRCMP_EQUAL("!olleh olleH", buf);
     cmd_mutex_unlock();
     CHECK(mutex_wait_count == mutex_release_count);
 
@@ -338,11 +336,11 @@ TEST(cli, cmd_has_option)
 #if MBED_CONF_CMDLINE_ENABLE_INTERNAL_COMMANDS == 1
 TEST(cli, echo_state)
 {
-  CHECK_EQUAL(cmd_echo_state(), true);
-  cmd_echo_off();
-  CHECK_EQUAL(cmd_echo_state(), false);
-  cmd_echo_on();
-  CHECK_EQUAL(cmd_echo_state(), true);
+    CHECK_EQUAL(cmd_echo_state(), true);
+    cmd_echo_off();
+    CHECK_EQUAL(cmd_echo_state(), false);
+    cmd_echo_on();
+    CHECK_EQUAL(cmd_echo_state(), true);
 }
 #endif
 
@@ -377,73 +375,77 @@ TEST(cli, cmd_echo)
     TEST_RETCODE_WITH_COMMAND("echo Hi!", CMDLINE_RETCODE_SUCCESS);
 #else
     REQUEST("echo Hi!");
-    ARRAY_CMP(RESPONSE("Hi! ") , buf);
+    ARRAY_CMP(RESPONSE("Hi! "), buf);
     CHECK_RETCODE(0);
 #endif
 }
 #if MBED_CONF_CMDLINE_ENABLE_INTERNAL_COMMANDS
 TEST(cli, cmd_echo_with_cr)
 {
-    input("echo crlf");INIT_BUF();input("\r\n");
-    ARRAY_CMP(RESPONSE("crlf ") , buf);
+    input("echo crlf");
+    INIT_BUF();
+    input("\r\n");
+    ARRAY_CMP(RESPONSE("crlf "), buf);
     CHECK_RETCODE(0);
 }
 TEST(cli, cmd_echo_cr_only)
 {
-    input("echo cr");INIT_BUF();input("\r");
-    ARRAY_CMP(RESPONSE("cr ") , buf);
+    input("echo cr");
+    INIT_BUF();
+    input("\r");
+    ARRAY_CMP(RESPONSE("cr "), buf);
     CHECK_RETCODE(0);
 }
 TEST(cli, cmd_echo1)
 {
     REQUEST(" echo Hi!");
-    ARRAY_CMP(RESPONSE("Hi! ") , buf);
+    ARRAY_CMP(RESPONSE("Hi! "), buf);
 }
 TEST(cli, cmd_echo2)
 {
     REQUEST("echo foo faa");
-    ARRAY_CMP(RESPONSE("foo faa ") , buf);
+    ARRAY_CMP(RESPONSE("foo faa "), buf);
 }
 TEST(cli, cmd_echo3)
 {
     REQUEST("echo foo   faa");
-    ARRAY_CMP(RESPONSE("foo faa ") , buf);
+    ARRAY_CMP(RESPONSE("foo faa "), buf);
 }
 TEST(cli, cmd_echo4)
 {
     REQUEST("echo   foo   faa");
-    ARRAY_CMP(RESPONSE("foo faa ") , buf);
+    ARRAY_CMP(RESPONSE("foo faa "), buf);
 }
 TEST(cli, cmd_echo5)
 {
     REQUEST("echo   \"foo   faa\"");
-    ARRAY_CMP(RESPONSE("foo   faa ") , buf);
+    ARRAY_CMP(RESPONSE("foo   faa "), buf);
 }
 TEST(cli, cmd_echo6)
 {
     REQUEST("echo   \"foo   faa");
-    ARRAY_CMP(RESPONSE("\"foo faa ") , buf);
+    ARRAY_CMP(RESPONSE("\"foo faa "), buf);
 }
 TEST(cli, cmd_echo7)
 {
     REQUEST("echo   'foo   faa\"");
-    ARRAY_CMP(RESPONSE("'foo faa\" ") , buf);
+    ARRAY_CMP(RESPONSE("'foo faa\" "), buf);
 }
 TEST(cli, cmd_echo8)
 {
     REQUEST("echof\x7f foo   faa");
-    ARRAY_CMP(RESPONSE("foo faa ") , buf);
+    ARRAY_CMP(RESPONSE("foo faa "), buf);
 }
 TEST(cli, cmd_echo9)
 {
     REQUEST("echo foo   faa\x1b[D\x1b[D\x1b[D hello ");
-    ARRAY_CMP(RESPONSE("foo hello faa ") , buf);
+    ARRAY_CMP(RESPONSE("foo hello faa "), buf);
     CLEAN();
 }
 TEST(cli, cmd_echo10)
 {
     REQUEST("echo foo   faa\x1b[D\x1b[C\x1b[C  hello "); //echo foo    hello faa
-    ARRAY_CMP(RESPONSE("foo faa hello ") , buf);
+    ARRAY_CMP(RESPONSE("foo faa hello "), buf);
     CLEAN();
 }
 TEST(cli, cmd_echo11)
@@ -451,32 +453,32 @@ TEST(cli, cmd_echo11)
     REQUEST("echo off\n");
     INIT_BUF();
     input("echo test");
-    ARRAY_CMP("" , buf);
+    ARRAY_CMP("", buf);
     input("\n");
-    ARRAY_CMP("test \r\n" , buf);
+    ARRAY_CMP("test \r\n", buf);
     INIT_BUF();
     REQUEST("echo on\n");
     INIT_BUF();
     input("e");
-    ARRAY_CMP(CMDLINE("e ") , buf);
+    ARRAY_CMP(CMDLINE("e "), buf);
     INIT_BUF();
     input("c");
-    ARRAY_CMP(CMDLINE("ec ") , buf);
+    ARRAY_CMP(CMDLINE("ec "), buf);
     INIT_BUF();
     input("h");
-    ARRAY_CMP(CMDLINE("ech ") , buf);
+    ARRAY_CMP(CMDLINE("ech "), buf);
     INIT_BUF();
     input("o");
-    ARRAY_CMP(CMDLINE("echo ") , buf);
+    ARRAY_CMP(CMDLINE("echo "), buf);
     INIT_BUF();
     input(" ");
-    ARRAY_CMP(CMDLINE("echo  ") , buf);
+    ARRAY_CMP(CMDLINE("echo  "), buf);
     INIT_BUF();
     input("o");
-    ARRAY_CMP(CMDLINE("echo o ") , buf);
+    ARRAY_CMP(CMDLINE("echo o "), buf);
     INIT_BUF();
     input("k");
-    ARRAY_CMP(CMDLINE("echo ok ") , buf);
+    ARRAY_CMP(CMDLINE("echo ok "), buf);
     CLEAN();
 }
 #endif
@@ -486,10 +488,10 @@ TEST(cli, cmd_arrows_up)
     REQUEST("echo foo-1");
     INIT_BUF();
     input("\x1b[A");
-    ARRAY_CMP(CMDLINE("echo foo-1 ") , buf);
+    ARRAY_CMP(CMDLINE("echo foo-1 "), buf);
     INIT_BUF();
     input("\x1b[A");
-    ARRAY_CMP(CMDLINE("echo foo-1 ") , buf);
+    ARRAY_CMP(CMDLINE("echo foo-1 "), buf);
     CLEAN();
 }
 TEST(cli, cmd_arrows_up_down)
@@ -529,7 +531,7 @@ TEST(cli, cmd_set)
     TEST_RETCODE_WITH_COMMAND("set abc def", CMDLINE_RETCODE_SUCCESS);
 #if MBED_CONF_CMDLINE_INIT_AUTOMATION_MODE == 0 && MBED_CONF_CMDLINE_ENABLE_INTERNAL_COMMANDS == 1
     REQUEST("echo $abc");
-    ARRAY_CMP(RESPONSE("def ") , buf);
+    ARRAY_CMP(RESPONSE("def "), buf);
 #endif
 }
 TEST(cli, cmd_history)
@@ -538,11 +540,11 @@ TEST(cli, cmd_history)
     REQUEST("echo test");
     INIT_BUF();
     REQUEST("history");
-    const char* to_be =
-      "\r\nHistory [2/31]:\r\n" \
-      "[0]: echo test\r\n" \
-      "[1]: history\r\n" \
-      CMDLINE_EMPTY;
+    const char *to_be =
+        "\r\nHistory [2/31]:\r\n" \
+        "[0]: echo test\r\n" \
+        "[1]: history\r\n" \
+        CMDLINE_EMPTY;
     ARRAY_CMP(to_be, buf);
     CLEAN();
 }
@@ -553,10 +555,10 @@ TEST(cli, cmd_history_clear)
     TEST_RETCODE_WITH_COMMAND("history clear", CMDLINE_RETCODE_SUCCESS);
     INIT_BUF();
     REQUEST("history");
-    const char* to_be =
-          "\r\nHistory [1/31]:\r\n" \
-          "[0]: history\r\n" \
-          CMDLINE_EMPTY;
+    const char *to_be =
+        "\r\nHistory [1/31]:\r\n" \
+        "[0]: history\r\n" \
+        CMDLINE_EMPTY;
     ARRAY_CMP(to_be, buf);
     CLEAN();
 }
@@ -568,11 +570,11 @@ TEST(cli, cmd_history_skip_duplicates)
     REQUEST("echo test");
     INIT_BUF();
     REQUEST("history");
-    const char* to_be =
-      "\r\nHistory [2/31]:\r\n" \
-      "[0]: echo test\r\n" \
-      "[1]: history\r\n" \
-      CMDLINE_EMPTY;
+    const char *to_be =
+        "\r\nHistory [2/31]:\r\n" \
+        "[0]: echo test\r\n" \
+        "[1]: history\r\n" \
+        CMDLINE_EMPTY;
     ARRAY_CMP(to_be, buf);
     CLEAN();
 }
@@ -581,10 +583,10 @@ TEST(cli, cmd_history_empty)
     //history when its empty
     INIT_BUF();
     REQUEST("history");
-    const char* to_be =
-      "\r\nHistory [1/31]:\r\n" \
-      "[0]: history\r\n" \
-      CMDLINE_EMPTY;
+    const char *to_be =
+        "\r\nHistory [1/31]:\r\n" \
+        "[0]: history\r\n" \
+        CMDLINE_EMPTY;
     ARRAY_CMP(to_be, buf);
     CLEAN();
 }
@@ -640,32 +642,32 @@ TEST(cli, cmd_text_pageup_up)
 #if MBED_CONF_CMDLINE_ENABLE_ESCAPE_HANDLING
 TEST(cli, cmd_alt_left_right)
 {
-  input("11 22 33");
-  INIT_BUF();
-  ALT_LEFT();
-  ARRAY_CMP(CMDLINE_CUR("11 22 33 ", "3", BACKWARD), buf);
-  INIT_BUF();
-  ALT_LEFT();
-  ARRAY_CMP(CMDLINE_CUR("11 22 33 ", "6", BACKWARD), buf);
-  INIT_BUF();
-  ALT_LEFT();
-  ARRAY_CMP(CMDLINE_CUR("11 22 33 ", "9", BACKWARD), buf);
-  INIT_BUF();
-  input("a");
-  ARRAY_CMP(CMDLINE_CUR("a11 22 33 ", "9", BACKWARD), buf);
-  INIT_BUF();
-  ALT_RIGHT();
-  ARRAY_CMP(CMDLINE_CUR("a11 22 33 ", "7", BACKWARD), buf);
-  INIT_BUF();
-  ALT_RIGHT();
-  ARRAY_CMP(CMDLINE_CUR("a11 22 33 ", "4", BACKWARD), buf);
-  INIT_BUF();
-  ALT_RIGHT();
-  ARRAY_CMP(CMDLINE_CUR("a11 22 33 ", "1", BACKWARD), buf);
-  INIT_BUF();
-  input("a");
-  ARRAY_CMP(CMDLINE_CUR("a11 22 33a ", "1", BACKWARD), buf);
-  CLEAN();
+    input("11 22 33");
+    INIT_BUF();
+    ALT_LEFT();
+    ARRAY_CMP(CMDLINE_CUR("11 22 33 ", "3", BACKWARD), buf);
+    INIT_BUF();
+    ALT_LEFT();
+    ARRAY_CMP(CMDLINE_CUR("11 22 33 ", "6", BACKWARD), buf);
+    INIT_BUF();
+    ALT_LEFT();
+    ARRAY_CMP(CMDLINE_CUR("11 22 33 ", "9", BACKWARD), buf);
+    INIT_BUF();
+    input("a");
+    ARRAY_CMP(CMDLINE_CUR("a11 22 33 ", "9", BACKWARD), buf);
+    INIT_BUF();
+    ALT_RIGHT();
+    ARRAY_CMP(CMDLINE_CUR("a11 22 33 ", "7", BACKWARD), buf);
+    INIT_BUF();
+    ALT_RIGHT();
+    ARRAY_CMP(CMDLINE_CUR("a11 22 33 ", "4", BACKWARD), buf);
+    INIT_BUF();
+    ALT_RIGHT();
+    ARRAY_CMP(CMDLINE_CUR("a11 22 33 ", "1", BACKWARD), buf);
+    INIT_BUF();
+    input("a");
+    ARRAY_CMP(CMDLINE_CUR("a11 22 33a ", "1", BACKWARD), buf);
+    CLEAN();
 }
 TEST(cli, cmd_text_delete)
 {
@@ -711,51 +713,51 @@ TEST(cli, cmd_insert)
 }
 TEST(cli, ctrl_w)
 {
-  input("\r\n");
-  input("echo ping pong");
-  INIT_BUF();
-  input("\x17");
-  ARRAY_CMP(CMDLINE_CUR("echo ping  ", "1", BACKWARD), buf);
+    input("\r\n");
+    input("echo ping pong");
+    INIT_BUF();
+    input("\x17");
+    ARRAY_CMP(CMDLINE_CUR("echo ping  ", "1", BACKWARD), buf);
 
-  INIT_BUF();
-  input("\x17");
-  ARRAY_CMP(CMDLINE_CUR("echo  ", "1", BACKWARD), buf);
-  INIT_BUF();
-  input("\x17");
-  ARRAY_CMP(CMDLINE_CUR(" ", "1", BACKWARD), buf);
-  CLEAN();
+    INIT_BUF();
+    input("\x17");
+    ARRAY_CMP(CMDLINE_CUR("echo  ", "1", BACKWARD), buf);
+    INIT_BUF();
+    input("\x17");
+    ARRAY_CMP(CMDLINE_CUR(" ", "1", BACKWARD), buf);
+    CLEAN();
 }
 
 TEST(cli, ctrl_w_1)
 {
-  input("echo ping pong");
-  LEFT();
-  INIT_BUF();
-  input("\x17");
-  ARRAY_CMP(CMDLINE_CUR("echo ping g ", "2", BACKWARD), buf);
-  INIT_BUF();
-  input("\x17");
-  ARRAY_CMP(CMDLINE_CUR("echo g ", "2", BACKWARD), buf);
-  INIT_BUF();
-  input("\x17");
-  ARRAY_CMP(CMDLINE_CUR("g ", "2", BACKWARD), buf);
-  CLEAN();
+    input("echo ping pong");
+    LEFT();
+    INIT_BUF();
+    input("\x17");
+    ARRAY_CMP(CMDLINE_CUR("echo ping g ", "2", BACKWARD), buf);
+    INIT_BUF();
+    input("\x17");
+    ARRAY_CMP(CMDLINE_CUR("echo g ", "2", BACKWARD), buf);
+    INIT_BUF();
+    input("\x17");
+    ARRAY_CMP(CMDLINE_CUR("g ", "2", BACKWARD), buf);
+    CLEAN();
 }
 #endif
 
 #if MBED_CONF_CMDLINE_ENABLE_INTERNAL_VARIABLES
 TEST(cli, cmd_request_screen_size)
 {
-  cmd_request_screen_size();
-  input(ESCAPE("[6;7R"));
-  INIT_BUF();
-  REQUEST("set");
-  ARRAY_CMP("\r\nvariables:\r\n"
-            "PS1='/>'\r\n"
-            "?=0\r\n"
-            "LINES=6\r\n"
-            "COLUMNS=7\r\n"
-            CMDLINE_EMPTY, buf);
+    cmd_request_screen_size();
+    input(ESCAPE("[6;7R"));
+    INIT_BUF();
+    REQUEST("set");
+    ARRAY_CMP("\r\nvariables:\r\n"
+              "PS1='/>'\r\n"
+              "?=0\r\n"
+              "LINES=6\r\n"
+              "COLUMNS=7\r\n"
+              CMDLINE_EMPTY, buf);
 }
 #endif
 #if MBED_CONF_CMDLINE_ENABLE_ESCAPE_HANDLING
@@ -765,12 +767,12 @@ TEST(cli, cmd_tab_1)
     input("e");
     INIT_BUF();
     input("\t");
-    ARRAY_CMP(CMDLINE_CUR("echo ", "1", BACKWARD) , buf);
+    ARRAY_CMP(CMDLINE_CUR("echo ", "1", BACKWARD), buf);
 
     input("\nech");
     INIT_BUF();
     input("\t");
-    ARRAY_CMP(CMDLINE_CUR("echo ", "1", BACKWARD) , buf);
+    ARRAY_CMP(CMDLINE_CUR("echo ", "1", BACKWARD), buf);
 
     input("\n");
 }
@@ -785,23 +787,23 @@ TEST(cli, cmd_tab_2)
     INIT_BUF();
 
     input("\t");
-    ARRAY_CMP(CMDLINE_CUR("role ", "1", BACKWARD) , buf);
+    ARRAY_CMP(CMDLINE_CUR("role ", "1", BACKWARD), buf);
 
     INIT_BUF();
     input("\t");
-    ARRAY_CMP(CMDLINE_CUR("route ", "1", BACKWARD) , buf);
+    ARRAY_CMP(CMDLINE_CUR("route ", "1", BACKWARD), buf);
 
     INIT_BUF();
     input("\t");
-    ARRAY_CMP(CMDLINE_CUR("rile ", "1", BACKWARD) , buf);
+    ARRAY_CMP(CMDLINE_CUR("rile ", "1", BACKWARD), buf);
 
     INIT_BUF();
     input("\x1b[Z");
-    ARRAY_CMP(CMDLINE_CUR("route ", "1", BACKWARD) , buf);
+    ARRAY_CMP(CMDLINE_CUR("route ", "1", BACKWARD), buf);
 
     INIT_BUF();
     input("\x1b[Z");
-    ARRAY_CMP(CMDLINE_CUR("role ", "1", BACKWARD) , buf);
+    ARRAY_CMP(CMDLINE_CUR("role ", "1", BACKWARD), buf);
 
     input("\n");
 }
@@ -817,13 +819,13 @@ TEST(cli, cmd_delete)
 #if MBED_CONF_CMDLINE_ENABLE_INTERNAL_COMMANDS == 1
 TEST(cli, cmd_escape)
 {
-  INIT_BUF();
-  REQUEST("echo \\\"");
-  ARRAY_CMP(RESPONSE("\\\" "), buf);
+    INIT_BUF();
+    REQUEST("echo \\\"");
+    ARRAY_CMP(RESPONSE("\\\" "), buf);
 
-  INIT_BUF();
-  REQUEST("echo \"\\\\\"\"");
-  ARRAY_CMP(RESPONSE("\\\" "), buf);
+    INIT_BUF();
+    REQUEST("echo \"\\\\\"\"");
+    ARRAY_CMP(RESPONSE("\\\" "), buf);
 }
 #endif
 #if MBED_CONF_CMDLINE_ENABLE_ALIASES == 1
@@ -838,23 +840,23 @@ TEST(cli, cmd_tab_3)
 
     INIT_BUF();
     input("\t");
-    ARRAY_CMP(CMDLINE_CUR("role ", "1", BACKWARD) , buf);
+    ARRAY_CMP(CMDLINE_CUR("role ", "1", BACKWARD), buf);
 
     INIT_BUF();
     input("\t");
-    ARRAY_CMP(CMDLINE_CUR("rose ", "1", BACKWARD) , buf);
+    ARRAY_CMP(CMDLINE_CUR("rose ", "1", BACKWARD), buf);
 
     INIT_BUF();
     input("\t");
-    ARRAY_CMP(CMDLINE_CUR("rope ", "1", BACKWARD) , buf);
+    ARRAY_CMP(CMDLINE_CUR("rope ", "1", BACKWARD), buf);
 
     INIT_BUF();
     input("\t");
-    ARRAY_CMP(CMDLINE_CUR("r ", "1", BACKWARD) , buf);
+    ARRAY_CMP(CMDLINE_CUR("r ", "1", BACKWARD), buf);
 
     INIT_BUF();
     input("o");
-    ARRAY_CMP(CMDLINE_CUR("ro ", "1", BACKWARD) , buf);
+    ARRAY_CMP(CMDLINE_CUR("ro ", "1", BACKWARD), buf);
 
     ESC();
     INIT_BUF();
@@ -870,7 +872,7 @@ TEST(cli, cmd_tab_4)
 
     INIT_BUF();
     input("\t");
-    ARRAY_CMP(CMDLINE_CUR("echo ", "1", BACKWARD) , buf);
+    ARRAY_CMP(CMDLINE_CUR("echo ", "1", BACKWARD), buf);
 
     input(" $d");
     INIT_BUF();
@@ -879,12 +881,12 @@ TEST(cli, cmd_tab_4)
 
     INIT_BUF();
     input("\t");
-    ARRAY_CMP(CMDLINE_CUR("echo $dut1 ", "1", BACKWARD) , buf);
+    ARRAY_CMP(CMDLINE_CUR("echo $dut1 ", "1", BACKWARD), buf);
 
     input("\ne");
     INIT_BUF();
     input("\t");
-    ARRAY_CMP(CMDLINE_CUR("echo ", "1", BACKWARD) , buf);
+    ARRAY_CMP(CMDLINE_CUR("echo ", "1", BACKWARD), buf);
 
     cmd_variable_add("dut1", NULL);
     CLEAN();
@@ -970,15 +972,15 @@ TEST(cli, cmd_var_2)
     REQUEST("set foo \"hello world\"");
     CHECK_RETCODE(0);
     REQUEST("echo foo");
-    ARRAY_CMP(RESPONSE("foo ") , buf);
+    ARRAY_CMP(RESPONSE("foo "), buf);
 
     REQUEST("echo $foo");
     CHECK_RETCODE(0);
-    ARRAY_CMP(RESPONSE("hello world ") , buf);
+    ARRAY_CMP(RESPONSE("hello world "), buf);
 
     REQUEST("set faa !");
     REQUEST("echo $foo$faa");
-    ARRAY_CMP(RESPONSE("hello world! ") , buf);
+    ARRAY_CMP(RESPONSE("hello world! "), buf);
     REQUEST("unset faa");
 }
 #endif
@@ -986,9 +988,9 @@ TEST(cli, cmd_var_2)
 TEST(cli, cmd__)
 {
     REQUEST("echo foo");
-    ARRAY_CMP(RESPONSE("foo ") , buf);
+    ARRAY_CMP(RESPONSE("foo "), buf);
     REQUEST("_");
-    ARRAY_CMP(RESPONSE("foo ") , buf);
+    ARRAY_CMP(RESPONSE("foo "), buf);
 }
 TEST(cli, var_prev_cmd)
 {
@@ -1008,7 +1010,7 @@ TEST(cli, var_prev_cmd)
 TEST(cli, var_ps1)
 {
     REQUEST("set PS1=abc");
-    ARRAY_CMP(RAW_RESPONSE_WITH_PROMPT("", "abc") , buf);
+    ARRAY_CMP(RAW_RESPONSE_WITH_PROMPT("", "abc"), buf);
     REQUEST("set")
     ARRAY_CMP("\r\nvariables:\r\n"
               "PS1='abc'\r\n"
@@ -1021,31 +1023,31 @@ TEST(cli, var_ps1)
 TEST(cli, operator_semicolon)
 {
     REQUEST("echo hello world")
-    ARRAY_CMP(RESPONSE("hello world ") , buf);
+    ARRAY_CMP(RESPONSE("hello world "), buf);
     CHECK_RETCODE(CMDLINE_RETCODE_SUCCESS);
 
     REQUEST("setd faa \"hello world\";echo $faa");
-    ARRAY_CMP("\r\nCommand 'setd' not found.\r\n$faa \r\n" CMDLINE_EMPTY , buf);
+    ARRAY_CMP("\r\nCommand 'setd' not found.\r\n$faa \r\n" CMDLINE_EMPTY, buf);
 }
 TEST(cli, operators_and)
 {
-  TEST_RETCODE_WITH_COMMAND("true && true", CMDLINE_RETCODE_SUCCESS);
-  TEST_RETCODE_WITH_COMMAND("true && false", CMDLINE_RETCODE_FAIL);
-  TEST_RETCODE_WITH_COMMAND("false && true", CMDLINE_RETCODE_FAIL);
-  TEST_RETCODE_WITH_COMMAND("false && false", CMDLINE_RETCODE_FAIL);
+    TEST_RETCODE_WITH_COMMAND("true && true", CMDLINE_RETCODE_SUCCESS);
+    TEST_RETCODE_WITH_COMMAND("true && false", CMDLINE_RETCODE_FAIL);
+    TEST_RETCODE_WITH_COMMAND("false && true", CMDLINE_RETCODE_FAIL);
+    TEST_RETCODE_WITH_COMMAND("false && false", CMDLINE_RETCODE_FAIL);
 }
 TEST(cli, operators_or)
 {
-  TEST_RETCODE_WITH_COMMAND("true || true", CMDLINE_RETCODE_SUCCESS);
-  TEST_RETCODE_WITH_COMMAND("true || false", CMDLINE_RETCODE_SUCCESS);
-  TEST_RETCODE_WITH_COMMAND("false || true", CMDLINE_RETCODE_SUCCESS);
-  TEST_RETCODE_WITH_COMMAND("false || false", CMDLINE_RETCODE_FAIL);
+    TEST_RETCODE_WITH_COMMAND("true || true", CMDLINE_RETCODE_SUCCESS);
+    TEST_RETCODE_WITH_COMMAND("true || false", CMDLINE_RETCODE_SUCCESS);
+    TEST_RETCODE_WITH_COMMAND("false || true", CMDLINE_RETCODE_SUCCESS);
+    TEST_RETCODE_WITH_COMMAND("false || false", CMDLINE_RETCODE_FAIL);
 }
 
 TEST(cli, ampersand)
 {
     REQUEST("echo hello world&");
-    ARRAY_CMP(RESPONSE("hello world ") , buf);
+    ARRAY_CMP(RESPONSE("hello world "), buf);
 }
 #endif
 #endif
@@ -1066,7 +1068,7 @@ TEST(cli, maxlength)
 #define REDIR_DATA "echo Hi!"
 #define PASSTHROUGH_BUF_LENGTH 10
 char passthrough_buffer[PASSTHROUGH_BUF_LENGTH];
-char* passthrough_ptr = NULL;
+char *passthrough_ptr = NULL;
 void passthrough_cb(uint8_t c)
 {
     if (passthrough_ptr != NULL) {
@@ -1091,7 +1093,7 @@ TEST(cli, passthrough_set)
 #if MBED_CONF_CMDLINE_INIT_AUTOMATION_MODE == 1
     ARRAY_CMP("retcode: 0\r\n", buf)
 #else
-    ARRAY_CMP(RESPONSE("Hi! ") , buf);
+    ARRAY_CMP(RESPONSE("Hi! "), buf);
 #endif
 }
 TEST(cli, passthrough_lf)
@@ -1129,19 +1131,19 @@ TEST(cli, passthrough_crlf)
     ARRAY_CMP(REDIR_DATA, passthrough_buffer);
 }
 int cmd_long_called = 0;
-int cmd_long(int argc, char* argv[])
+int cmd_long(int argc, char *argv[])
 {
-  cmd_long_called ++;
-  return CMDLINE_RETCODE_EXCUTING_CONTINUE;
+    cmd_long_called ++;
+    return CMDLINE_RETCODE_EXCUTING_CONTINUE;
 }
 TEST(cli, cmd_continue)
 {
-  cmd_add("long", cmd_long, 0, 0);
-  previous_retcode = 111;
-  TEST_RETCODE_WITH_COMMAND("long", previous_retcode);
-  cmd_ready(0);
-  CHECK_RETCODE(CMDLINE_RETCODE_SUCCESS);
-  CHECK_EQUAL(cmd_long_called, 1);
+    cmd_add("long", cmd_long, 0, 0);
+    previous_retcode = 111;
+    TEST_RETCODE_WITH_COMMAND("long", previous_retcode);
+    cmd_ready(0);
+    CHECK_RETCODE(CMDLINE_RETCODE_SUCCESS);
+    CHECK_EQUAL(cmd_long_called, 1);
 }
 TEST(cli, cmd_out_func_set_null)
 {
@@ -1149,7 +1151,8 @@ TEST(cli, cmd_out_func_set_null)
 }
 
 static int outf_called = 0;
-void outf(const char *fmt, va_list ap) {
+void outf(const char *fmt, va_list ap)
+{
     outf_called++;
 }
 TEST(cli, cmd_out_func_set)
@@ -1167,8 +1170,9 @@ TEST(cli, cmd_ctrl_func_set_null)
 }
 
 int sohf_cb_called = 0;
-void sohf_cb(uint8_t c) {
-  sohf_cb_called++;
+void sohf_cb(uint8_t c)
+{
+    sohf_cb_called++;
 }
 #if MBED_CONF_CMDLINE_ENABLE_ESCAPE_HANDLING == 1
 TEST(cli, cmd_ctrl_func_set)
@@ -1255,5 +1259,5 @@ TEST(cli, cmd_free)
     cmd_exe("");
     cmd_ready(0);
     cmd_next(0);
-    STRCMP_EQUAL("" , buf);
+    STRCMP_EQUAL("", buf);
 }
