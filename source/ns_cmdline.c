@@ -1814,6 +1814,9 @@ static void cmd_execute(void)
     tr_deep("cmd_execute('%s') ", cmd.input);
     cmd_exe(cmd.input);
     cmd_line_clear(0);
+    if (cmd.echo) {
+        cmd_output();
+    }
 }
 
 
