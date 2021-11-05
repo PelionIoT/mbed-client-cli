@@ -4,6 +4,8 @@ if(DEFINED LINUXIFY)
   project(mbed-client-cli-unittest)
   cmake_minimum_required(VERSION 3.16)
 
+  enable_testing ()  
+
   # CppUTest
   include(FetchContent)
   FetchContent_Declare(
@@ -76,10 +78,8 @@ if(DEFINED LINUXIFY)
       )
 
     target_compile_definitions(mbed_client_cli_test_${TEST} PUBLIC ${flag})
+    add_test(NAME mbed_client_cli_test_${TEST} COMMAND mbed_client_cli_test_${TEST})
 
-    # describe what is actual test binary
-    SET(TEST_EXECUTABLE "../../../build/x86-linux-native/test/mbed_client_cli_test_${TEST}")
-    add_test(mbed_client_cli_test_${TEST} ${TEST_EXECUTABLE})
   endforeach()
 
 else()
