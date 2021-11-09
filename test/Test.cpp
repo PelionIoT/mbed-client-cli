@@ -26,9 +26,9 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#include "mbed-cpputest/CppUTest/TestHarness.h"
-#include "mbed-cpputest/CppUTest/SimpleString.h"
-#include "mbed-cpputest/CppUTest/CommandLineTestRunner.h"
+#include "CppUTest/TestHarness.h"
+#include "CppUTest/SimpleString.h"
+#include "CppUTest/CommandLineTestRunner.h"
 
 #define MBED_CONF_MBED_TRACE_ENABLE 1
 #define MBED_CONF_MBED_TRACE_FEA_IPV6 0
@@ -1099,7 +1099,7 @@ TEST(cli, passthrough_set)
     INIT_BUF();
     REQUEST(REDIR_DATA);
 #if MBED_CONF_CMDLINE_INIT_AUTOMATION_MODE == 1
-    ARRAY_CMP("retcode: 0\r\n", buf)
+    ARRAY_CMP("retcode: 0\r\n", buf);
 #else
     ARRAY_CMP(RESPONSE("Hi! "), buf);
 #endif
@@ -1229,7 +1229,7 @@ TEST(cli, cmd_parameter_timestamp_2)
     const char *key = "-t";
     int64_t value = 0;
     CHECK_EQUAL(true, cmd_parameter_timestamp(argc, argv, key, &value));
-    LONGS_EQUAL(78187493520, value)
+    LONGS_EQUAL(78187493520, value);
 }
 TEST(cli, cmd_parameter_timestamp_3)
 {

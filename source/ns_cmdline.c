@@ -629,6 +629,10 @@ void cmd_exe(char *str)
         return;
     }
     cmd_split(str);
+    if (str == cmd.input) {
+        cmd_line_clear(0);
+    }
+
     if (cmd.cmd_buffer_ptr == 0) {
         //execution buffer is empty
         cmd.idle = false; //not really, but fake it
@@ -1815,9 +1819,6 @@ static void cmd_execute(void)
     tr_deep("cmd_execute('%s') ", cmd.input);
     cmd_exe(cmd.input);
     cmd_line_clear(0);
-    if (cmd.echo) {
-        cmd_output();
-    }
 }
 
 
