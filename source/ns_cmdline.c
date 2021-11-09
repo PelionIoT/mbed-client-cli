@@ -780,6 +780,7 @@ static void cmd_split(char *string_ptr)
     char *ptr = string_ptr, *next;
     operator_t oper = OPERATOR_SEMI_COLON;
     do {
+        cmd_replace_alias(ptr);
         next = next_command(ptr, &oper);
         cmd_push(ptr, oper);
         ptr = next;

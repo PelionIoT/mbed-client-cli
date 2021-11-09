@@ -941,6 +941,13 @@ TEST(cli, cmd_series)
     CHECK_RETCODE(0);
     ARRAY_CMP(RESPONSE("dut1 \r\ndut2 \r\ndut3 "), buf);
 }
+TEST(cli, cmd_alias_series)
+{
+    cmd_alias_add("multiecho", "echo dut1;echo dut2;");
+    REQUEST("multiecho");
+    CHECK_RETCODE(0);
+    ARRAY_CMP("\r\ndut1 \r\ndut2 \r\n" CMDLINE_EMPTY, buf);
+}
 #endif
 #if MBED_CONF_CMDLINE_ENABLE_INTERNAL_VARIABLES
 TEST(cli, cmd_var_1)
