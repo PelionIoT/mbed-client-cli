@@ -19,14 +19,15 @@
 #################################################################################
 #
 #
-# Run unit tests and produce 'test_detail.xml' output to build folder.
+# Run unit tests and produce 'xml' output to build/html folder.
+# Coverage report will be available in: ./build/html/coverage_index.html
 #
 
 TEST_DIR="build"
 
 mkdir -p ${TEST_DIR}
 cd ${TEST_DIR}
-cmake .. -DLINUXIFY=ON
+cmake .. -DLINUXIFY=ON -Denable_coverage_data=ON -DCMAKE_BUILD_TYPE=Debug
 make
 ctest
 

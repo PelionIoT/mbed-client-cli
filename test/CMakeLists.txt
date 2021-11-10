@@ -2,21 +2,31 @@
 if(DEFINED LINUXIFY)
 
   project(mbed-client-cli-unittest)
-  cmake_minimum_required(VERSION 3.16)
+  cmake_minimum_required(VERSION 3.11)
 
-  enable_testing ()  
+  include(FindUnixCommands)
 
-  # CppUTest
+  option(enable_coverage_data "Enable Coverage data" OFF)
+
+  enable_testing ()
+
+  if (enable_coverage_data)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --coverage")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
+  endif ()
+
+  # Google Tests
   include(FetchContent)
   FetchContent_Declare(
-    CppUTest
-    GIT_REPOSITORY https://github.com/cpputest/cpputest.git
-    GIT_TAG        latest-passing-build # or use release tag, eg. v3.8
-    )
-  # Set this to ON if you want to have the CppUTests in your project as well.
-  set(TESTS OFF CACHE BOOL "Switch off CppUTest Test build")
-  FetchContent_MakeAvailable(CppUTest)
+    googletest
+    URL https://github.com/google/googletest/archive/refs/tags/release-1.11.0.zip
+  )
 
+  # For Windows: Prevent overriding the parent project's compiler/linker settings
+  set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+  FetchContent_MakeAvailable(googletest)
+   
   add_definitions("-Wno-write-strings")
 
   add_library(mbed-trace INTERFACE)
@@ -56,15 +66,9 @@ if(DEFINED LINUXIFY)
       ../mbed-client-cli
       )
 
-    if("${TEST}" STREQUAL "full")
-      MESSAGE("USE GCOV BUILD (Linux)")
-      set_target_properties(mbed-client-cli-${TEST} PROPERTIES COMPILE_FLAGS
-        "-g -O0 -Wall -fprofile-arcs -ftest-coverage"
-        )
-      target_link_libraries(mbed-client-cli-${TEST} gcov)
-    else()
-      target_link_libraries(mbed-client-cli-${TEST})
-    endif()
+    # GTest framework requires C++ version 11
+    set (CMAKE_CXX_STANDARD 11)
+    
     target_compile_definitions(mbed-client-cli-${TEST} PUBLIC ${flag})
 
     # describe the test executable
@@ -74,86 +78,25 @@ if(DEFINED LINUXIFY)
     target_link_libraries(mbed_client_cli_test_${TEST}
       "mbed-client-cli-${TEST}"
       "mbed-trace"
-      CppUTest
+      gtest_main
       )
 
     target_compile_definitions(mbed_client_cli_test_${TEST} PUBLIC ${flag})
     add_test(NAME mbed_client_cli_test_${TEST} COMMAND mbed_client_cli_test_${TEST})
 
+    include(GoogleTest)
+    gtest_discover_tests(mbed_client_cli_test_${TEST} EXTRA_ARGS --gtest_output=xml: XML_OUTPUT_DIR mbed_client_cli_test_${TEST})
+
+    if (enable_coverage_data AND ${CMAKE_PROJECT_NAME} STREQUAL "mbed-client-cli-unittest")
+      file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/html")
+
+      # get path mbed-client-cli top level as coverage is calculated from sources
+      get_filename_component(CLI_TOP_LEVEL ../ ABSOLUTE)
+
+      add_test(NAME mbed_client_cli_test_${TEST}_cov WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMAND ${BASH} -c "gcovr --root ${CLI_TOP_LEVEL} -e 'Test.cpp' -e '.*build.*' --html --html-details -o ${CMAKE_CURRENT_BINARY_DIR}/html/coverage_index.html"
+      )
+    endif ()
   endforeach()
-
-else()
-
-if(DEFINED TARGET_LIKE_X86_WINDOWS_NATIVE OR DEFINED TARGET_LIKE_X86_LINUX_NATIVE OR DEFINED TARGET_LIKE_X86_OSX_NATIVE)
-
-    include_directories("../yotta_modules/cpputest")
-    add_definitions("-Wno-write-strings")
-
-    # FULL BUILD TESTS
-    set(FLAGS
-            MBED_CONF_CMDLINE_USE_MINIMUM_SET=0
-            MBED_CONF_CMDLINE_USE_MINIMUM_SET=1
-            )
-    set(TESTS
-            full
-            min
-            )
-    foreach(flag ${FLAGS})
-        list(FIND FLAGS ${flag} index)
-        list(GET TESTS ${index} TEST)
-
-        MESSAGE("TEST flag: ${flag}")
-
-        add_library( mbed-client-cli-${TEST}
-            ../source/ns_cmdline.c
-            ../source/ns_list_internal/ns_list.c
-            )
-
-        if("${TEST}" STREQUAL "full")
-            if(DEFINED TARGET_LIKE_X86_LINUX_NATIVE)
-                MESSAGE("USE GCOV BUILD (Linux)")
-                set_target_properties(mbed-client-cli-${TEST} PROPERTIES COMPILE_FLAGS
-                        "-g -O0 -Wall -fprofile-arcs -ftest-coverage"
-                        )
-                target_link_libraries(mbed-client-cli-${TEST} gcov)
-            #[[
-            elseif(DEFINED TARGET_LIKE_X86_OSX_NATIVE)
-                # Not supported yet..
-                MESSAGE("USE GCOV BUILD (Mac)")
-                #target_link_libraries(mbed-client-cli-${TEST} clang_rt)
-            #]]
-            else()
-                MESSAGE("gcov is not supported in Windows")
-                target_link_libraries(mbed-client-cli-${TEST})
-            endif()
-        else()
-            target_link_libraries(mbed-client-cli-${TEST})
-        endif()
-        target_compile_definitions(mbed-client-cli-${TEST} PUBLIC ${flag})
-
-        # describe the test executable
-        add_executable(mbed_client_cli_test_${TEST} Test.cpp)
-
-        # describe what the test executable needs to link with
-        target_link_libraries(mbed_client_cli_test_${TEST}
-                "mbed-client-cli-${TEST}"
-                "mbed-trace"
-                cpputest
-                )
-
-        target_compile_definitions(mbed_client_cli_test_${TEST} PUBLIC ${flag})
-
-        # describe what is actual test binary
-        if(DEFINED TARGET_LIKE_X86_WINDOWS_NATIVE)
-            SET(TEST_EXECUTABLE "build/x86-windows-native/test/mbed_client_cli_test_${TEST}")
-        elseif(DEFINED TARGET_LIKE_X86_OSX_NATIVE)
-            SET(TEST_EXECUTABLE "../../../build/x86-osx-native/test/mbed_client_cli_test_${TEST}")
-        elseif(DEFINED TARGET_LIKE_X86_LINUX_NATIVE)
-            SET(TEST_EXECUTABLE "../../../build/x86-linux-native/test/mbed_client_cli_test_${TEST}")
-        endif()
-        add_test(mbed_client_cli_test_${TEST} ${TEST_EXECUTABLE})
-    endforeach()
-
-endif()
 
 endif()

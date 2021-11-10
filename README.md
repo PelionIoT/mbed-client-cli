@@ -1,6 +1,6 @@
 # mbed-client-cli
 
-This is the Command Line Library for a CLI application. It uses only ansi C features so it is portable and works in mbed-os-3, mbed-os-5, linux and windows.
+This is the Command Line Library for a CLI application. It uses only ansi C features so it is portable and works in mbed-os-3, mbed-os-5, mbed-os-6, linux and windows.
 
 ## Features
 
@@ -167,25 +167,11 @@ Thread safety example for mbed-os-5 is available [here](example/mbed-os-5/main.c
 
 ## Unit tests
 
-Unit tests is written using [yotta](https://yottabuild.org). To run unit tests:
-
-* In Linux
-
+Unit tests are available in the `./test` folder. To run the unit tests in linux environment:
 ```
-yotta target x86-linux-native
-yotta test
+cd test
+./run_unit_tests.sh
 ```
 
-* In Mac
-
-```
-yotta target x86-osx-native
-yotta test
-```
-
-* In Windows
-
-```
-yotta target x86-windows-native
-yotta test
-```
+Unit tests xml output will be generated to folder: `test/build`. 
+Code coverage report can be found from: `./test/build/html/coverage_index.html`.
