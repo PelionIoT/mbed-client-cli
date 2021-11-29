@@ -11,5 +11,4 @@ make
 ```
 ./cli
 ```
-
-to exit application write `exit` and press enter
+type `help` and press enter to see available commands. To exit the application write `exit` and press enter

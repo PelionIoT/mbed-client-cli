@@ -1,4 +1,4 @@
-# mbed-os 5 example application using mbed-client-cli library
+# Mbed OS example application using mbed-client-cli library
 
 ## build
 
