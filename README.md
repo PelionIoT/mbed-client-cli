@@ -1,6 +1,6 @@
 # mbed-client-cli
 
-This is the Command Line Library for a CLI application. It uses only ansi C features so it is portable and works in mbed-os-3, mbed-os-5, mbed-os-6, linux and windows.
+This is the Command Line Library for a CLI application. It uses only ansi C features so it is portable and works in Mbed OS, linux and windows.
 
 ## Features
 
@@ -162,7 +162,7 @@ void main(void) {
 The CLI library is not thread safe, but the CLI terminal output can be locked against other
 output streams, for example if both traces and CLI output are using serial out.
 
-Thread safety example for mbed-os-5 is available [here](example/mbed-os-5/main.cpp).
+Thread safety example for Mbed OS is available [here](example/Mbed-OS/main.cpp).
 
 
 ## Unit tests
@@ -173,5 +173,5 @@ cd test
 ./run_unit_tests.sh
 ```
 
-Unit tests xml output will be generated to folder: `test/build`. 
+Unit tests xml output will be generated to folder: `test/build`.
 Code coverage report can be found from: `./test/build/html/coverage_index.html`.
